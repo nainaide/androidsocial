@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="wrap_content"
+	android:layout_height="wrap_content" android:orientation="vertical">
+
+	<LinearLayout
+		android:id="@+id/LinearLayoutPictureAndMainDetails"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:orientation="horizontal">
+		
+		<ImageView
+			android:id="@+id/ImageViewUserPicture"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content">
+		</ImageView>
+	
+<!--		
+		<LinearLayout
+			android:id="@+id/LinearLayoutMainDetails"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:orientation="vertical">
+		</LinearLayout>
+-->
+	
+		<TextView
+			android:id="@+id/TextViewMainDetails"
+			android:text="@+id/TextViewMainDetails"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content">
+		</TextView>
+		
+	</LinearLayout><TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/TextViewUserDetailsDateBirthLabel" android:text="Date of Birth :" android:layout_marginTop="20sp"></TextView><DatePicker android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/DatePickerUserDetailsDateBirth" android:clickable="false"></DatePicker><TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/TextViewUserDetailsHobbiesLabel" android:text="Hobbies :" android:layout_marginTop="10sp"></TextView>
+
+
+
+
+
+
+<TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/TextViewUserDetailsHobbies" android:text="Hobbies"></TextView>
+</LinearLayout>
