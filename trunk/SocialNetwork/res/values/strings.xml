@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+	<dimen name="SizeTitle">30sp</dimen>
+	<dimen name="SizeMarginUnderTitles">30sp</dimen>
+	<dimen name="min_width_edit_text">250sp</dimen>
+	<dimen name="width_button">100sp</dimen>
+	
+	<string name="app_name">Social Application</string>
+	<string name="no_users_are_connected">No users are currently connected to this network</string>
+	<string name="extra_key_main_data">main_data</string>
+	<string name="extra_key_login_user_name">user_name</string><string name="file_name_prefs">prefsFile</string>
+	<string name="pref_name_should_login_automatically">shouldLoginAutomatically</string>
+	<string name="pref_name_last_logged_in_user_name">lastLoggedInUserName</string>
+	
+	
+	
+	<color name="color_background">#000033</color>
+	
+<!--	
+	<style name="style_app">
+	        <item name="android:textColor">#00FF00</item>
+	        <item name="android:background">@color/color_background</item>
+	</style>
+-->
+
+
+
+<string name="activity_label_connect">Connecting To A Network</string>
+<string name="activity_label_chat">Chat</string>
+<string name="activity_label_login">Login</string>
+<string name="activity_label_users_list">Users List</string>
+</resources>

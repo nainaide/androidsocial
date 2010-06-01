@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+  
+<RelativeLayout android:id="@+id/RelativeLayoutChooseUser" android:layout_width="fill_parent"
+				android:layout_height="fill_parent" xmlns:android="http://schemas.android.com/apk/res/android">
+
+	<ImageView android:id="@+id/ImageViewLogo"
+			   android:layout_width="wrap_content"
+			   android:layout_height="wrap_content"
+			   android:layout_alignParentTop="true"
+			   android:layout_marginBottom="20sp">
+	</ImageView>
+	
+	<TextView android:text="Please Choose A User"
+			  android:layout_width="wrap_content"
+			  android:layout_height="wrap_content"
+			  android:layout_below="@+id/ImageViewLogo"
+			  android:id="@+id/TextViewTitle"
+			  android:layout_centerInParent="true"
+			  android:textSize="@dimen/SizeTitle" android:layout_marginBottom="@dimen/SizeMarginUnderTitles">
+	</TextView>
+	
+	<TextView android:id="@+id/TextViewUserName"
+			  android:text="User Name :"
+			  android:layout_width="wrap_content"
+			  android:layout_height="wrap_content"
+			  android:layout_below="@+id/TextViewTitle">
+	</TextView>
+	
+	<Spinner android:id="@+id/SpinnerUserName"
+			 android:layout_below="@+id/TextViewUserName"
+			 android:layout_width="wrap_content"
+			 android:layout_height="wrap_content"
+			 android:minWidth="200sp">
+	</Spinner>
+	
+	<Button android:id="@+id/ButtonCreateUser"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:text="Create..."
+			android:layout_toRightOf="@+id/SpinnerUserName"
+			android:layout_alignBottom="@+id/SpinnerUserName">
+	</Button>
+
+
+
+</RelativeLayout>

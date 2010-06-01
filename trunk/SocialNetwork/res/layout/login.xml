@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="wrap_content"
+  android:layout_height="wrap_content" android:orientation="vertical">
+  
+	<ImageView android:id="@+id/ImageViewLogo"
+			   android:layout_width="wrap_content"
+			   android:layout_height="wrap_content"
+			   android:layout_marginBottom="20sp">
+	</ImageView>
+	
+	<TextView android:text="Please Choose A User"
+			  android:layout_width="wrap_content"
+			  android:layout_height="wrap_content"
+			  android:id="@+id/TextViewTitle"
+			  android:layout_centerInParent="true"
+			  android:textSize="@dimen/SizeTitle"
+			  android:layout_marginBottom="@dimen/SizeMarginUnderTitles">
+	</TextView>
+	
+	<TextView android:id="@+id/TextViewUserName"
+			  android:text="User Name :"
+			  android:layout_width="wrap_content"
+			  android:layout_height="wrap_content">
+	</TextView>
+	
+	<LinearLayout android:id="@+id/LinearLayout01"
+				  android:orientation="horizontal"
+				  android:layout_height="wrap_content"
+				  android:layout_width="fill_parent">
+				  
+		<Spinner android:id="@+id/SpinnerUserName"
+				 android:layout_height="wrap_content"
+				 android:minWidth="200sp"
+				 android:layout_gravity="left"
+				 android:layout_width="fill_parent"
+				 android:layout_weight="1">
+		</Spinner>
+		
+		<Button android:id="@+id/ButtonCreateUser"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:text="Create..."
+				android:layout_alignBottom="@+id/SpinnerUserName"
+				android:layout_gravity="right">
+		</Button>
+	</LinearLayout>
+	
+	<Button android:id="@+id/ButtonDeleteUser"
+			android:text="Delete"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content">
+	</Button>
+	
+	<Button android:text="Login"
+			android:id="@+id/ButtonLogin"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_marginTop="40sp"
+			android:layout_gravity="center_horizontal"
+			android:minWidth="100sp">
+	</Button>
+	
+	<CheckBox android:text="From now on, automatically login with the selected user"
+			  android:id="@+id/CheckBoxAutomaticallyLoginWithUser"
+			  android:layout_width="wrap_content"
+			  android:layout_height="wrap_content"
+			  android:layout_marginTop="40sp">
+	</CheckBox>
+
+</LinearLayout>
