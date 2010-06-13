@@ -9,6 +9,7 @@ import android.os.Message;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -53,6 +54,16 @@ public class ActivityUserDetails extends Activity
         // TODO : Also get and show the user picture
         ImageView imageViewUserPicture = (ImageView) findViewById(R.id.ImageViewUserPicture);
         imageViewUserPicture.setImageResource(R.drawable.icon);
+        
+        Button buttonDeleteUser = (Button) findViewById(R.id.fileBrowser);
+        buttonDeleteUser.setOnClickListener( new View.OnClickListener( ) {
+			
+			@Override
+			public void onClick(View v) {
+				Intent intent = new Intent(ActivityUserDetails.this, ActivityFileBrowser.class);
+				startActivity(intent);
+			}
+		});
         
         // TODO : Request all the details from the selected user
     }        
