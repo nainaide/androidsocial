@@ -206,6 +206,23 @@ case "$1" in
     startsecnat
     startmacwhitelist
 ;;
+'reset_wifi')
+    stopint
+    stopwifi
+    startwifi
+;;
+'stop_int')
+    stopint
+;;
+'stop_wifi')
+    stopwifi
+;;
+'start_wifi')
+    startwifi
+;;
+'stop_dnsmasq')
+    stopdnsmasq
+;;
 *)
 echo "Usage: $0 [start|stop] [directory]"
 ;;

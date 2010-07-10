@@ -12,6 +12,8 @@ import android.app.Dialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Handler;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.ArrayAdapter;
@@ -35,11 +37,13 @@ public class ActivityLogin extends Activity implements OnClickListener
 	private final String USER_FILE_NAME_SUFFIX = "";
 	private final String USER_FILE_NAME_EXTENSION = "";
 	
+	private final String LOG_TAG = "SN.Login";
+	
 	private String mUserName = USER_NAME_EMPTY;
 	private ArrayAdapter<CharSequence> mAdapter;
 	
 	ApplicationSocialNetwork application = null;
-	
+	public static ActivityLogin instance = null;
 //	private DialogInterface.OnDismissListener mOnDismissListener;
 	
     /** Called when the activity is first created. */
@@ -49,8 +53,10 @@ public class ActivityLogin extends Activity implements OnClickListener
         super.onCreate(savedInstanceState);
         setContentView(R.layout.login);
 
-    	application = (ApplicationSocialNetwork)getApplication();
+Log.d(LOG_TAG, "D Where will this be printed ??");
 
+    	application = (ApplicationSocialNetwork)getApplication();
+    	ActivityLogin.instance = this;
         FILE_NAME_PREFS = getResources().getString(R.string.file_name_prefs);
 //        DIR_NAME_USERS = getApplicationContext().getFilesDir() + File.separator + DIR_RELATIVE_NAME_USERS;
 
@@ -206,8 +212,9 @@ public class ActivityLogin extends Activity implements OnClickListener
 			application.loadMyDetails(getUserFileName(userNameToLogin)); //, userNameToLogin);
 			
 			// Open the opening screen's activity
-			Intent intent = new Intent(this, ActivityConnect.class);
-			intent.putExtra(getResources().getString(R.string.extra_key_login_user_name), userNameToLogin);
+//			Intent intent = new Intent(this, ActivityConnect.class);
+			Intent intent = new Intent(this, ActivityUsersList.class);
+//			intent.putExtra(getResources().getString(R.string.extra_key_login_user_name), userNameToLogin);
 			startActivity(intent);
 		}
 	}
@@ -221,7 +228,6 @@ public class ActivityLogin extends Activity implements OnClickListener
 //		File dirUsers = getApplicationContext().getDir(DIR_NAME_USERS, MODE_PRIVATE);
 		File dirUsers = getApplicationContext().getFilesDir();
 		String[] userFilesNames = dirUsers.list(new FilenameFilter() {
-			@Override
 			public boolean accept(File dir, String fileName)
 			{
 				boolean shouldAccecpt = false;
@@ -246,9 +252,9 @@ public class ActivityLogin extends Activity implements OnClickListener
 		
 		// TODO : The keyboard didn't show on one of the devices and I got stuck without any users, so I added these.
 		//        Delete this code when the keyboard decides it wants to work again
-		mAdapter.add("NoKeyboard1");
-		mAdapter.add("NoKeyboard2");
-		mAdapter.add("NoKeyboard3");
+//		mAdapter.add("NoKeyboard1");
+//		mAdapter.add("NoKeyboard2");
+//		mAdapter.add("NoKeyboard3");
 		
 		
 		mAdapter.sort(null);
@@ -287,7 +293,6 @@ public class ActivityLogin extends Activity implements OnClickListener
     			
     			Button buttonCreate = (Button) dialog.findViewById(R.id.ButtonCreate);
     			buttonCreate.setOnClickListener(new Button.OnClickListener() {
-					@Override
 					public void onClick(View view)
 					{
 						Spinner spinnerUserNames = (Spinner) findViewById(R.id.SpinnerUserName);
@@ -358,7 +363,6 @@ public class ActivityLogin extends Activity implements OnClickListener
     			
     			Button buttonCancel = (Button) dialog.findViewById(R.id.ButtonCancel);
     			buttonCancel.setOnClickListener(new Button.OnClickListener() {
-					@Override
 					public void onClick(View view) {
 						dismissDialog(DIALOG_ID_CREATE_USER);
 					}
@@ -393,4 +397,20 @@ public class ActivityLogin extends Activity implements OnClickListener
 			}
 		}
 	}
+	private Handler mHandler = new Handler() {
+		public String getUserName()
+		{
+			return mUserName;
+				}
+	};
+
+	public Handler getUpdateHandler()
+	{
+		return mHandler;
+	}
+	
+	public String getUserName()
+	{
+		return mUserName;
+			}
 }
