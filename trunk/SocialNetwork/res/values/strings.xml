@@ -26,8 +26,9 @@
 
 
 
-<string name="activity_label_connect">Connecting To A Network</string>
-<string name="activity_label_chat">Chat</string>
+<string name="activity_label_chat">Chat</string><string name="activity_label_connect">Connecting To A Network</string>
+
 <string name="activity_label_login">Login</string>
-<string name="activity_label_users_list">Users List</string>
+<string name="activity_label_user_details">User\'s Details</string><string name="activity_label_users_list">Users List</string>
+
 </resources>

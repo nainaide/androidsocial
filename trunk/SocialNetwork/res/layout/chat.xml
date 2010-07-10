@@ -27,10 +27,9 @@
 
 		
 	<EditText
-		android:text="Conversation Contents"
 		android:id="@+id/EditTextChatConversation"
 		android:inputType="none"
-		android:layout_width="fill_parent" android:layout_height="fill_parent" android:layout_weight="1">
+		android:layout_width="fill_parent" android:layout_height="fill_parent" android:layout_weight="1" android:clickable="false" android:focusable="false" android:focusableInTouchMode="false" android:longClickable="false">
 	</EditText>
 	
 	<LinearLayout
@@ -46,9 +45,8 @@
 		</ImageView>
 		
 		<EditText
-			android:text="My Message"
 			android:id="@+id/EditTextChatMyMessage"
-			android:layout_height="wrap_content" android:layout_width="wrap_content" android:layout_weight="100" android:minLines="2" android:maxLines="4">
+			android:layout_height="wrap_content" android:layout_width="wrap_content" android:layout_weight="100" android:minLines="2" android:maxLines="4" android:hint="Enter A Message Here">
 		</EditText>
 		
 		<Button

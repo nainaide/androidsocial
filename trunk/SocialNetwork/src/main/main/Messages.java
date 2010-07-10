@@ -18,9 +18,10 @@ public class Messages
 	//           Structure : NewUser IPAddress username dateBirth Sex Picture
 	public static final String MSG_PREFIX_NEW_USER = "NewUser";
 	
-	// NewUser : Leader sends as a reply to NEW_USER with its own IP Address
-	//           Structure : NewUserReply leaderIPAddress
-	public static final String MSG_PREFIX_NEW_USER_REPLY = "NewUserReply";
+	// TODO : If in fact it's useless, delete this NewUserReply message
+//	// NewUser : Leader sends as a reply to NEW_USER with its own IP Address
+//	//           Structure : NewUserReply leaderIPAddress
+//	public static final String MSG_PREFIX_NEW_USER_REPLY = "NewUserReply";
 	
 	// NewUser : Client asks for another user's full details
 	//           Structure : GetUserDetails targetIPAddress(The unique identifier)
@@ -40,8 +41,8 @@ public class Messages
 	public static final String MSG_PREFIX_USER_DISCONNECTED = "UserDisconnected"; 
 
 	// ChatMessage : User sends a chat message to another user whenever the "Send" button is pressed in the chat Activity
-	//               Structure : ChatMessage messageContents
-	public static final String MSG_PREFIX_CHAT_MESSAGE = "ChageMessage";
+	//               Structure : ChatMessage sourceIPAddress, targetIPAddress, messageContents
+	public static final String MSG_PREFIX_CHAT_MESSAGE = "ChatMessage";
 	
 	
 //	public static final String MSG_EOM = "DONE";
@@ -263,36 +264,37 @@ public class Messages
 		}
 	}
 	
-	public static class MessageNewUserReply
-	{
-		private final int INDEX_PARAM_LEADER_IP = 1;
-		
-		private String mLeaderIP = "";
-		
-		public MessageNewUserReply(String leaderIP)
-		{
-			mLeaderIP = leaderIP;
-		}
-		
-		public MessageNewUserReply(Message message)
-		{
-			String strMessage = message.toString();
-			
-			mLeaderIP = strMessage.split(MSG_PARAMS_SEPARATOR)[INDEX_PARAM_LEADER_IP];
-		}
-		
-		
-		public String getLeaderIP()
-		{
-			return mLeaderIP;
-		}
-		
-		public String toString()
-		{
-			return MSG_PREFIX_NEW_USER_REPLY + MSG_PARAMS_SEPARATOR +
-						mLeaderIP;
-		}
-	}
+	// TODO : If in fact it's useless, delete this NewUserReply message
+//	public static class MessageNewUserReply
+//	{
+//		private final int INDEX_PARAM_LEADER_IP = 1;
+//		
+//		private String mLeaderIP = "";
+//		
+//		public MessageNewUserReply(String leaderIP)
+//		{
+//			mLeaderIP = leaderIP;
+//		}
+//		
+//		public MessageNewUserReply(Message message)
+//		{
+//			String strMessage = message.toString();
+//			
+//			mLeaderIP = strMessage.split(MSG_PARAMS_SEPARATOR)[INDEX_PARAM_LEADER_IP];
+//		}
+//		
+//		
+//		public String getLeaderIP()
+//		{
+//			return mLeaderIP;
+//		}
+//		
+//		public String toString()
+//		{
+//			return MSG_PREFIX_NEW_USER_REPLY + MSG_PARAMS_SEPARATOR +
+//						mLeaderIP;
+//		}
+//	}
 	
 	public static class MessageGetUserDetails
 	{
@@ -362,10 +364,14 @@ public class Messages
 	{
 		private final int INDEX_PARAM_ASKER_IP_ADDRESS = 1;
 		private final int INDEX_PARAM_IP_ADDRESS = 2;
+		private final int INDEX_PARAM_HOBBIES = 3;
+		private final int INDEX_PARAM_FAVORITE_MUSIC = 4;
 		
 		private String mAskerIPAddress = "";
 		private String mIPAddress = "";
 		private String mHobbies = "Playing basket ball";
+		private String mFavoriteMusic = "Metal, Country and Britney Spears";
+		
 		
 		public MessageUserDetails(String askerIPAddress)
 		{
@@ -379,13 +385,18 @@ public class Messages
 			
 			mAskerIPAddress = arrParams[INDEX_PARAM_ASKER_IP_ADDRESS]; 
 			mIPAddress = arrParams[INDEX_PARAM_IP_ADDRESS]; 
+			// TODO : Uncomment these
+//			mHobbies = arrParams[INDEX_PARAM_HOBBIES];
+//			mFavoriteMusic = arrParams[INDEX_PARAM_FAVORITE_MUSIC];
 		}
 		
-		public MessageUserDetails(User user, String askerIPAddress)
+		public MessageUserDetails(User user, String askerIPAddress, String hobbies, String favoriteMusic)
 		{
-			// TODO : Implement this
 			mIPAddress = user.getIPAddress();
 			mAskerIPAddress = askerIPAddress;
+			// TODO : Uncomment these
+//			mHobbies = hobbies;
+//			mFavoriteMusic = favoriteMusic;
 		}
 		
 		
@@ -404,10 +415,18 @@ public class Messages
 			return mHobbies;
 		}
 		
+		public String getFavoriteMusic()
+		{
+			return mFavoriteMusic;
+		}
+		
 		public String toString()
 		{
 			return MSG_PREFIX_USER_DETAILS + MSG_PARAMS_SEPARATOR +
-						mAskerIPAddress + MSG_PARAMS_SEPARATOR + mIPAddress + MSG_PARAMS_SEPARATOR + mHobbies;
+						mAskerIPAddress + MSG_PARAMS_SEPARATOR +
+						mIPAddress + MSG_PARAMS_SEPARATOR +
+						mHobbies + MSG_PARAMS_SEPARATOR +
+						mFavoriteMusic;
 		}
 	}
 
@@ -444,13 +463,23 @@ public class Messages
 	
 	public static class MessageChatMessage
 	{
-		private final int INDEX_PARAM_CHAT_MESSAGE_CONTENTS = 1;
-		
+		private final int INDEX_PARAM_CHAT_USER = 1;
+		private final int INDEX_PARAM_CHAT_SOURCE_USER_IP = 2;
+		private final int INDEX_PARAM_CHAT_TARGET_USER_IP = 3;
+		private final int INDEX_PARAM_CHAT_MESSAGE_CONTENTS = 4;
 		String mChatMessageContents = "";
 		
-		public MessageChatMessage(String chatMessageContents)
+		private String mUsername = "";
+		
+		private String mSourceUserIp = "";
+		private String mTargetUserIp ="";
+		
+		public MessageChatMessage(String chatMessageContents, String username, String sourceIp, String targetIp)
 		{
 			mChatMessageContents = chatMessageContents;
+			mUsername = username;
+			mSourceUserIp = sourceIp;
+			mTargetUserIp = targetIp;
 		}
 		
 		public MessageChatMessage(Message message)
@@ -458,6 +487,9 @@ public class Messages
 			String strMessage = message.toString();
 			
 			mChatMessageContents = strMessage.split(MSG_PARAMS_SEPARATOR)[INDEX_PARAM_CHAT_MESSAGE_CONTENTS];
+			mUsername = strMessage.split(MSG_PARAMS_SEPARATOR)[INDEX_PARAM_CHAT_USER];
+			mSourceUserIp = strMessage.split(MSG_PARAMS_SEPARATOR)[INDEX_PARAM_CHAT_SOURCE_USER_IP];
+			mTargetUserIp = strMessage.split(MSG_PARAMS_SEPARATOR)[INDEX_PARAM_CHAT_TARGET_USER_IP];
 		}
 		
 		
@@ -466,10 +498,28 @@ public class Messages
 			return mChatMessageContents;
 		}
 		
+		public String getChatMessageUser()
+		{
+			return mUsername;
+		}
+		
+		public String getSourceUserIP()
+		{
+			return mSourceUserIp;
+		}
+		
+		public String getTargetUserIP()
+		{
+			return mTargetUserIp;
+		}
+		
 		public String toString()
 		{
 			return MSG_PREFIX_CHAT_MESSAGE + MSG_PARAMS_SEPARATOR +
-						mChatMessageContents;
+					mUsername + MSG_PARAMS_SEPARATOR +
+					mSourceUserIp + MSG_PARAMS_SEPARATOR +
+					mTargetUserIp + MSG_PARAMS_SEPARATOR +
+					mChatMessageContents;
 		}
 	}
 //	public static String createMessageAskForUsers()

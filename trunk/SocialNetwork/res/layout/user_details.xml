@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
 	xmlns:android="http://schemas.android.com/apk/res/android"
-	android:layout_width="wrap_content"
-	android:layout_height="wrap_content" android:orientation="vertical">
+	android:layout_height="wrap_content" android:orientation="vertical" android:layout_width="fill_parent">
 
 	<LinearLayout
 		android:id="@+id/LinearLayoutPictureAndMainDetails"
@@ -32,15 +31,71 @@
 			android:layout_height="wrap_content">
 		</TextView>
 		
-	</LinearLayout><TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/TextViewUserDetailsDateBirthLabel" android:text="Date of Birth :" android:layout_marginTop="20sp"></TextView><DatePicker android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/DatePickerUserDetailsDateBirth" android:clickable="false"></DatePicker><TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/TextViewUserDetailsHobbiesLabel" android:text="Hobbies :" android:layout_marginTop="10sp"></TextView>
+	</LinearLayout>
+	
+	<TextView
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:id="@+id/TextViewUserDetailsDateBirthLabel"
+		android:text="Date of Birth :"
+		android:layout_marginTop="20sp">
+	</TextView>
+	
+	<DatePicker
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:id="@+id/DatePickerUserDetailsDateBirth"
+		android:layout_gravity="center_horizontal">
+	</DatePicker>
+	
+	<TextView
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:id="@+id/TextViewUserDetailsHobbiesLabel"
+		android:text="Hobbies :"
+		android:layout_marginTop="10sp">
+	</TextView>
+
+	<EditText
+		android:text="Hobbies"
+		android:id="@+id/EditTextUserDetailsHobbies"
+		android:layout_height="wrap_content"
+		android:layout_width="fill_parent"
+		android:maxLines="3"
+		android:scrollbars="vertical">
+	</EditText>
+	
+	<TextView
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:id="@+id/TextViewUserDetailsHobbies"
+		android:text="Hobbies"
+		android:visibility="gone">
+	</TextView>
+	
+	<TextView
+		android:text="Favorite Music :"
+		android:id="@+id/TextViewUserDetailsFavoriteMusicLabel"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_marginTop="10sp">
+	</TextView>
+	
+	<EditText
+		android:text="Favorite Music"
+		android:id="@+id/EditTextUserDetailsFavoriteMusic"
+		android:layout_height="wrap_content"
+		android:layout_width="fill_parent"
+		android:maxLines="3"
+		android:scrollbars="vertical">
+	</EditText>
+	
+	<TextView
+		android:text="Favorite Music"
+		android:id="@+id/TextViewUserDetailsFavoriteMusic"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content" android:visibility="gone">
+	</TextView>
 
 
-
-
-
-
-<TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/TextViewUserDetailsHobbies" android:text="Hobbies"></TextView>
-
-
-<Button android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/fileBrowser" android:text="Load user image file"></Button>
 </LinearLayout>
