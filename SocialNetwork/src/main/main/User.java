@@ -4,6 +4,9 @@ import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.StringTokenizer;
 
+import android.app.Application;
+import android.content.Context;
+
 
 public class User
 {
@@ -39,7 +42,8 @@ public class User
 	// TODO : Add a picture to the user
 	
 	// TODO : Add all the other needed fields
-	//	private String mHobbies;
+	private String mHobbies = "";
+	private String mFavoriteMusic = "";
 
 	private long mLastPongTime = 0;
 	private String mIPaddress;
@@ -135,6 +139,17 @@ public class User
 		return mLastPongTime;
 	}
 	
+	public String getHobbies()
+	{
+		return mHobbies;
+	}
+	
+	public String getFavoriteMusic()
+	{
+		return mFavoriteMusic;
+	}
+	
+	
 	public void setFullName(String newFullName)
 	{
 		String[] nameParts = newFullName.split(" ");
@@ -186,6 +201,16 @@ public class User
 	public void setLastPongTime(long newLastPongTime)
 	{
 		mLastPongTime = newLastPongTime;
+	}
+	
+	public void setHobbies(String newHobbies)
+	{
+		mHobbies = newHobbies;
+	}
+	
+	public void setFavoriteMusic(String newFavoriteMusic)
+	{
+		mFavoriteMusic = newFavoriteMusic;
 	}
 	
 	

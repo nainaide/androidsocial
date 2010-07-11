@@ -14,10 +14,8 @@ import java.io.OutputStreamWriter;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
-import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Dictionary;
@@ -29,7 +27,6 @@ import java.util.List;
 import main.main.Messages.MessageChatMessage;
 import android.app.Application;
 import android.content.Context;
-import android.graphics.LinearGradient;
 import android.net.wifi.WifiManager;
 import android.os.Message;
 import android.util.Log;
@@ -68,7 +65,7 @@ public class ApplicationSocialNetwork extends Application
 	private WifiManager mWifiManager;
 	private Thread mThreadClientSender = null;
 	private Thread mThreadClientReceiver = null;
-	private Thread mThreadLeaderSocketListener = null;
+//	private Thread mThreadLeaderSocketListener = null;
 	
 	public OSFilesManager mOSFilesManager = null;
 
@@ -290,13 +287,14 @@ public class ApplicationSocialNetwork extends Application
 			case LEADER:
 			{
 				Log.d(LOG_TAG, "About to open a leader socket listner");
-				if (mThreadLeaderSocketListener == null)
-				{
-					mThreadLeaderSocketListener = new Thread(new LeaderSocketListener());
-					mThreadLeaderSocketListener.start();
-				}
+//				if (mThreadLeaderSocketListener == null)
+//				{
+//					mThreadLeaderSocketListener = new Thread(new LeaderSocketListener());
+//					mThreadLeaderSocketListener.start();
+//				}
 				
 				setMyIPAddress(IP_LEADER);
+				
 				Log.d(LOG_TAG, "Set my ip as leader");
 				break;
 			}
@@ -329,13 +327,13 @@ Log.d(LOG_TAG, "Opened a socket to the leader");
 		// Start the threads for sending and receiving messages
 		if (mThreadClientReceiver == null)
 		{
-			mThreadClientReceiver = new Thread(new ClientReceiver());
+			mThreadClientReceiver = new Thread(new ThreadMessageLoop());
 			mThreadClientReceiver.start();
 		}
 
 		if (mThreadClientSender == null)
 		{
-			mThreadClientSender = new Thread(new ClientSender());
+			mThreadClientSender = new Thread(new ThreadStaleChecker());
 			mThreadClientSender.start();
 		}
 	}
@@ -371,7 +369,7 @@ Log.d(LOG_TAG, "Opened a socket to the leader");
 			
 			mThreadClientReceiver.interrupt();
 			mThreadClientSender.interrupt();
-			mThreadLeaderSocketListener.interrupt();
+//			mThreadLeaderSocketListener.interrupt();
 		}
 		catch (Exception e)
 		{
@@ -447,46 +445,46 @@ Log.d(LOG_TAG, "Opened a socket to the leader");
 		mMe.setIPAddress(IPaddress);	    	
 	}
 
-	private class LeaderSocketListener implements Runnable
-	{
-		// @Override
-		public void run()
-		{
-			try
-			{ 
-				ServerSocket serverSocket = new ServerSocket(PORT);
-				
-				// Set a time out for listening for new connections, so that if the leader logs out, this thread
-				// won't continue running
-				serverSocket.setSoTimeout(TIMEOUT_SOCKET_ACCEPT);
-				
-				while (mCurrState == NetControlState.LEADER && !Thread.currentThread().isInterrupted())
-				{
-					try
-					{
-						Socket socket = serverSocket.accept();
-						
-Log.d(LOG_TAG, "A client opened a connection");
-
-						// A new connection was made. Add it to the leader's global map of IP to Socket
-						String remoteIP = socket.getInetAddress().getHostAddress();
-						mMapIPToSocket.put(remoteIP, socket);
-					}
-					catch (SocketTimeoutException s)
-					{
-						// The socket timed out while listening to new connections. Try again
-//Log.d(LOG_TAG, "Connection accepting timed out");
-					}
-				}
-			}
-			catch (IOException e)
-			{
-				e.printStackTrace();
-			}
-		}
-	}
+//	private class LeaderSocketListener implements Runnable
+//	{
+//		// @Override
+//		public void run()
+//		{
+//			try
+//			{ 
+//				ServerSocket serverSocket = new ServerSocket(PORT);
+//				
+//				// Set a time out for listening for new connections, so that if the leader logs out, this thread
+//				// won't continue running
+//				serverSocket.setSoTimeout(TIMEOUT_SOCKET_ACCEPT);
+//				
+//				while (mCurrState == NetControlState.LEADER && !Thread.currentThread().isInterrupted())
+//				{
+//					try
+//					{
+//						Socket socket = serverSocket.accept();
+//						
+//Log.d(LOG_TAG, "A client opened a connection");
+//
+//						// A new connection was made. Add it to the leader's global map of IP to Socket
+//						String remoteIP = socket.getInetAddress().getHostAddress();
+//						mMapIPToSocket.put(remoteIP, socket);
+//					}
+//					catch (SocketTimeoutException s)
+//					{
+//						// The socket timed out while listening to new connections. Try again
+////Log.d(LOG_TAG, "Connection accepting timed out");
+//					}
+//				}
+//			}
+//			catch (IOException e)
+//			{
+//				e.printStackTrace();
+//			}
+//		}
+//	}
 	
-	private class ClientSender implements Runnable
+	private class ThreadStaleChecker implements Runnable
 	{
 		// @Override
 		public void run()
@@ -594,7 +592,7 @@ Log.d(LOG_TAG, "There's a stale user :" + currUser.getFullName());
 	}
 
 
-	private class ClientReceiver implements Runnable
+	private class ThreadMessageLoop implements Runnable
 	{
 
 //		private String LOCAL_HOST = ""; //InetAddress.getLocalHost().getHostAddress(); //"127.0.0.1";
@@ -624,7 +622,7 @@ Log.d(LOG_TAG, "There's a stale user :" + currUser.getFullName());
 //			System.out.println(in.readLine());
 	              
 	              
-			socket = getDatagramSocket();
+			socket = createDatagramSocket();
 
 			while (!Thread.currentThread().isInterrupted())
 			{
@@ -637,209 +635,144 @@ Log.d(LOG_TAG, "There's a stale user :" + currUser.getFullName());
 					
 Log.d(LOG_TAG, "Recevied Msg : " + strMsgReceived);
 
-					//if (packet.getAddress().getHostAddress().equals(mMe.getIPAddress()))
-					//{
-						// The packet was received from me
-						// TODO : What to do ?
-					//}
-					//else
-					//{
-						String msgPrefix = Messages.getPrefix(strMsgReceived);
-						Messages.Message msgReceived = new Messages.Message(strMsgReceived);
+					String msgPrefix = Messages.getPrefix(strMsgReceived);
+					Messages.Message msgReceived = new Messages.Message(strMsgReceived);
+					
+					
+					if (msgPrefix.equals(Messages.MSG_PREFIX_NEW_USER))
+					{
+						Messages.MessageNewUser msgNewUser = new Messages.MessageNewUser(msgReceived);
 						
-						if (msgPrefix.equals(Messages.MSG_PREFIX_NEW_USER))
+						if (mCurrState == NetControlState.LEADER)
 						{
-						}
-						else if (msgPrefix.equals(Messages.MSG_PREFIX_USER_DISCONNECTED))
-						{
-						}
-						else if (msgPrefix.equals(Messages.MSG_PREFIX_NEW_USER))
-						{
-						}
-						else if (msgPrefix.equals(Messages.MSG_PREFIX_NEW_USER))
-						{
-						}
-						else if (msgPrefix.equals(Messages.MSG_PREFIX_NEW_USER))
-						{
-						}
-						else if (msgPrefix.equals(Messages.MSG_PREFIX_NEW_USER))
-						{
-						}
-						else if (msgPrefix.equals(Messages.MSG_PREFIX_NEW_USER))
-						{
-						}
-						else if (msgPrefix.equals(Messages.MSG_PREFIX_NEW_USER))
-						{
-						}
-						else if (msgPrefix.equals(Messages.MSG_PREFIX_NEW_USER))
-						{
-						}
-						else if (msgPrefix.equals(Messages.MSG_PREFIX_NEW_USER))
-						{
-						}
+							String ipAddressNewUser = msgNewUser.getIPAddress();
+//								User newUser = new User(msgNewUser);
 
-						
-// ********************* BEGIN ****************************************************						
-						if (mCurrState == NetControlState.CLIENT)
-						{
-//							if (msgPrefix.equals(Messages.MSG_PREFIX_NEW_USER_REPLY))
-//							{
-//								// Get the leader's IP
-//								String leaderIP = new Messages.MessageNewUserReply(msgReceived).getLeaderIP(); // Messages.getMessageParamByIndex()
-//								
-////								mLeaderIP = leaderIP;
-//							}
-							if (msgPrefix.equals(Messages.MSG_PREFIX_NEW_USER))
+							// Send the new user a "NewUser" message for every other client so he knows them
+							for (User currUser : mMapIPToUser.values())
 							{
-								Messages.MessageNewUser msgNewUser = new Messages.MessageNewUser(msgReceived);
+								Messages.MessageNewUser msgNewUserOfExistingUserForNewcomerToKnow = new Messages.MessageNewUser(currUser);
 								
-								// Check that the new user isn't me (When a user joins, the leader broadcasts it so he will
-								//                                   also get the message about it, and should ignore it)
-								if (msgNewUser.getIPAddress().equals(mMe.getIPAddress()) == false)
-								{
-									User newUser = new User(msgNewUser);
-									
-									addUser(newUser);
-								}
+								sendMessage(msgNewUserOfExistingUserForNewcomerToKnow.toString(), ipAddressNewUser);
 							}
-							else if (msgPrefix.equals(Messages.MSG_PREFIX_USER_DISCONNECTED))
-							{
-								Messages.MessageUserDisconnected msgUserDisconnected = new Messages.MessageUserDisconnected(msgReceived);
-								User userDisconnected = mMapIPToUser.get(msgUserDisconnected.getIPAddress());
-								
-								removeUser(userDisconnected.getIPAddress());
-							}
-							else if (msgPrefix.equals(Messages.MSG_PREFIX_GIVE_DETAILS))
-							{
-								// Send a UserDetails message to the leader with my details
-								Messages.MessageGiveDetails msgGiveDetails = new Messages.MessageGiveDetails(msgReceived);
-								Messages.MessageUserDetails msgUserDetails = new Messages.MessageUserDetails(mMe, msgGiveDetails.getAskerIPAddress(), "Stam Hobbies", "Stam Fav Music");
-								
-								sendMessage(msgUserDetails.toString(), IP_LEADER); //mLeaderIP);
-							}
-							else if (msgPrefix.equals(Messages.MSG_PREFIX_USER_DETAILS))
-							{
-								Messages.MessageUserDetails msgUserDetails = new Messages.MessageUserDetails(msgReceived);
-//								notifyActivityUserDetails(msgUserDetails.toString());
-								notifyActivityUserDetails(msgUserDetails);
-								// TODO : Complete this
-							}
-							else if (msgPrefix.equals(Messages.MSG_PREFIX_CHAT_MESSAGE))
-							{
-								Messages.MessageChatMessage msgChat = new Messages.MessageChatMessage(msgReceived);
-								Log.d(LOG_TAG, "got chat and will update, source is : "+msgChat.getSourceUserIP());
-								UpdateOpenChats(msgChat.getChatMessageUser(),msgChat.getSourceUserIP(), msgChat.getChatMessageContents());
-								notifyActivityChat(msgChat);
-								// TODO : Complete this
-							}
-							else if (msgPrefix.equals(Messages.MSG_PREFIX_PING))
-							{
-								// Send a pong message to show I'm alive
-								Messages.MessagePong msgPong = new Messages.MessagePong(mMe.getIPAddress());
-								
-								sendMessageUDP(msgPong.toString(), IP_LEADER); //mLeaderIP);
-								
-								mLeaderLastPing = System.currentTimeMillis();
-							}
+							
+							// Send the user a "NewUser" message for me (The leader)
+							Messages.MessageNewUser msgNewUserLeader = new Messages.MessageNewUser(mMe);
+							
+							sendMessage(msgNewUserLeader.toString(), ipAddressNewUser);
+							
+							// Broadcast to everybody that this user has joined us, so they know him
+							broadcast(msgNewUser.toString());
 						}
 						
-						
-						else if (mCurrState == NetControlState.LEADER)
+						// Check that the new user isn't me (When a user joins, the leader broadcasts it so he will
+						//                                   also get the message about it, and should ignore it)
+						// Note : The condition is only needed when we're not the leader (Otherwise we're obviously not the new user)
+						if (msgNewUser.getIPAddress().equals(mMe.getIPAddress()) == false)
 						{
-							if (msgPrefix.equals(Messages.MSG_PREFIX_NEW_USER))
-							{
-								Messages.MessageNewUser msgNewUser = new Messages.MessageNewUser(msgReceived);
-								String ipAddressNewUser = msgNewUser.getIPAddress();
-								User newUser = new User(msgNewUser);
-
-								// Send back to the user a "NewUserReply" message so he'd know my IP
-//								Messages.MessageNewUserReply msgNewUserReply = new Messages.MessageNewUserReply(mMe.getIPAddress());
-//								
-//								sendMessage(msgNewUserReply.toString(), ipAddressNewUser);
-								
-								// Send the new user a "NewUser" message for every other client so he knows them
-								for (User currUser : mMapIPToUser.values())
-								{
-									Messages.MessageNewUser msgNewUserOfExistingUserForNewcomerToKnow = new Messages.MessageNewUser(currUser);
-									
-									sendMessage(msgNewUserOfExistingUserForNewcomerToKnow.toString(), ipAddressNewUser);
-								}
-								
-								// Send the user a "NewUser" message for me (The leader)
-								Messages.MessageNewUser msgNewUserLeader = new Messages.MessageNewUser(mMe);
-								
-								sendMessage(msgNewUserLeader.toString(), ipAddressNewUser);
-								
-								// Broadcast to everybody that this user has joined us, so they know him
-								broadcast(msgNewUser.toString());
-								
-								// Add the new users to my clients list
-								addUser(newUser);
-//								mMapIPToUser.put(ipAddressNewUser, newUser);
-//								notifyActivities();
-							}
-							else if (msgPrefix.equals(Messages.MSG_PREFIX_GET_USER_DETAILS))
-							{
-								Messages.MessageGetUserDetails msgGetUserDetails = new Messages.MessageGetUserDetails(msgReceived);
-								String targetIPAddress = msgGetUserDetails.getTargetIPAddress();
-//								String askerIPAddress = socket.getInetAddress().getHostAddress();
-								String askerIPAddress = packet.getAddress().getHostAddress();
-								Messages.MessageGiveDetails msgGiveDetails = new Messages.MessageGiveDetails(askerIPAddress);
-								
-								sendMessage(msgGiveDetails.toString(), targetIPAddress);
-								
-							}
-							else if (msgPrefix.equals(Messages.MSG_PREFIX_USER_DETAILS))
-							{
-								// Get the asker's IP and send him the details
-								Messages.MessageUserDetails msgUserDetails = new Messages.MessageUserDetails(msgReceived);
-								String askerIP = msgUserDetails.getAskerIPAddress();
-								
-Log.d(LOG_TAG, "Leader got user details. askerIP = " + askerIP + ", getMyIP() = " + getMyIP());
-
-								if (askerIP.equals(getMyIP())) // || askerIP.equals(LOCAL_HOST))
-								{
-									// If I'm the leader and I asked for the details, process them
-//									notifyActivityUserDetails(msgUserDetails.toString());
-									notifyActivityUserDetails(msgUserDetails);
-								}
-								else
-								{
-									// If a client asked for the details, send them to him
-									sendMessage(strMsgReceived, askerIP);
-								}
-							}
-							else if (msgPrefix.equals(Messages.MSG_PREFIX_PONG))
-							{
-								Messages.MessagePong msgPong = new Messages.MessagePong(msgReceived);
-								String ipAddressPongged = msgPong.getIPAddress();
-								
-								User userPongged = mMapIPToUser.get(ipAddressPongged);
-								
-								userPongged.setLastPongTime(System.currentTimeMillis());
-							}
-							else if (msgPrefix.equals(Messages.MSG_PREFIX_CHAT_MESSAGE))
-							{
-								Messages.MessageChatMessage msgChat = new Messages.MessageChatMessage(msgReceived);
-								String targetIP = msgChat.getTargetUserIP();
-
-								if (targetIP.equals(getMyIP())) // || targetIP.equals(LOCAL_HOST))
-								{
-Log.d(LOG_TAG, "Chat for leader");									
-									UpdateOpenChats(msgChat.getChatMessageUser(),msgChat.getSourceUserIP(), msgChat.getChatMessageContents());
-									notifyActivityChat(msgChat);
-								}
-								else
-								{
-Log.d(LOG_TAG, "Chat NOT for leader, passing on");									
-									// If a client asked for the details, send them to him
-									sendMessage(strMsgReceived, targetIP);
-								}
-							}
+							User newUser = new User(msgNewUser);
+							
+							addUser(newUser);
 						}
-// ********************* END ****************************************************						
 					}
-				//}
+					else if (msgPrefix.equals(Messages.MSG_PREFIX_USER_DISCONNECTED))
+					{
+						Messages.MessageUserDisconnected msgUserDisconnected = new Messages.MessageUserDisconnected(msgReceived);
+						User userDisconnected = mMapIPToUser.get(msgUserDisconnected.getIPAddress());
+
+						if (mCurrState == NetControlState.LEADER)
+						{
+							// Broadcast to everybody that this user has disconnected, so they remove him from their list
+							broadcast(msgUserDisconnected.toString());
+						}
+						
+						removeUser(userDisconnected.getIPAddress());
+					}
+					else if (msgPrefix.equals(Messages.MSG_PREFIX_GET_USER_DETAILS)) // Only the leader gets this message
+					{
+						Messages.MessageGetUserDetails msgGetUserDetails = new Messages.MessageGetUserDetails(msgReceived);
+						String targetIPAddress = msgGetUserDetails.getTargetIPAddress();
+						String askerIPAddress = packet.getAddress().getHostAddress();
+						
+						// Check if the target user (whose details the asker wants) is the leader itself
+						if (targetIPAddress.equals(getMyIP()))
+						{
+							// Send the asker my details
+							Messages.MessageUserDetails msgUserDetails = new Messages.MessageUserDetails(mMe, askerIPAddress);
+							
+							sendMessage(msgUserDetails.toString(), askerIPAddress);
+						}
+						else
+						{
+							// Send the target user that another user wants his details
+							Messages.MessageGiveDetails msgGiveDetails = new Messages.MessageGiveDetails(askerIPAddress);
+							
+							sendMessage(msgGiveDetails.toString(), targetIPAddress);
+						}								
+					}
+					else if (msgPrefix.equals(Messages.MSG_PREFIX_GIVE_DETAILS)) // Only a client gets this message
+					{
+						// Send a UserDetails message to the leader with my details
+						Messages.MessageGiveDetails msgGiveDetails = new Messages.MessageGiveDetails(msgReceived);
+						Messages.MessageUserDetails msgUserDetails = new Messages.MessageUserDetails(mMe, msgGiveDetails.getAskerIPAddress()); //, "Stam Hobbies", "Stam Fav Music");
+						
+						sendMessage(msgUserDetails.toString(), IP_LEADER);
+					}
+					else if (msgPrefix.equals(Messages.MSG_PREFIX_USER_DETAILS))
+					{
+						Messages.MessageUserDetails msgUserDetails = new Messages.MessageUserDetails(msgReceived);
+						String askerIP = msgUserDetails.getAskerIPAddress();
+						
+						if (mCurrState == NetControlState.LEADER && askerIP.equals(getMyIP()) == false)
+						{
+							// If it wasn't the leader who asked for the user's details, then pass the details to the asker
+							sendMessage(strMsgReceived, askerIP);
+						}
+						else
+						{
+							// Else, if we're the leader but we're the ones who asked for the details, or if we're a client
+							// (So if we got here, we're surely the ones who asked for them), process the data
+							notifyActivityUserDetails(msgUserDetails);
+						}
+					}
+					else if (msgPrefix.equals(Messages.MSG_PREFIX_CHAT_MESSAGE))
+					{
+						Messages.MessageChatMessage msgChat = new Messages.MessageChatMessage(msgReceived);
+						String targetIP = msgChat.getTargetUserIP();
+
+						// If the message isn't for the leader, then pass it to the target user
+						if (mCurrState == NetControlState.LEADER && targetIP.equals(getMyIP()) == false)
+						{
+							sendMessage(strMsgReceived, targetIP);
+						}
+						else
+						{
+							// If either we're the leader and the message is for us, or we're a client (So if we're here,
+							// the message surely is for us), process the data
+							Log.d(LOG_TAG, "got chat and will update, source is : "+msgChat.getSourceUserIP());
+							UpdateOpenChats(msgChat.getChatMessageUser(),msgChat.getSourceUserIP(), msgChat.getChatMessageContents());
+							notifyActivityChat(msgChat);
+						}
+					}
+					else if (msgPrefix.equals(Messages.MSG_PREFIX_PING)) // Only a client gets this message
+					{
+						// Send a pong message to show I'm alive
+						Messages.MessagePong msgPong = new Messages.MessagePong(mMe.getIPAddress());
+						
+						sendMessageUDP(msgPong.toString(), IP_LEADER); //mLeaderIP);
+						
+						mLeaderLastPing = System.currentTimeMillis();
+					}
+					else if (msgPrefix.equals(Messages.MSG_PREFIX_PONG)) // Only the leader gets this message
+					{
+						Messages.MessagePong msgPong = new Messages.MessagePong(msgReceived);
+						String ipAddressPongged = msgPong.getIPAddress();
+						
+						User userPongged = mMapIPToUser.get(ipAddressPongged);
+						
+						userPongged.setLastPongTime(System.currentTimeMillis());
+					}
+				}
 				catch (IOException e)
 				{
 					e.printStackTrace();
@@ -863,10 +796,9 @@ Log.d(LOG_TAG, "Chat NOT for leader, passing on");
 				msg.obj = msgChat; 
 				ActivityChat.instance.getUpdateHandler().sendMessage(msg);
 			}
-			
 		}
 
-		private DatagramSocket getDatagramSocket()
+		private DatagramSocket createDatagramSocket()
 		{
 			DatagramSocket socket = null;
 			boolean done = false;
@@ -900,12 +832,6 @@ Log.d(LOG_TAG, "Chat NOT for leader, passing on");
 			
 			return socket;
 		}
-		
-//		private void broadcastMessage(String string)
-//		{
-//			// TODO Auto-generated method stub
-//			
-//		}
 	}
 
 
