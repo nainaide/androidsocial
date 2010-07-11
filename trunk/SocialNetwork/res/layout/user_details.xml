@@ -5,9 +5,8 @@
 
 	<LinearLayout
 		android:id="@+id/LinearLayoutPictureAndMainDetails"
-		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
-		android:orientation="horizontal">
+		android:orientation="horizontal" android:layout_width="fill_parent">
 		
 		<ImageView
 			android:id="@+id/ImageViewUserPicture"
@@ -28,8 +27,15 @@
 			android:id="@+id/TextViewMainDetails"
 			android:text="@+id/TextViewMainDetails"
 			android:layout_width="wrap_content"
-			android:layout_height="wrap_content">
+			android:layout_height="wrap_content" android:layout_weight="1">
 		</TextView>
+		
+		<Button
+			android:text="Chat"
+			android:id="@+id/ButtonUserDetailsChat"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content" android:minWidth="70sp">
+		</Button>
 		
 	</LinearLayout>
 	
@@ -97,5 +103,26 @@
 		android:layout_height="wrap_content" android:visibility="gone">
 	</TextView>
 
+	<LinearLayout
+		android:id="@+id/LinearLayoutUserDetailsOKCancelButtons"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_gravity="center_horizontal"
+		android:layout_marginTop="20sp">
+	
+		<Button
+			android:text="OK"
+			android:id="@+id/ButtonUserDetailsOK"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content" android:minWidth="@dimen/min_width_button">
+		</Button>
+		
+		<Button
+			android:text="Cancel"
+			android:id="@+id/ButtonUserDetailsCancel"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content" android:minWidth="@dimen/min_width_button">
+		</Button>
+	</LinearLayout>
 
 </LinearLayout>

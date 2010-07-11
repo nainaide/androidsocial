@@ -4,7 +4,7 @@
 	<dimen name="SizeTitle">30sp</dimen>
 	<dimen name="SizeMarginUnderTitles">30sp</dimen>
 	<dimen name="min_width_edit_text">250sp</dimen>
-	<dimen name="width_button">100sp</dimen>
+	<dimen name="min_width_button">100sp</dimen>
 	
 	<string name="app_name">Social Application</string>
 	<string name="no_users_are_connected">No users are currently connected to this network</string>

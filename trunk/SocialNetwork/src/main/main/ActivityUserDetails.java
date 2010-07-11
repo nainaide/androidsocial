@@ -8,6 +8,9 @@ import android.os.Message;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -30,6 +33,9 @@ public class ActivityUserDetails extends Activity
 //    private TextView mTextViewFavoriteMusic = null;
     private EditText mEditTextFavoriteMusic = null;
     private DatePicker mDatePickerBirth = null;
+    private Button mButtonChat = null;
+    private Button mButtonOK = null;
+    private Button mButtonCancel = null;
     
 	private Handler mHandler = null;
     
@@ -49,19 +55,27 @@ public class ActivityUserDetails extends Activity
         
         String[] arrMainData = extras.getStringArray(getResources().getString(R.string.extra_key_main_data));
         lookingAtUserIp = extras.getString("ActivityDetails.userIp");
-        Log.d(LOG_TAG, "on create lookingAtUserIp is : "+lookingAtUserIp);
         mUserName = extras.getString("ActivityDetails.userName");
+        Log.d(LOG_TAG, "on create lookingAtUserIp is : "+lookingAtUserIp);
+        
         mTextViewMainDetails = (TextView) findViewById(R.id.TextViewMainDetails);
-//        mEditTextHobbies = (TextView) findViewById(R.id.TextViewUserDetailsHobbies);
+        
+//        mTextViewHobbies = (TextView) findViewById(R.id.TextViewUserDetailsHobbies);
         mEditTextHobbies = (EditText) findViewById(R.id.EditTextUserDetailsHobbies);
-//        mTextViewHobbies.setVisibility(View.VISIBLE);
         mEditTextHobbies.setText(FIELD_NOT_FILLED);
         
-//        mEditTextFavoriteMusic = (TextView) findViewById(R.id.TextViewUserDetailsFavoriteMusic);
+//        mTextViewFavoriteMusic = (TextView) findViewById(R.id.TextViewUserDetailsFavoriteMusic);
         mEditTextFavoriteMusic = (EditText) findViewById(R.id.EditTextUserDetailsFavoriteMusic);
         mEditTextFavoriteMusic.setText(FIELD_NOT_FILLED);
         
         mDatePickerBirth = (DatePicker) findViewById(R.id.DatePickerUserDetailsDateBirth);
+        
+        mButtonChat = (Button) findViewById(R.id.ButtonUserDetailsChat);
+        mButtonOK =  (Button) findViewById(R.id.ButtonUserDetailsOK);
+        mButtonCancel =  (Button) findViewById(R.id.ButtonUserDetailsCancel);
+        
+        setListenersAndHandlers();
+
         setAreDetailsEditable(false);
 
         String mainData = "";
@@ -76,6 +90,40 @@ public class ActivityUserDetails extends Activity
         // TODO : Also get and show the user picture
         ImageView imageViewUserPicture = (ImageView) findViewById(R.id.ImageViewUserPicture);
         imageViewUserPicture.setImageResource(R.drawable.icon);
+    }
+
+    public void onResume()
+    {
+    	
+    }
+    
+	private void setListenersAndHandlers()
+	{
+		mButtonChat.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View view)
+			{
+				chat();
+			}
+		});
+        
+        mButtonOK.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View view)
+			{
+				// TODO Auto-generated method stub
+				
+			}
+		});
+        
+        mButtonCancel.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View view)
+			{
+				// TODO Auto-generated method stub
+				
+			}
+		});
         
     	mHandler = new Handler() {
     		public void handleMessage(Message msg)
@@ -86,9 +134,7 @@ public class ActivityUserDetails extends Activity
     			updateUserDetails(msgUserDetails);
     		}
     	};
-    	
-        // TODO : Request all the details from the selected user
-    }        
+	}        
 
     private void setAreDetailsEditable(boolean isEditable)
     {
@@ -97,6 +143,24 @@ public class ActivityUserDetails extends Activity
 		mDatePickerBirth.setEnabled(isEditable);
 		mEditTextFavoriteMusic.setEnabled(isEditable);
 		mEditTextHobbies.setEnabled(isEditable);
+		
+		int visibilityEditingViews = View.GONE;
+		int visibilityViewingViews = View.VISIBLE;
+		
+		if (isEditable)
+		{
+			visibilityEditingViews = View.VISIBLE;
+			visibilityViewingViews = View.GONE;
+		}
+		
+//		mEditTextFavoriteMusic.setVisibility(visibilityEditingViews);
+//		mEditTextHobbies.setVisibility(visibilityEditingViews);
+		mButtonOK.setVisibility(visibilityEditingViews);
+		mButtonCancel.setVisibility(visibilityEditingViews);
+		
+//		mTextViewFavoriteMusic.setVisibility(visibilityViewingViews);
+//		mTextViewHobbies.setVisibility(visibilityViewingViews);
+		mButtonChat.setVisibility(visibilityViewingViews);
 	}
 
 	@Override
