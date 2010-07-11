@@ -373,10 +373,10 @@ public class Messages
 		private String mFavoriteMusic = "Metal, Country and Britney Spears";
 		
 		
-		public MessageUserDetails(String askerIPAddress)
-		{
-			mAskerIPAddress = askerIPAddress;
-		}
+//		public MessageUserDetails(String askerIPAddress)
+//		{
+//			mAskerIPAddress = askerIPAddress;
+//		}
 		
 		public MessageUserDetails(Message message)
 		{
@@ -390,13 +390,16 @@ public class Messages
 //			mFavoriteMusic = arrParams[INDEX_PARAM_FAVORITE_MUSIC];
 		}
 		
-		public MessageUserDetails(User user, String askerIPAddress, String hobbies, String favoriteMusic)
+		public MessageUserDetails(User user, String askerIPAddress) //, String hobbies, String favoriteMusic)
 		{
 			mIPAddress = user.getIPAddress();
 			mAskerIPAddress = askerIPAddress;
 			// TODO : Uncomment these
 //			mHobbies = hobbies;
 //			mFavoriteMusic = favoriteMusic;
+			
+			mHobbies = user.getHobbies();
+			mFavoriteMusic = user.getFavoriteMusic();
 		}
 		
 		
