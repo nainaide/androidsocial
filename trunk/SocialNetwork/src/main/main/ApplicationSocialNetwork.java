@@ -41,13 +41,13 @@ public class ApplicationSocialNetwork extends Application
 	private final int NAP_TIME_ADHOC_CLIENT_DISABLE = 1000;
 	private final int NAP_TIME_ADHOC_SERVER_ENABLE = 1000;
 	private final int NAP_TIME_ADHOC_SERVER_DISABLE = 1000;
-	private final int NAP_TIME_RECEIVER = 1000;
+	private final int NAP_TIME_STALE_CHECKER = 1000;
 	private final int NAP_TIME_SENDER = 1000;
 	private final int NAP_TIME_GET_DATAGRAM_SOCKET = 1000;
 	private final int NAP_TIME_TOAST_AND_EXIT = 3000;
 	
-	private final long TIMEOUT_STALE_CLIENT = 5 * NAP_TIME_RECEIVER;
-	private final long TIMEOUT_STALE_LEADER = 5 * NAP_TIME_RECEIVER;
+	private final long TIMEOUT_STALE_CLIENT = 5 * NAP_TIME_STALE_CHECKER;
+	private final long TIMEOUT_STALE_LEADER = 5 * NAP_TIME_STALE_CHECKER;
 	private final int  TIMEOUT_SOCKET_ACCEPT = 30000;
 
 	public final String USER_FILE_NAME_PREFIX = "user_";
@@ -77,7 +77,6 @@ public class ApplicationSocialNetwork extends Application
 
 	private User mMe = null;
 	private HashMap<String, User> mMapIPToUser = null;
-//	private String mLeaderIP = "";
 	private long mLeaderLastPing = -1;
 	private String CHAT_SEPERATOR = "@";
 	private boolean mDidRunBefore = false;
@@ -553,6 +552,7 @@ Log.d(LOG_TAG, "Running as client");
 							if (isLeaderStale())
 							{
 								// The leader is dead. We should quit the network, wait a random time and then try to connect again
+Log.d(LOG_TAG, "The leader is stale");
 
 								// TODO : What now ?
 							}
@@ -591,14 +591,14 @@ Log.d(LOG_TAG, "Running as client");
 		
 		private boolean isLeaderStale()
 		{
-			return mLeaderLastPing > TIMEOUT_STALE_LEADER;
+			return (System.currentTimeMillis() - mLeaderLastPing) > TIMEOUT_STALE_LEADER;
 		}
 
 		private void updateStaleClients()
 		{
 			for (User currUser : mMapIPToUser.values())
 			{
-				if ( (currUser.getLastPongTime() - System.currentTimeMillis()) > TIMEOUT_STALE_CLIENT)
+				if ((System.currentTimeMillis() - currUser.getLastPongTime()) > TIMEOUT_STALE_CLIENT)
 				{
 					
 Log.d(LOG_TAG, "There's a stale user :" + currUser.getFullName());
@@ -800,7 +800,7 @@ Log.d(LOG_TAG, "Recevied Msg : " + strMsgReceived);
 						// Send a pong message to show I'm alive
 						Messages.MessagePong msgPong = new Messages.MessagePong(mMe.getIPAddress());
 						
-						sendMessageUDP(msgPong.toString(), IP_LEADER); //mLeaderIP);
+						sendMessageUDP(msgPong.toString(), IP_LEADER);
 						
 						mLeaderLastPing = System.currentTimeMillis();
 					}
@@ -904,33 +904,29 @@ Log.d(LOG_TAG, "Recevied Msg : " + strMsgReceived);
 		{
 			ActivityUsersList.instance.getUpdateHandler().sendMessage(new Message());
 		}
-		
 	}
 
 	private synchronized void notifyActivityUserDetails(Messages.MessageUserDetails msgUserDetails) //String msgUserDetails)
 	{
 Log.d(LOG_TAG, "About to notify ActivityUserDetails. Msg = " + msgUserDetails.toString());
 
-		// TODO : Check if this while is ok
+		// TODO : I think these 2 whiles are not needed anymore. Try to delete
 		while (ActivityUserDetails.instance == null)
 		{
 			// Do nothing. Just wait. If we're in this function, this means that the ActivityUserDetails will shortly appear
 			// so just wait until it does and there's an instance of it
 		}
 		
-//		if (ActivityUserDetails.instance != null)
-//		{
 		while (ActivityUserDetails.instance.getUpdateHandler() == null)
 		{
 		}
 		
-			Message msg = ActivityUserDetails.instance.getUpdateHandler().obtainMessage();
-			msg.obj = msgUserDetails;
+		Message msg = ActivityUserDetails.instance.getUpdateHandler().obtainMessage();
+		msg.obj = msgUserDetails;
 			
 Log.d(LOG_TAG, "Right before notifying ActivityUserDetails");
 
-			ActivityUserDetails.instance.getUpdateHandler().sendMessage(msg);
-//		}
+		ActivityUserDetails.instance.getUpdateHandler().sendMessage(msg);
 	}
 	
 	public String GetOpenChatsIP(String user)
@@ -1028,8 +1024,8 @@ Log.d(LOG_TAG, "Right before notifying ActivityUserDetails");
 //	public synchronized void sendMessage(String message, InetAddress dest)
 	public synchronized void sendMessage(String message, String destIP)
 	{
-		// TODO : Temporarily to see that it works. When it does, sendMessageTCP's contents will be here
-		
+		// TODO : After choosing between UDP and TCP, the only implementation will be here instead of this function call to sendMessageUPD/TCP.
+		//        (If we end up using both, then there WILL be a function call here, calling the default, most used, one)
 		sendMessageUDP(message, destIP);
 	}
 	
@@ -1163,7 +1159,7 @@ Log.d(LOG_TAG, "Sent Msg : " + message);
 
 	public synchronized String getLeaderIP()
 	{
-		return IP_LEADER; //mLeaderIP;
+		return IP_LEADER;
 	}
 	
 	public synchronized String getMyIP()
