@@ -20,22 +20,16 @@ public class ImageManagerRequestHandler {
 	public void handleRequest( Socket socket) {
 		try {
 			InputStream inputStream = socket.getInputStream( );
-			OutputStream outputStream = socket.getOutputStream( );
 			int messageType = inputStream.read( );
 			Runnable handler;
 			if ( (messageType & SEND_USER_IMAGE) != 0) {
-				handler = new ImageSender( inputStream, outputStream);
+				handler = new ImageReceiver( socket);
 			} else {
-				handler = new ImageReceiver( inputStream, outputStream);
+				handler = new ImageSender( socket);
 			}
 			executor.execute(handler);
 		} catch (IOException e) {
 			e.printStackTrace();
-		} finally {
-			try {
-				socket.close( );
-			} catch (IOException e) {
-			}
 		}
 		
 	}

@@ -33,9 +33,10 @@ public class ClientImageSender {
 			inputStream.read(sendBuffer, 0, sendBuffer.length);
 			outputStream = socket.getOutputStream( );
 			outputStream.write( ImageManagerRequestHandler.SEND_USER_IMAGE);
-			outputStream.write( (userName + ";").getBytes( ), 0, (userName + ";").length( ) + 1);
-			outputStream.write(sendBuffer);
-			outputStream.flush( );
+			outputStream.write( (userName + ";").getBytes( ), 0, (userName + ";").length( ));
+			outputStream.write(sendBuffer,  0, sendBuffer.length);
+			if ( !socket.isOutputShutdown( ))
+				outputStream.flush( );
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -62,10 +63,10 @@ public class ClientImageSender {
 			fileOut = new BufferedOutputStream( new FileOutputStream( userName + ".jpg"));
 			outputStream = socket.getOutputStream( );
 			inputStream = socket.getInputStream( );
-			byte ch = 0;
-			outputStream.write( ImageManagerRequestHandler.SEND_USER_IMAGE);
-			outputStream.write( (userName + ";").getBytes( ), 0, (userName + ";").length( ) + 1);
-			while ( ( ch = (byte)inputStream.read()) != -1) {
+			int ch = 0;
+			outputStream.write( ImageManagerRequestHandler.RECEIVE_USER_IMAGE);
+			outputStream.write( (userName + ";").getBytes( ));
+			while ( ( ch = inputStream.read()) != -1) {
 				fileOut.write( ch);
 			}
 			fileOut.flush( );
@@ -85,4 +86,10 @@ public class ClientImageSender {
 			}
 		}
 	}
+	
+	public static void main(String[] args) {
+		ClientImageSender sender = new ClientImageSender( "localhost", 1703);
+		sender.requestImage( "userTest");
+	}
+	
 }
