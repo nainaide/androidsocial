@@ -49,11 +49,15 @@ public class ApplicationSocialNetwork extends Application
 	private final long TIMEOUT_STALE_CLIENT = 5 * NAP_TIME_RECEIVER;
 	private final long TIMEOUT_STALE_LEADER = 5 * NAP_TIME_RECEIVER;
 	private final int  TIMEOUT_SOCKET_ACCEPT = 30000;
-	
+
+	public final String USER_FILE_NAME_PREFIX = "user_";
+	public final String USER_FILE_NAME_SUFFIX = "";
+	public final String USER_FILE_NAME_EXTENSION = "";
+
 	private final String LOG_TAG = "SN.Application";
 	
 	private final String IP_LEADER = "192.168.2.1";
-	private final int PORT = 5678;
+	private final int PORT = 2222;
 	
 	public enum NetControlState
 	{
@@ -76,12 +80,12 @@ public class ApplicationSocialNetwork extends Application
 //	private String mLeaderIP = "";
 	private long mLeaderLastPing = -1;
 	private String CHAT_SEPERATOR = "@";
+	private boolean mDidRunBefore = false;
 	private Dictionary<String ,String > openChats = null;
-	private HashMap<String, Socket> mMapIPToSocket = null;
-	private Socket mSocketToLeader = null;
+//	private HashMap<String, Socket> mMapIPToSocket = null;
+//	private Socket mSocketToLeader = null;
 	
 	boolean mWasWifiEnabledBeforeApp;
-	
 	
 	/** Called when the application is first created. */
 	public void onCreate()
@@ -93,7 +97,7 @@ public class ApplicationSocialNetwork extends Application
 		mWasWifiEnabledBeforeApp = mWifiManager.isWifiEnabled();
 		
 		mMapIPToUser = new HashMap<String, User>();
-		mMapIPToSocket = new HashMap<String, Socket>();
+//		mMapIPToSocket = new HashMap<String, Socket>();
 		openChats = new Hashtable<String, String>();
 
 		// Check for root permissions
@@ -113,11 +117,15 @@ public class ApplicationSocialNetwork extends Application
 
 		mCurrState = NetControlState.NOT_RUNNING;
 
-		resetWifi();
+//		resetWifi();
 //		disableAdhocServer();
 //		disableAdhocClient();
 	}
-
+	public User getMe()
+	{
+		return mMe;
+	}
+	
 	private void resetWifi()
 	{
 		mOSFilesManager.runRootCommand(mOSFilesManager.PATH_APP_DATA_FILES + "/bin/netcontrol stop_dnsmasq");
@@ -286,7 +294,7 @@ public class ApplicationSocialNetwork extends Application
 
 			case LEADER:
 			{
-				Log.d(LOG_TAG, "About to open a leader socket listner");
+Log.d(LOG_TAG, "About to be a leader");
 //				if (mThreadLeaderSocketListener == null)
 //				{
 //					mThreadLeaderSocketListener = new Thread(new LeaderSocketListener());
@@ -302,23 +310,23 @@ public class ApplicationSocialNetwork extends Application
 			case CLIENT:
 			{
 				// Open a socket to the server
-				try
-				{
-Log.d(LOG_TAG, "About to open a socket to the leader");
-					mSocketToLeader = new Socket(IP_LEADER, PORT);
-Log.d(LOG_TAG, "Opened a socket to the leader");
-				}
-//				catch (UnknownHostException e)
+//				try
+//				{
+//Log.d(LOG_TAG, "About to open a socket to the leader");
+//					mSocketToLeader = new Socket(IP_LEADER, PORT);
+//Log.d(LOG_TAG, "Opened a socket to the leader");
+//				}
+////				catch (UnknownHostException e)
+////				{
+////					e.printStackTrace();
+////				}
+//				catch (IOException e)
 //				{
 //					e.printStackTrace();
+//					
+//					// TODO : What to do here ?
+//					toastAndExit("Cannot establish a connection with the network. Exiting");
 //				}
-				catch (IOException e)
-				{
-					e.printStackTrace();
-					
-					// TODO : What to do here ?
-					toastAndExit("Cannot establish a connection with the network. Exiting");
-				}
 				
 				break;
 			}
@@ -354,18 +362,18 @@ Log.d(LOG_TAG, "Opened a socket to the leader");
 				disableAdhocServer();
 			}
 
-			if (mMapIPToSocket != null)
-			{
-				for (Socket currSocket : mMapIPToSocket.values())
-				{
-					currSocket.close();
-				}
-			}
-			
-			if (mSocketToLeader != null)
-			{
-				mSocketToLeader.close();
-			}
+//			if (mMapIPToSocket != null)
+//			{
+//				for (Socket currSocket : mMapIPToSocket.values())
+//				{
+//					currSocket.close();
+//				}
+//			}
+//			
+//			if (mSocketToLeader != null)
+//			{
+//				mSocketToLeader.close();
+//			}
 			
 			mThreadClientReceiver.interrupt();
 			mThreadClientSender.interrupt();
@@ -378,15 +386,39 @@ Log.d(LOG_TAG, "Opened a socket to the leader");
 	}
 
 
-	public void disableWifi()
-	{
-		mWifiManager.setWifiEnabled(false);
-	}
-
-	public void enableWifi()
-	{
-		mWifiManager.setWifiEnabled(true);
-	}
+//	public void disableWifi()
+//	{
+//		boolean isDone = false;
+//		
+//		while (isDone == false && !Thread.currentThread().isInterrupted())
+//		{
+//			mWifiManager.setWifiEnabled(false);
+//			
+//			nap(NAP_TIME_WIFI_ENABLE);
+//			
+//			if (mWifiManager.isWifiEnabled() == false)
+//			{
+//				isDone = true;
+//			}
+//		}
+//	}
+//
+//	public void enableWifi()
+//	{
+//		boolean isDone = false;
+//		
+//		while (isDone == false && !Thread.currentThread().isInterrupted())
+//		{
+//			mWifiManager.setWifiEnabled(true);
+//			
+//			nap(NAP_TIME_WIFI_ENABLE);
+//			
+//			if (mWifiManager.isWifiEnabled())
+//			{
+//				isDone = true;
+//			}
+//		}
+//	}
 
 	public void enableAdhocServer()
 	{
@@ -397,7 +429,9 @@ Log.d(LOG_TAG, "Opened a socket to the leader");
 			// TODO : Notify the user
 			int debug = 3;
 		}
+		Log.d(LOG_TAG, "Running as server");
 		
+		mDidRunBefore = true;
 		mCurrState = NetControlState.LEADER;
 	}
 
@@ -419,12 +453,16 @@ Log.d(LOG_TAG, "Opened a socket to the leader");
 		{
 			// TODO : Notify the user
 			// It doesn't necessarily mean the lease failed
+			int debugPoint = 3;
+			
 		}
 
 		// If I have a new DHCP Address, it means there's a leader who already ran the DHCP server and I'm a client
 		mMyDhcpAddress = mOSFilesManager.getMyDhcpAddress();
 		if (mMyDhcpAddress.length() > 0)
 		{
+Log.d(LOG_TAG, "Running as client");
+			
 			isDiscovered = true;
 			setMyIPAddress(mMyDhcpAddress);
 		}
@@ -576,16 +614,16 @@ Log.d(LOG_TAG, "There's a stale user :" + currUser.getFullName());
 					removeUser(currIPAddress);
 					
 					// Close that user's socket to the leader, and remove its entrance from the map from IP to Socket
-					try
-					{
-						Socket socketToRemove = mMapIPToSocket.get(currIPAddress);
-						socketToRemove.close();
-						mMapIPToSocket.remove(currIPAddress);
-					}
-					catch (IOException e)
-					{
-						e.printStackTrace();
-					}
+//					try
+//					{
+//						Socket socketToRemove = mMapIPToSocket.get(currIPAddress);
+//						socketToRemove.close();
+//						mMapIPToSocket.remove(currIPAddress);
+//					}
+//					catch (IOException e)
+//					{
+//						e.printStackTrace();
+//					}
 				}
 			}
 		}
@@ -680,13 +718,16 @@ Log.d(LOG_TAG, "Recevied Msg : " + strMsgReceived);
 						Messages.MessageUserDisconnected msgUserDisconnected = new Messages.MessageUserDisconnected(msgReceived);
 						User userDisconnected = mMapIPToUser.get(msgUserDisconnected.getIPAddress());
 
-						if (mCurrState == NetControlState.LEADER)
+						if (userDisconnected != null)
 						{
-							// Broadcast to everybody that this user has disconnected, so they remove him from their list
-							broadcast(msgUserDisconnected.toString());
+							if (mCurrState == NetControlState.LEADER)
+							{
+								// Broadcast to everybody that this user has disconnected, so they remove him from their list
+								broadcast(msgUserDisconnected.toString());
+							}
+							
+							removeUser(userDisconnected.getIPAddress());
 						}
-						
-						removeUser(userDisconnected.getIPAddress());
 					}
 					else if (msgPrefix.equals(Messages.MSG_PREFIX_GET_USER_DETAILS)) // Only the leader gets this message
 					{
@@ -708,13 +749,13 @@ Log.d(LOG_TAG, "Recevied Msg : " + strMsgReceived);
 							Messages.MessageGiveDetails msgGiveDetails = new Messages.MessageGiveDetails(askerIPAddress);
 							
 							sendMessage(msgGiveDetails.toString(), targetIPAddress);
-						}								
+						}	
 					}
 					else if (msgPrefix.equals(Messages.MSG_PREFIX_GIVE_DETAILS)) // Only a client gets this message
 					{
 						// Send a UserDetails message to the leader with my details
 						Messages.MessageGiveDetails msgGiveDetails = new Messages.MessageGiveDetails(msgReceived);
-						Messages.MessageUserDetails msgUserDetails = new Messages.MessageUserDetails(mMe, msgGiveDetails.getAskerIPAddress()); //, "Stam Hobbies", "Stam Fav Music");
+						Messages.MessageUserDetails msgUserDetails = new Messages.MessageUserDetails(mMe, msgGiveDetails.getAskerIPAddress());
 						
 						sendMessage(msgUserDetails.toString(), IP_LEADER);
 					}
@@ -811,7 +852,7 @@ Log.d(LOG_TAG, "Recevied Msg : " + strMsgReceived);
 				{
 					socket = new DatagramSocket(PORT);
 				}
-				catch (Exception e)
+				catch (SocketException e)
 				{
 					e.printStackTrace();
 					done = false;
@@ -852,6 +893,11 @@ Log.d(LOG_TAG, "Recevied Msg : " + strMsgReceived);
 		notifyActivityUsersList();
 	}
 	
+	public User getUserByIp(String ipAddress)
+	{
+		return mMapIPToUser.get(ipAddress);
+	}
+	
 	private synchronized void notifyActivityUsersList()
 	{
 		if (ActivityUsersList.instance != null)
@@ -866,7 +912,7 @@ Log.d(LOG_TAG, "Recevied Msg : " + strMsgReceived);
 Log.d(LOG_TAG, "About to notify ActivityUserDetails. Msg = " + msgUserDetails.toString());
 
 		// TODO : Check if this while is ok
-		while (ActivityUserDetails.instance != null)
+		while (ActivityUserDetails.instance == null)
 		{
 			// Do nothing. Just wait. If we're in this function, this means that the ActivityUserDetails will shortly appear
 			// so just wait until it does and there's an instance of it
@@ -874,15 +920,15 @@ Log.d(LOG_TAG, "About to notify ActivityUserDetails. Msg = " + msgUserDetails.to
 		
 //		if (ActivityUserDetails.instance != null)
 //		{
+		while (ActivityUserDetails.instance.getUpdateHandler() == null)
+		{
+		}
+		
 			Message msg = ActivityUserDetails.instance.getUpdateHandler().obtainMessage();
 			msg.obj = msgUserDetails;
 			
 Log.d(LOG_TAG, "Right before notifying ActivityUserDetails");
 
-			while (ActivityUserDetails.instance.getUpdateHandler() != null)
-			{
-			}
-			
 			ActivityUserDetails.instance.getUpdateHandler().sendMessage(msg);
 //		}
 	}
@@ -1005,7 +1051,7 @@ Log.d(LOG_TAG, "About to send Msg to ip: " + destIP);
 			sock = new DatagramSocket();
 			sock.send(pkt);
 			
-Log.d(LOG_TAG, "Sending Msg : " + message);
+Log.d(LOG_TAG, "Sent Msg : " + message);
 
 		}
 		catch (Exception e)
@@ -1014,30 +1060,30 @@ Log.d(LOG_TAG, "Sending Msg : " + message);
 		}
 	}
 	
-	private synchronized void sendMessageTCP(String message, String destIP)
-	{
-		Socket socketToUse = null;
-		
-		if (destIP.equals(IP_LEADER))
-		{
-			socketToUse = mSocketToLeader;
-		}
-		else
-		{
-			socketToUse = mMapIPToSocket.get(destIP);
-		}
-		
-		DataOutputStream dataOutputStream;
-		try
-		{
-			dataOutputStream = new DataOutputStream(socketToUse.getOutputStream());
-			dataOutputStream.writeBytes(message);
-		}
-		catch (IOException e)
-		{
-			e.printStackTrace();
-		}
-	}
+//	private synchronized void sendMessageTCP(String message, String destIP)
+//	{
+//		Socket socketToUse = null;
+//		
+//		if (destIP.equals(IP_LEADER))
+//		{
+//			socketToUse = mSocketToLeader;
+//		}
+//		else
+//		{
+//			socketToUse = mMapIPToSocket.get(destIP);
+//		}
+//		
+//		DataOutputStream dataOutputStream;
+//		try
+//		{
+//			dataOutputStream = new DataOutputStream(socketToUse.getOutputStream());
+//			dataOutputStream.writeBytes(message);
+//		}
+//		catch (IOException e)
+//		{
+//			e.printStackTrace();
+//		}
+//	}
 	
 	
 	public synchronized void sendMessage(String message)
@@ -1080,14 +1126,14 @@ Log.d(LOG_TAG, "Sending Msg : " + message);
 		}
 	}
 
-	private synchronized void broadcastTCP(String message) // throws SocketException, IOException
-	{
-		// TODO : Go over the sockets and send them one by one
-		for (String currDestIP : mMapIPToSocket.keySet())
-		{
-			sendMessage(message, currDestIP);
-		}
-	}
+//	private synchronized void broadcastTCP(String message) // throws SocketException, IOException
+//	{
+//		// TODO : Go over the sockets and send them one by one
+//		for (String currDestIP : mMapIPToSocket.keySet())
+//		{
+//			sendMessage(message, currDestIP);
+//		}
+//	}
 
 	private synchronized String calcBroadcastAddress(String ipAddress)
 	{
@@ -1204,5 +1250,28 @@ Log.d(LOG_TAG, "Sending Msg : " + message);
 		}
 		
 		return returnedValue;
+	}
+	
+	public String getUserFileName(String userName)
+	{
+//		String extension = "";
+//		
+//		if (USER_FILE_NAME_EXTENSION.equals("") == false)
+//		{
+//			extension = "." + USER_FILE_NAME_EXTENSION;
+//		}
+		
+		return USER_FILE_NAME_PREFIX + userName + USER_FILE_NAME_SUFFIX + USER_FILE_NAME_EXTENSION;
+	}
+
+	public String getUserNameFromUserFileName(String userFileName)
+	{
+		return userFileName.substring(USER_FILE_NAME_PREFIX.length(),
+									  userFileName.length() - (USER_FILE_NAME_SUFFIX.length() + USER_FILE_NAME_EXTENSION.length())); 
+	}
+	
+	public boolean didRunBefore()
+	{
+		return mDidRunBefore;
 	}
 }

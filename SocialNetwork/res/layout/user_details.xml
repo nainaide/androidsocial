@@ -63,7 +63,6 @@
 	</TextView>
 
 	<EditText
-		android:text="Hobbies"
 		android:id="@+id/EditTextUserDetailsHobbies"
 		android:layout_height="wrap_content"
 		android:layout_width="fill_parent"
@@ -88,7 +87,6 @@
 	</TextView>
 	
 	<EditText
-		android:text="Favorite Music"
 		android:id="@+id/EditTextUserDetailsFavoriteMusic"
 		android:layout_height="wrap_content"
 		android:layout_width="fill_parent"
