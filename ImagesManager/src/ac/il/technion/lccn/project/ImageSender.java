@@ -28,7 +28,7 @@ public class ImageSender implements Runnable {
 				builder.append( in);
 			}
 			String userName = builder.toString( );
-			File userPictureFile = new File( userName + ".jpg");
+			File userPictureFile = new File( "userImages/" + userName + ".jpg");
 			byte[] buffer = new byte[(int)userPictureFile.length( )];
 			BufferedInputStream stream = new BufferedInputStream( new FileInputStream( userPictureFile));
 			stream.read(buffer, 0, (int)userPictureFile.length( ));

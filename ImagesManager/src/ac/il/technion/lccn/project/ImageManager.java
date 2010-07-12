@@ -29,5 +29,22 @@ public class ImageManager implements Runnable {
 		interrupted = true;
 		executor.shutdown( );
 	}
+	
+	public static void main(String[] args) {
+		final ImageManager manager = new ImageManager( );
+		new Thread( manager).start( );
+		Runtime.getRuntime( ).addShutdownHook( new Thread( ) {
+			public void run( ) {
+				manager.shutdown( );
+			}
+		});
+		while( true) {
+			try {
+				Thread.sleep(500);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+	}
 
 }

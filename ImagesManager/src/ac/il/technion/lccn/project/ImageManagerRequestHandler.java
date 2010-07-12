@@ -10,8 +10,8 @@ public class ImageManagerRequestHandler {
 
 	private ExecutorService executor;
 	
-	final public int SEND_USER_IMAGE = 0x1;
-	final public int RECEIVE_USER_IMAGE = SEND_USER_IMAGE << 1;
+	final static public int SEND_USER_IMAGE = 0x1;
+	final static public int RECEIVE_USER_IMAGE = SEND_USER_IMAGE << 1;
 	
 	public ImageManagerRequestHandler(ExecutorService executor) {
 		this.executor = executor; 
