@@ -1,5 +1,9 @@
 package main.main;
 
+import java.io.File;
+import java.util.GregorianCalendar;
+
+import main.main.User.Sex;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
@@ -30,6 +34,7 @@ public class ActivityUserDetails extends Activity
     private TextView mTextViewMainDetails = null;
 //    private TextView mTextViewHobbies = null;
     private EditText mEditTextHobbies = null;
+	private ApplicationSocialNetwork application = null;
 //    private TextView mTextViewFavoriteMusic = null;
     private EditText mEditTextFavoriteMusic = null;
     private DatePicker mDatePickerBirth = null;
@@ -38,6 +43,12 @@ public class ActivityUserDetails extends Activity
     private Button mButtonCancel = null;
     
 	private Handler mHandler = null;
+	private boolean isEditable;
+	private int birthDay;
+	private int birthMonth;
+	private int birthYear;
+	private String currHobbies;
+	private String currFavorMusic;
     
     public static ActivityUserDetails instance = null;
 
@@ -48,25 +59,41 @@ public class ActivityUserDetails extends Activity
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.user_details);
-        
+        Log.d(LOG_TAG, "on create");
         ActivityUserDetails.instance = this;
-        
-        Bundle extras = getIntent().getExtras();
-        
-        String[] arrMainData = extras.getStringArray(getResources().getString(R.string.extra_key_main_data));
-        lookingAtUserIp = extras.getString("ActivityDetails.userIp");
-        mUserName = extras.getString("ActivityDetails.userName");
-        Log.d(LOG_TAG, "on create lookingAtUserIp is : "+lookingAtUserIp);
+        application = (ApplicationSocialNetwork)getApplication();
+//        Bundle extras = getIntent().getExtras();
+//        
+//        String[] arrMainData = extras.getStringArray(getResources().getString(R.string.extra_key_main_data));
+//        lookingAtUserIp = extras.getString("ActivityDetails.userIp");
+//        mUserName = extras.getString("ActivityDetails.userName");
+//        isEditable = extras.getBoolean("ActivityDetails.isEditable");
+//        if(isEditable)
+//        {
+//        	birthDay = application.getMe().getDateBirth().get(GregorianCalendar.DAY_OF_MONTH);
+//        	birthMonth = application.getMe().getDateBirth().get(GregorianCalendar.MONTH);
+//        	birthYear = application.getMe().getDateBirth().get(GregorianCalendar.YEAR);
+//        }
+//        else
+//        {
+//        	birthDay = application.getUserByIp(lookingAtUserIp).getDateBirth().get(GregorianCalendar.DAY_OF_MONTH);
+//        	birthMonth = application.getUserByIp(lookingAtUserIp).getDateBirth().get(GregorianCalendar.MONTH);
+//        	birthYear = application.getUserByIp(lookingAtUserIp).getDateBirth().get(GregorianCalendar.YEAR);
+//        }
+//        Log.d(LOG_TAG, "on create lookingAtUserIp is : "+lookingAtUserIp);
         
         mTextViewMainDetails = (TextView) findViewById(R.id.TextViewMainDetails);
-        
+        if(mEditTextHobbies!=null)
+        	Log.d(LOG_TAG, "on create hobbies is NOT null");
+        else
+        	Log.d(LOG_TAG, "on create hobbies is null");
 //        mTextViewHobbies = (TextView) findViewById(R.id.TextViewUserDetailsHobbies);
         mEditTextHobbies = (EditText) findViewById(R.id.EditTextUserDetailsHobbies);
-        mEditTextHobbies.setText(FIELD_NOT_FILLED);
+      //  mEditTextHobbies.setText(FIELD_NOT_FILLED);
         
 //        mTextViewFavoriteMusic = (TextView) findViewById(R.id.TextViewUserDetailsFavoriteMusic);
         mEditTextFavoriteMusic = (EditText) findViewById(R.id.EditTextUserDetailsFavoriteMusic);
-        mEditTextFavoriteMusic.setText(FIELD_NOT_FILLED);
+       // mEditTextFavoriteMusic.setText(FIELD_NOT_FILLED);
         
         mDatePickerBirth = (DatePicker) findViewById(R.id.DatePickerUserDetailsDateBirth);
         
@@ -76,8 +103,66 @@ public class ActivityUserDetails extends Activity
         
         setListenersAndHandlers();
 
-        setAreDetailsEditable(false);
-
+//        ListView listView = (ListView) findViewById(R.id.ListView01);
+        
+//        setAreDetailsEditable(isEditable);
+//
+//        String mainData = "";
+//        for (String currData : arrMainData)
+//        {
+//        	// TODO : Check if needs to make this new line character a global thing
+//        	mainData += currData + System.getProperty("line.separator");
+//        }
+//        
+//        mTextViewMainDetails.setText(mainData);
+        
+        // TODO : Also get and show the user picture
+        ImageView imageViewUserPicture = (ImageView) findViewById(R.id.ImageViewUserPicture);
+        imageViewUserPicture.setImageResource(R.drawable.icon);
+        
+        populateFields();
+    }
+    
+	private void populateFields()
+	{
+//		boolean isEditable;
+		Bundle extras = getIntent().getExtras();
+	        
+		String[] arrMainData = extras.getStringArray(getResources().getString(R.string.extra_key_main_data));
+		lookingAtUserIp = extras.getString("ActivityDetails.userIp");
+		mUserName = extras.getString("ActivityDetails.userName");
+		isEditable = extras.getBoolean("ActivityDetails.isEditable");
+		Log.d(LOG_TAG, "is editable:" + isEditable);
+		if(isEditable)
+		{
+			User me = application.getMe();
+			 
+			birthDay = me.getDateBirth().get(GregorianCalendar.DAY_OF_MONTH);
+			birthMonth = me.getDateBirth().get(GregorianCalendar.MONTH);
+			birthYear = me.getDateBirth().get(GregorianCalendar.YEAR);
+			mEditTextFavoriteMusic.setText(me.getFavoriteMusic());
+			mEditTextHobbies.setText(me.getHobbies());
+		}
+		else
+		{
+			Messages.MessageGetUserDetails msgGetUserDetails = new Messages.MessageGetUserDetails(lookingAtUserIp);
+			application.sendMessage(msgGetUserDetails.toString());
+			birthDay = application.getUserByIp(lookingAtUserIp).getDateBirth().get(GregorianCalendar.DAY_OF_MONTH);
+			birthMonth = application.getUserByIp(lookingAtUserIp).getDateBirth().get(GregorianCalendar.MONTH);
+			birthYear = application.getUserByIp(lookingAtUserIp).getDateBirth().get(GregorianCalendar.YEAR);
+			//mEditTextFavoriteMusic.setText(currFavorMusic);
+			//mEditTextHobbies.setText(currHobbies);
+		}
+		
+		if(mEditTextHobbies.getText().toString().equals(""))
+				mEditTextHobbies.setText(FIELD_NOT_FILLED);
+		if(mEditTextFavoriteMusic.getText().toString().equals(""))
+			mEditTextFavoriteMusic.setText(FIELD_NOT_FILLED);	
+		
+        mDatePickerBirth.updateDate(birthYear, birthMonth, birthDay);
+        
+        setAreDetailsEditable(isEditable);
+        
         String mainData = "";
         for (String currData : arrMainData)
         {
@@ -86,21 +171,45 @@ public class ActivityUserDetails extends Activity
         }
         
         mTextViewMainDetails.setText(mainData);
-        
-        // TODO : Also get and show the user picture
-        ImageView imageViewUserPicture = (ImageView) findViewById(R.id.ImageViewUserPicture);
-        imageViewUserPicture.setImageResource(R.drawable.icon);
-    }
 
+	}
+	/*
     public void onResume()
     {
+    	super.onResume();
+    	Log.d(LOG_TAG, "on resume");
+//    	 Bundle extras = getIntent().getExtras();
+//         
+//         lookingAtUserIp = extras.getString("ActivityDetails.userIp");
+//         mUserName = extras.getString("ActivityDetails.userName");
+//         isEditable = extras.getBoolean("ActivityDetails.isEditable");
+//         if(isEditable)
+//         {
+//        	 User me = application.getMe();
+//        	 
+//        	 birthDay = me.getDateBirth().get(GregorianCalendar.DAY_OF_MONTH);
+//        	 birthMonth = me.getDateBirth().get(GregorianCalendar.MONTH);
+//        	 birthYear = me.getDateBirth().get(GregorianCalendar.YEAR);
+//        	 mEditTextFavoriteMusic.setText(me.getFavoriteMusic());
+//        	 mEditTextHobbies.setText(me.getHobbies());
+//         }
+//         else
+//         {
+//         	birthDay = application.getUserByIp(lookingAtUserIp).getDateBirth().get(GregorianCalendar.DAY_OF_MONTH);
+//         	birthMonth = application.getUserByIp(lookingAtUserIp).getDateBirth().get(GregorianCalendar.MONTH);
+//         	birthYear = application.getUserByIp(lookingAtUserIp).getDateBirth().get(GregorianCalendar.YEAR);
+//         }
+//         mDatePickerBirth.updateDate(birthYear, birthMonth, birthDay);
+//         
+//         setAreDetailsEditable(isEditable);
     	
+        populateFields();
     }
-    
+    */
 	private void setListenersAndHandlers()
 	{
 		mButtonChat.setOnClickListener(new OnClickListener() {
-			@Override
+//			@Override
 			public void onClick(View view)
 			{
 				chat();
@@ -108,20 +217,45 @@ public class ActivityUserDetails extends Activity
 		});
         
         mButtonOK.setOnClickListener(new OnClickListener() {
-			@Override
+//			@Override
 			public void onClick(View view)
 			{
-				// TODO Auto-generated method stub
+				// Save the details to mMe
+				User me = application.getMe();
+				String sex = me.getSex();
+				int birthYear = mDatePickerBirth.getYear();
+				int birthMonth = mDatePickerBirth.getMonth();
+				int birthDay = mDatePickerBirth.getDayOfMonth();
 				
+				me.setDateBirth(new GregorianCalendar(birthYear, birthMonth, birthDay));
+				me.setFavoriteMusic(mEditTextFavoriteMusic.getText().toString());
+				me.setHobbies(mEditTextHobbies.getText().toString());
+
+				// Delete the user's file and create a new updated one
+				String userFileName = application.getUserFileName(me.getFullName());
+				File userFile = new File(userFileName);
+				
+				if (userFile != null)
+				{
+					userFile.delete();
+				}
+
+				application.writePropertyToFile(userFileName, "Username", mUserName);
+				application.writePropertyToFile(userFileName, "Sex", sex);
+				application.writePropertyToFile(userFileName, "Date of Birth", birthYear + " " + birthMonth + " " + birthDay);
+				application.writePropertyToFile(userFileName, "Hobbies", mEditTextHobbies.getText().toString());
+				application.writePropertyToFile(userFileName, "FavoriteMusic", mEditTextFavoriteMusic.getText().toString());
+				
+				finish();
 			}
 		});
         
         mButtonCancel.setOnClickListener(new OnClickListener() {
-			@Override
+//			@Override
 			public void onClick(View view)
 			{
 				// TODO Auto-generated method stub
-				
+				finish();
 			}
 		});
         
@@ -229,11 +363,13 @@ Log.d(LOG_TAG, "hobbies = " + hobbies + ", favourite music = " + favoriteMusic);
 			if (hobbies.equals("") == false)
 			{
 //		        mTextViewHobbies.setVisibility(View.VISIBLE);
+				currHobbies =hobbies;
 		        mEditTextHobbies.setText(hobbies);
 			}
 			
 			if (favoriteMusic.equals("") == false)
 			{
+				currFavorMusic = favoriteMusic;
 //		        mTextViewFavoriteMusic.setVisibility(View.VISIBLE);
 		        mEditTextFavoriteMusic.setText(favoriteMusic);
 			}

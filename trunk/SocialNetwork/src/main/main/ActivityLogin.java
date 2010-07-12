@@ -7,6 +7,8 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 
+import main.main.ApplicationSocialNetwork.NetControlState;
+
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.Intent;
@@ -33,9 +35,9 @@ public class ActivityLogin extends Activity implements OnClickListener
 //	private final String DIR_RELATIVE_NAME_USERS = "users";
 //	private String DIR_NAME_USERS;
 	private String DIR_NAME_USERS = "users";
-	private final String USER_FILE_NAME_PREFIX = "user_";
-	private final String USER_FILE_NAME_SUFFIX = "";
-	private final String USER_FILE_NAME_EXTENSION = "";
+//	private final String USER_FILE_NAME_PREFIX = "user_";
+//	private final String USER_FILE_NAME_SUFFIX = "";
+//	private final String USER_FILE_NAME_EXTENSION = "";
 	
 	private final String LOG_TAG = "SN.Login";
 	
@@ -45,6 +47,7 @@ public class ActivityLogin extends Activity implements OnClickListener
 	ApplicationSocialNetwork application = null;
 	public static ActivityLogin instance = null;
 //	private DialogInterface.OnDismissListener mOnDismissListener;
+	
 	
     /** Called when the activity is first created. */
     @Override
@@ -131,7 +134,7 @@ Log.d(LOG_TAG, "D Where will this be printed ??");
 				// Delete the user file
 //				File userFile = new File(DIR_NAME_USERS + File.separator + userNameToDelete);
 //				userFile.delete();
-				getApplicationContext().deleteFile(getUserFileName(userNameToDelete));
+				getApplicationContext().deleteFile(application.getUserFileName(userNameToDelete));
 				
 				// Remove the user name from the spinner
 				mAdapter.remove(userNameToDelete);
@@ -151,6 +154,11 @@ Log.d(LOG_TAG, "D Where will this be printed ??");
     			}
     			else
     			{
+    				if (application.didRunBefore() && application.getCurrentState() == NetControlState.LEADER)
+    				{
+    					application.disableAdhocServer();
+    				}
+    					
     				// First, set the preference whether we should auto-login the next time
     				SharedPreferences prefs = getSharedPreferences(FILE_NAME_PREFS, MODE_PRIVATE);
     				SharedPreferences.Editor prefEditor = prefs.edit();
@@ -169,24 +177,6 @@ Log.d(LOG_TAG, "D Where will this be printed ??");
     		}
     	}
     }
-
-	private String getUserFileName(String userName)
-	{
-//		String extension = "";
-//		
-//		if (USER_FILE_NAME_EXTENSION.equals("") == false)
-//		{
-//			extension = "." + USER_FILE_NAME_EXTENSION;
-//		}
-		
-		return USER_FILE_NAME_PREFIX + userName + USER_FILE_NAME_SUFFIX + USER_FILE_NAME_EXTENSION;
-	}
-
-	private String getUserNameFromUserFileName(String userFileName)
-	{
-		return userFileName.substring(USER_FILE_NAME_PREFIX.length(),
-									  userFileName.length() - (USER_FILE_NAME_SUFFIX.length() + USER_FILE_NAME_EXTENSION.length())); 
-	}
 
 //	private File getUesrsDir()
 //	{
@@ -209,7 +199,7 @@ Log.d(LOG_TAG, "D Where will this be printed ??");
 			prefEditor.commit();
 
 			// Get the application to load the user's data, if available
-			application.loadMyDetails(getUserFileName(userNameToLogin)); //, userNameToLogin);
+			application.loadMyDetails(application.getUserFileName(userNameToLogin)); //, userNameToLogin);
 			
 			// Open the opening screen's activity
 //			Intent intent = new Intent(this, ActivityConnect.class);
@@ -234,8 +224,8 @@ Log.d(LOG_TAG, "D Where will this be printed ??");
 				
 				// TODO : Check the fileName. It probably contains an extension and it
 				//        needs to be dealt with
-				if (fileName.startsWith(USER_FILE_NAME_PREFIX) &&
-					fileName.endsWith(USER_FILE_NAME_SUFFIX + USER_FILE_NAME_EXTENSION))
+				if (fileName.startsWith(application.USER_FILE_NAME_PREFIX) &&
+					fileName.endsWith(application.USER_FILE_NAME_SUFFIX + application.USER_FILE_NAME_EXTENSION))
 				{
 					shouldAccecpt = true;
 				}
@@ -247,7 +237,7 @@ Log.d(LOG_TAG, "D Where will this be printed ??");
 		// Add all the users to the spinner
 		for (String currUserFileName : userFilesNames)
 		{
-			mAdapter.add(getUserNameFromUserFileName(currUserFileName));
+			mAdapter.add(application.getUserNameFromUserFileName(currUserFileName));
 		}
 		
 		// TODO : The keyboard didn't show on one of the devices and I got stuck without any users, so I added these.
@@ -325,32 +315,32 @@ Log.d(LOG_TAG, "D Where will this be printed ??");
 //								File dirUsers = getApplicationContext().getDir(DIR_NAME_USERS, MODE_PRIVATE);
 //								dirUsers.c
 
-								String userFileName = getUserFileName(mUserName);
-								FileOutputStream fos = null;
-								OutputStreamWriter osw = null;
-								try {
-//									 fos = new FileOutputStream(getApplicationContext().getFilesDir() + File.separator + DIR_NAME_USERS + File.separator + mUserName);
-									 fos = openFileOutput(userFileName, MODE_PRIVATE);
-									 osw = new OutputStreamWriter(fos); 
-//									 osw.write(mUserName);
-								} catch (FileNotFoundException e) {
-									e.printStackTrace();
-//								} catch (IOException e) {
+//								FileOutputStream fos = null;
+//								OutputStreamWriter osw = null;
+//								try {
+////									 fos = new FileOutputStream(getApplicationContext().getFilesDir() + File.separator + DIR_NAME_USERS + File.separator + mUserName);
+//									 fos = openFileOutput(userFileName, MODE_PRIVATE);
+//									 osw = new OutputStreamWriter(fos); 
+////									 osw.write(mUserName);
+//								} catch (FileNotFoundException e) {
 //									e.printStackTrace();
-								} finally {
-									try {
-										osw.flush();
-										fos.close();
-										osw.close();
-									} catch (IOException e) {
-										e.printStackTrace();
-									}
-								}
+////								} catch (IOException e) {
+////									e.printStackTrace();
+//								} finally {
+//									try {
+//										osw.flush();
+//										fos.close();
+//										osw.close();
+//									} catch (IOException e) {
+//										e.printStackTrace();
+//									}
+//								}
 								
 								RadioButton rdoMale = (RadioButton)((View)( view.getParent().getParent()) ).findViewById(R.id.RadioButtonCreateUserMale);
 								String sex = (rdoMale.isChecked() ? User.Sex.MALE.toString() : User.Sex.FEMALE.toString());
 								DatePicker dateBirth = (DatePicker)((View)( view.getParent().getParent()) ).findViewById(R.id.DatePickerCreateUserBirth);
 								
+								String userFileName = application.getUserFileName(mUserName);
 								application.writePropertyToFile(userFileName, "Username", mUserName);
 								application.writePropertyToFile(userFileName, "Sex", sex);
 								application.writePropertyToFile(userFileName, "Date of Birth", dateBirth.getYear() + " " + dateBirth.getMonth() + " " + dateBirth.getDayOfMonth());

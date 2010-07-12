@@ -362,15 +362,17 @@ public class Messages
 	// Structure : UserDetails askerIPAddress *all the details. TBD*
 	public static class MessageUserDetails
 	{
-		private final int INDEX_PARAM_ASKER_IP_ADDRESS = 1;
+	    private final String FIELD_NOT_FILLED = "-- Not Filled By User --";
+
+	    private final int INDEX_PARAM_ASKER_IP_ADDRESS = 1;
 		private final int INDEX_PARAM_IP_ADDRESS = 2;
 		private final int INDEX_PARAM_HOBBIES = 3;
 		private final int INDEX_PARAM_FAVORITE_MUSIC = 4;
 		
 		private String mAskerIPAddress = "";
 		private String mIPAddress = "";
-		private String mHobbies = "Playing basket ball";
-		private String mFavoriteMusic = "Metal, Country and Britney Spears";
+		private String mHobbies = FIELD_NOT_FILLED;
+		private String mFavoriteMusic = FIELD_NOT_FILLED;
 		
 		
 //		public MessageUserDetails(String askerIPAddress)
@@ -384,22 +386,17 @@ public class Messages
 			String[] arrParams = strMessage.split(MSG_PARAMS_SEPARATOR);
 			
 			mAskerIPAddress = arrParams[INDEX_PARAM_ASKER_IP_ADDRESS]; 
-			mIPAddress = arrParams[INDEX_PARAM_IP_ADDRESS]; 
-			// TODO : Uncomment these
-//			mHobbies = arrParams[INDEX_PARAM_HOBBIES];
-//			mFavoriteMusic = arrParams[INDEX_PARAM_FAVORITE_MUSIC];
+			mIPAddress = arrParams[INDEX_PARAM_IP_ADDRESS];
+			mHobbies = arrParams[INDEX_PARAM_HOBBIES];
+			mFavoriteMusic = arrParams[INDEX_PARAM_FAVORITE_MUSIC];
 		}
 		
-		public MessageUserDetails(User user, String askerIPAddress) //, String hobbies, String favoriteMusic)
+		public MessageUserDetails(User user, String askerIPAddress)
 		{
 			mIPAddress = user.getIPAddress();
 			mAskerIPAddress = askerIPAddress;
-			// TODO : Uncomment these
-//			mHobbies = hobbies;
-//			mFavoriteMusic = favoriteMusic;
-			
-			mHobbies = user.getHobbies();
-			mFavoriteMusic = user.getFavoriteMusic();
+			mHobbies = user.getHobbies().equals("") ? mHobbies : user.getHobbies();
+			mFavoriteMusic = user.getFavoriteMusic().equals("") ? mFavoriteMusic : user.getFavoriteMusic();
 		}
 		
 		

@@ -1,6 +1,7 @@
 package main.main;
 
 import java.util.ArrayList;
+import java.util.GregorianCalendar;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -20,16 +21,19 @@ import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.View.OnClickListener;
+import android.view.View.OnTouchListener;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.AdapterView.OnItemSelectedListener;
 
 public class ActivityUsersList extends ListActivity
 {
@@ -114,6 +118,35 @@ public class ActivityUsersList extends ListActivity
 //		Thread thread = new Thread(null, runnableGetUsers, "threadGetUsers");
 //		thread.start();
 
+		getListView().setOnItemSelectedListener(new OnItemSelectedListener() {
+
+			public void onItemSelected(AdapterView<?> parent, View view,
+					int position, long id)
+			{
+				// TODO Auto-generated method stub
+Log.d(LOG_TAG, "onItemSelcted, position = " + position);				
+			}
+
+			public void onNothingSelected(AdapterView<?> parent)
+			{
+				// TODO Auto-generated method stub
+Log.d(LOG_TAG, "onNothingSelcted");				
+			}
+		});
+		
+		getListView().setOnTouchListener(new OnTouchListener() {
+
+			public boolean onTouch(View view, MotionEvent event) {
+				// TODO Auto-generated method stub
+Log.d(LOG_TAG, "onTouch");				
+				int i =9;
+				i++;
+				
+				return false;
+			}
+		
+		});
+		
 		connect();
 	}
 
@@ -133,7 +166,7 @@ public class ActivityUsersList extends ListActivity
 	    
 	private void connect()
 	{
-        application.disableWifi();
+        //application.disableWifi();
 
         mProgDialog = ProgressDialog.show(this, "", "Searching for an existing network. Please wait...", true);
                 
@@ -154,7 +187,6 @@ public class ActivityUsersList extends ListActivity
 					application.enableAdhocServer();
 //					mProgDialog.dismiss();
 				}
-				
 				runOnUiThread(mRunnableReturnNetwork);
 			}
 		};
@@ -248,13 +280,13 @@ public class ActivityUsersList extends ListActivity
 			intent.putExtra(getResources().getString(R.string.extra_key_main_data), arrMainDataValues);
 			intent.putExtra("ActivityDetails.userIp", user.getIPAddress());
 			intent.putExtra("ActivityDetails.userName", user.getFullName());
+			intent.putExtra("ActivityDetails.isEditable", false);
 			// TODO : Also pass the picture
 			Log.d(LOG_TAG, "selected username :"+user.getFullName() + " and his ip is : 0"+ user.getIPAddress() );
 			startActivity(intent);
 			
 			// Send a command to get the rest of the selcted user's details
-			Messages.MessageGetUserDetails msgGetUserDetails = new Messages.MessageGetUserDetails(user.getIPAddress());
-			application.sendMessage(msgGetUserDetails.toString());
+			
 		}
 	}
 	
@@ -278,7 +310,25 @@ public class ActivityUsersList extends ListActivity
     {
     	if (item.getTitle().equals(CTXT_MENU_ITEM_TITLE_EDIT_DETAILS))
     	{
+    		Intent intent = new Intent(this, ActivityUserDetails.class);
+    		User user = application.getMe();
     		
+    		if (user != null)
+    		{
+    			List<String> listMainDataValues = new LinkedList<String>();
+    			listMainDataValues.add("Name: " + user.getFullName());
+    			listMainDataValues.add(user.getSex() + ", " + user.getAge());
+    			
+    			String[] arrMainDataValues = listMainDataValues.toArray(new String[0]);
+    			
+    			intent.putExtra(getResources().getString(R.string.extra_key_main_data), arrMainDataValues);
+    			intent.putExtra("ActivityDetails.userIp", user.getIPAddress());
+    			intent.putExtra("ActivityDetails.userName", user.getFullName());
+    			intent.putExtra("ActivityDetails.isEditable", true);
+    		
+    			// TODO : Also pass the picture
+    			startActivity(intent);
+    		}
     	}
     	else if (item.getTitle().equals(CTXT_MENU_ITEM_TITLE_LOGOUT))
     	{
@@ -314,6 +364,7 @@ public class ActivityUsersList extends ListActivity
     {
        	if (item.getTitle().equals(MENU_ITEM_TITLE_CHAT))
     	{
+       		// TODO : Not correct. Fix this
     		chat(mUsers.get(item.getItemId()).getFullName(),mUsers.get(item.getItemId()).getIPAddress());
     	}
     	
@@ -371,6 +422,14 @@ public class ActivityUsersList extends ListActivity
 			
 			// Assign the context menu to the current list item
 			view.setOnCreateContextMenuListener(ActivityUsersList.this);
+			view.setOnClickListener(new OnClickListener() {
+
+				public void onClick(View v) {
+					// TODO Auto-generated method stub
+					
+				}
+				
+			});
 			
 			return view;
 		}

@@ -67,7 +67,6 @@ public class ActivityFileBrowser extends ListActivity {
 			};
 			DialogInterface.OnCancelListener cancelButtonListener = new DialogInterface.OnCancelListener( ) {
 				
-				@Override
 				public void onCancel(DialogInterface dialog) {
 				}
 			}; 
