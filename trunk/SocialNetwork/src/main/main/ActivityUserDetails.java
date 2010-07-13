@@ -3,7 +3,6 @@ package main.main;
 import java.io.File;
 import java.util.GregorianCalendar;
 
-import main.main.User.Sex;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
@@ -47,8 +46,8 @@ public class ActivityUserDetails extends Activity
 	private int birthDay;
 	private int birthMonth;
 	private int birthYear;
-	private String currHobbies;
-	private String currFavorMusic;
+//	private String currHobbies;
+//	private String currFavorMusic;
     
     public static ActivityUserDetails instance = null;
 
@@ -145,8 +144,10 @@ public class ActivityUserDetails extends Activity
 		}
 		else
 		{
+			// Send a command to get the rest of the selected user's details
 			Messages.MessageGetUserDetails msgGetUserDetails = new Messages.MessageGetUserDetails(lookingAtUserIp);
 			application.sendMessage(msgGetUserDetails.toString());
+			
 			birthDay = application.getUserByIp(lookingAtUserIp).getDateBirth().get(GregorianCalendar.DAY_OF_MONTH);
 			birthMonth = application.getUserByIp(lookingAtUserIp).getDateBirth().get(GregorianCalendar.MONTH);
 			birthYear = application.getUserByIp(lookingAtUserIp).getDateBirth().get(GregorianCalendar.YEAR);
@@ -353,34 +354,24 @@ public class ActivityUserDetails extends Activity
     
 	private void updateUserDetails(Messages.MessageUserDetails msgUserDetails)
 	{
-
-
-			String hobbies = msgUserDetails.getHobbies();
-			String favoriteMusic = msgUserDetails.getFavoriteMusic();
+		String hobbies = msgUserDetails.getHobbies();
+		String favoriteMusic = msgUserDetails.getFavoriteMusic();
 			
 Log.d(LOG_TAG, "hobbies = " + hobbies + ", favourite music = " + favoriteMusic);
 
-			if (hobbies.equals("") == false)
-			{
-//		        mTextViewHobbies.setVisibility(View.VISIBLE);
-				currHobbies =hobbies;
-		        mEditTextHobbies.setText(hobbies);
-			}
-			
-			if (favoriteMusic.equals("") == false)
-			{
-				currFavorMusic = favoriteMusic;
-//		        mTextViewFavoriteMusic.setVisibility(View.VISIBLE);
-		        mEditTextFavoriteMusic.setText(favoriteMusic);
-			}
-			
-			// TODO : Continue implementing this
-			
-//			mUsers = application.getUsers();
-//			mUsersAdapter = new UsersAdapter(ActivityUsersList.this, R.layout.user, mUsers);
-//			setListAdapter(mUsersAdapter);
-//			mUsersAdapter.notifyDataSetChanged();
-////			ActivityUsersList.this.updateListView();
+		if (hobbies.equals("") == false)
+		{
+//			mTextViewHobbies.setVisibility(View.VISIBLE);
+//			currHobbies =hobbies;
+	        mEditTextHobbies.setText(hobbies);
+		}
+		
+		if (favoriteMusic.equals("") == false)
+		{
+//			currFavorMusic = favoriteMusic;
+//			mTextViewFavoriteMusic.setVisibility(View.VISIBLE);
+	        mEditTextFavoriteMusic.setText(favoriteMusic);
+		}
 	}
 
 	public Handler getUpdateHandler()

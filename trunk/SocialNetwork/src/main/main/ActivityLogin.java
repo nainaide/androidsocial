@@ -1,21 +1,15 @@
 package main.main;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.FilenameFilter;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
 
 import main.main.ApplicationSocialNetwork.NetControlState;
-
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
-import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.ArrayAdapter;
@@ -32,14 +26,11 @@ public class ActivityLogin extends Activity implements OnClickListener
 	private final int DIALOG_ID_CREATE_USER = 0;
 	private String FILE_NAME_PREFS; // If I final it and assign its value here, it will crash
 	private final String USER_NAME_EMPTY = "";
-//	private final String DIR_RELATIVE_NAME_USERS = "users";
-//	private String DIR_NAME_USERS;
-	private String DIR_NAME_USERS = "users";
 //	private final String USER_FILE_NAME_PREFIX = "user_";
 //	private final String USER_FILE_NAME_SUFFIX = "";
 //	private final String USER_FILE_NAME_EXTENSION = "";
 	
-	private final String LOG_TAG = "SN.Login";
+//	private final String LOG_TAG = "SN.Login";
 	
 	private String mUserName = USER_NAME_EMPTY;
 	private ArrayAdapter<CharSequence> mAdapter;
@@ -56,21 +47,18 @@ public class ActivityLogin extends Activity implements OnClickListener
         super.onCreate(savedInstanceState);
         setContentView(R.layout.login);
 
-Log.d(LOG_TAG, "D Where will this be printed ??");
-
     	application = (ApplicationSocialNetwork)getApplication();
     	ActivityLogin.instance = this;
         FILE_NAME_PREFS = getResources().getString(R.string.file_name_prefs);
-//        DIR_NAME_USERS = getApplicationContext().getFilesDir() + File.separator + DIR_RELATIVE_NAME_USERS;
 
         // Get the last logged-in user name (and put it in mUserName)
 		SharedPreferences settings = getSharedPreferences(FILE_NAME_PREFS, MODE_PRIVATE);
     	String prefNameLastLoggedInUserName = getResources().getString(R.string.pref_name_last_logged_in_user_name);
     	mUserName = settings.getString(prefNameLastLoggedInUserName, USER_NAME_EMPTY);
     	
-        // TODO : Check if the user checked to always login with a certain user.
-        //        If so, don't display this screen. Simply login with that user
-//        loginAutomaticallyIfNeeded();
+        // Check if the user checked to always login with a certain user.
+        // If so, don't display this screen. Simply login with that user
+        loginAutomaticallyIfNeeded();
         
         // Else, if it wasn't set to login automatically, continue (show the activity)
         
@@ -129,11 +117,10 @@ Log.d(LOG_TAG, "D Where will this be printed ??");
     		{
 				Spinner spinnerUserNames = (Spinner) findViewById(R.id.SpinnerUserName);
 				String userNameToDelete = (String) spinnerUserNames.getSelectedItem();
+				
 				// TODO : Ask the user if he is sure he wants to delete the selected user
 				
 				// Delete the user file
-//				File userFile = new File(DIR_NAME_USERS + File.separator + userNameToDelete);
-//				userFile.delete();
 				getApplicationContext().deleteFile(application.getUserFileName(userNameToDelete));
 				
 				// Remove the user name from the spinner
@@ -178,13 +165,6 @@ Log.d(LOG_TAG, "D Where will this be printed ??");
     	}
     }
 
-//	private File getUesrsDir()
-//	{
-//		// TODO Auto-generated method stub
-//		return null;
-//	}
-
-
 	private void login(String userNameToLogin)
 	{
 		if (userNameToLogin.equals(USER_NAME_EMPTY) == false)
@@ -199,10 +179,9 @@ Log.d(LOG_TAG, "D Where will this be printed ??");
 			prefEditor.commit();
 
 			// Get the application to load the user's data, if available
-			application.loadMyDetails(application.getUserFileName(userNameToLogin)); //, userNameToLogin);
+			application.loadMyDetails(application.getUserFileName(userNameToLogin));
 			
 			// Open the opening screen's activity
-//			Intent intent = new Intent(this, ActivityConnect.class);
 			Intent intent = new Intent(this, ActivityUsersList.class);
 //			intent.putExtra(getResources().getString(R.string.extra_key_login_user_name), userNameToLogin);
 			startActivity(intent);
@@ -215,15 +194,13 @@ Log.d(LOG_TAG, "D Where will this be printed ??");
 		
 		// Check the list of users files. Each file will have the name of the relevant
 		// user. This name will be entered to the spinner
-//		File dirUsers = getApplicationContext().getDir(DIR_NAME_USERS, MODE_PRIVATE);
 		File dirUsers = getApplicationContext().getFilesDir();
 		String[] userFilesNames = dirUsers.list(new FilenameFilter() {
 			public boolean accept(File dir, String fileName)
 			{
 				boolean shouldAccecpt = false;
 				
-				// TODO : Check the fileName. It probably contains an extension and it
-				//        needs to be dealt with
+				// For each file, check by its name if it is in fact a user details file
 				if (fileName.startsWith(application.USER_FILE_NAME_PREFIX) &&
 					fileName.endsWith(application.USER_FILE_NAME_SUFFIX + application.USER_FILE_NAME_EXTENSION))
 				{
@@ -239,14 +216,8 @@ Log.d(LOG_TAG, "D Where will this be printed ??");
 		{
 			mAdapter.add(application.getUserNameFromUserFileName(currUserFileName));
 		}
-		
-		// TODO : The keyboard didn't show on one of the devices and I got stuck without any users, so I added these.
-		//        Delete this code when the keyboard decides it wants to work again
-//		mAdapter.add("NoKeyboard1");
-//		mAdapter.add("NoKeyboard2");
-//		mAdapter.add("NoKeyboard3");
-		
-		
+
+		// Sort the users by their names
 		mAdapter.sort(null);
 
 		// Select the last logged-in user in the spinner
@@ -311,31 +282,6 @@ Log.d(LOG_TAG, "D Where will this be printed ??");
 								
 								mUserName = createdUserName;
 								
-								// Create a file for the user
-//								File dirUsers = getApplicationContext().getDir(DIR_NAME_USERS, MODE_PRIVATE);
-//								dirUsers.c
-
-//								FileOutputStream fos = null;
-//								OutputStreamWriter osw = null;
-//								try {
-////									 fos = new FileOutputStream(getApplicationContext().getFilesDir() + File.separator + DIR_NAME_USERS + File.separator + mUserName);
-//									 fos = openFileOutput(userFileName, MODE_PRIVATE);
-//									 osw = new OutputStreamWriter(fos); 
-////									 osw.write(mUserName);
-//								} catch (FileNotFoundException e) {
-//									e.printStackTrace();
-////								} catch (IOException e) {
-////									e.printStackTrace();
-//								} finally {
-//									try {
-//										osw.flush();
-//										fos.close();
-//										osw.close();
-//									} catch (IOException e) {
-//										e.printStackTrace();
-//									}
-//								}
-								
 								RadioButton rdoMale = (RadioButton)((View)( view.getParent().getParent()) ).findViewById(R.id.RadioButtonCreateUserMale);
 								String sex = (rdoMale.isChecked() ? User.Sex.MALE.toString() : User.Sex.FEMALE.toString());
 								DatePicker dateBirth = (DatePicker)((View)( view.getParent().getParent()) ).findViewById(R.id.DatePickerCreateUserBirth);
@@ -391,7 +337,7 @@ Log.d(LOG_TAG, "D Where will this be printed ??");
 		public String getUserName()
 		{
 			return mUserName;
-				}
+		}
 	};
 
 	public Handler getUpdateHandler()
@@ -402,5 +348,5 @@ Log.d(LOG_TAG, "D Where will this be printed ??");
 	public String getUserName()
 	{
 		return mUserName;
-			}
+	}
 }
