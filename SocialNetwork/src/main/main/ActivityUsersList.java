@@ -1,7 +1,6 @@
 package main.main;
 
 import java.util.ArrayList;
-import java.util.GregorianCalendar;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -21,19 +20,15 @@ import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.View.OnClickListener;
-import android.view.View.OnTouchListener;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.AdapterView.OnItemSelectedListener;
 
 public class ActivityUsersList extends ListActivity
 {
@@ -79,108 +74,29 @@ public class ActivityUsersList extends ListActivity
 		chatButton.setVisibility(View.INVISIBLE);
 		mTextViewNoUsers = (TextView) findViewById(R.id.TextViewNoUsers);
 		mTextViewNoUsers.setVisibility(View.GONE);
-//		mUsersAdapter = new UsersAdapter(this, R.layout.user, application.getUsers());
+		
 		setListAdapter(mUsersAdapter);
 
-		
-
-
-//		Runnable runnableViewUsers = new Runnable(){
-//			@Override
-//			public void run()
-//			{
-//				getUsers();
-//			}
-//		};
-//		Thread thread = new Thread(null, runnableViewUsers, "threadGetUsers");
-//		thread.start();
-//		mProgressDialog = ProgressDialog.show(ActivityUsersList.this,    
-//				"Please wait...", "Retrieving data ...", true);
-		
-		// TODO : This is just a simulation. Delete this
-//		Runnable runnableGetUsers = new Runnable(){
-//			public void run()
-//			{
-//				application.nap(1000);
-//				Messages.MessageNewUser msgNewUser1 = new Messages.MessageNewUser(application.getMyIP(), "username1", 1980, 3, 10, "Male", "pic1"); 
-//				application.sendMessage(msgNewUser1.toString(), application.getLeaderIP());
-//
-//				application.nap(3000);
-//				Messages.MessageNewUser msgNewUser2 = new Messages.MessageNewUser(application.getMyIP(), "username2", 1982, 6, 15, "Female", "pic2"); 
-//				application.sendMessage(msgNewUser2.toString(), application.getLeaderIP());
-//
-//				application.nap(5000);
-//				Messages.MessageNewUser msgNewUser3 = new Messages.MessageNewUser(application.getMyIP(), "username3", 1984, 9, 20, "Male", "pic3"); 
-//				application.sendMessage(msgNewUser3.toString(), application.getLeaderIP());
-//				//			getUsers();
-//			}
-//		};
-//		Thread thread = new Thread(null, runnableGetUsers, "threadGetUsers");
-//		thread.start();
-
-		getListView().setOnItemSelectedListener(new OnItemSelectedListener() {
-
-			public void onItemSelected(AdapterView<?> parent, View view,
-					int position, long id)
-			{
-				// TODO Auto-generated method stub
-Log.d(LOG_TAG, "onItemSelcted, position = " + position);				
-			}
-
-			public void onNothingSelected(AdapterView<?> parent)
-			{
-				// TODO Auto-generated method stub
-Log.d(LOG_TAG, "onNothingSelcted");				
-			}
-		});
-		
-		getListView().setOnTouchListener(new OnTouchListener() {
-
-			public boolean onTouch(View view, MotionEvent event) {
-				// TODO Auto-generated method stub
-Log.d(LOG_TAG, "onTouch");				
-				int i =9;
-				i++;
-				
-				return false;
-			}
-		
-		});
-		
 		connect();
 	}
 
-	
-//	final WeatherDataListAdapter listModelView = new WeatherDataListAdapter(ctx, listview);
-
-	  // bind a selection listener to the view
-//	  listview.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-//	    public void onItemSelected(AdapterView parentView, View childView, int position, long id) {
-//	      mUsersAdapter.setSelected(position);
-//	    }
-//	    public void onNothingSelected(AdapterView parentView) {
-//	      listModelView.setSelected(-1);
-//	    }
-//	  });
-	    
 	    
 	private void connect()
 	{
-        //application.disableWifi();
-
         mProgDialog = ProgressDialog.show(this, "", "Searching for an existing network. Please wait...", true);
                 
 		// Search for a network
 		Runnable runnableSearchForNetwork = new Runnable(){
 			public void run()
 			{
+				application.stopDnsmasq();
+				
 				mIsClientEnabled = application.enableAdhocClient();
 				
 				mProgDialog.dismiss();
 				
 				if (mIsClientEnabled == false)
 				{
-//					application.disableAdhocClient();
 					Looper.prepare(); // Apparently it's needed for showing a dialog (next line) in a thread
 					application.showToast(ActivityUsersList.this, "No network could be found. Creating a new one...");
 //					mProgDialog = ProgressDialog.show(ActivityConnect.this, "", "No network could be found. Starting a new one...", true);
@@ -198,6 +114,8 @@ Log.d(LOG_TAG, "onTouch");
 	private  Runnable mRunnableReturnNetwork = new Runnable() {
 		public void run()
 		{
+Log.d(LOG_TAG, "Got to mRunnableReturnNetwork");
+
 			if (mIsClientEnabled == false)
 			{
 				// Android will crash if another thread touches the UI other then the thread who created it,
@@ -210,57 +128,6 @@ Log.d(LOG_TAG, "onTouch");
 			application.startService();
 		}
 	};
-
-	
-//	private void getUsers()
-//	{
-//		// TODO : Actually get the real users list !
-//		mUsers = new ArrayList<User>();
-//
-//		User user1 = new User("John", "Smith", Sex.MALE, 1980, Calendar.OCTOBER, 15, "192.168.1.10");
-//		User user2 = new User("Dianne", "Brown", Sex.FEMALE, 1985, Calendar.MARCH, 27,  "192.168.1.11");
-//
-//		mUsers.add(user1);
-//		mUsers.add(user2);
-//
-//		try {
-//			Thread.sleep(2000);
-//		} catch (InterruptedException e) {
-//			//			e.printStackTrace();
-//		}
-//
-//		runOnUiThread(returnRes);
-//	}
-//
-//	private  Runnable returnRes = new Runnable() {
-//		public void run()
-//		{
-//			TextView textViewNoUsers = (TextView) findViewById(R.id.TextViewNoUsers);
-//			
-////			mProgressDialog.dismiss();
-//			
-//			if(mUsers == null || mUsers.size() <= 0)
-//			{
-//				textViewNoUsers.setVisibility(View.VISIBLE);
-//			}
-//			else
-//			{
-//				textViewNoUsers.setVisibility(View.GONE);
-//				
-//				// TODO : Is this notifyDataSetChanged needed ?
-////				mUsersAdapter.notifyDataSetChanged();
-//				
-//				for(int indexUser = 0; indexUser < mUsers.size(); ++indexUser)
-//				{
-//					mUsersAdapter.add(mUsers.get(indexUser));
-//				}
-//			}
-//			
-//			mUsersAdapter.notifyDataSetChanged();
-//			
-//			// TODO : Listen to users connecting 
-//		}
-//	};
 
 	public void onListItemClick(ListView parent, View view, int position, long id) 
 	{
@@ -284,9 +151,6 @@ Log.d(LOG_TAG, "onTouch");
 			// TODO : Also pass the picture
 			Log.d(LOG_TAG, "selected username :"+user.getFullName() + " and his ip is : 0"+ user.getIPAddress() );
 			startActivity(intent);
-			
-			// Send a command to get the rest of the selcted user's details
-			
 		}
 	}
 	
@@ -364,8 +228,19 @@ Log.d(LOG_TAG, "onTouch");
     {
        	if (item.getTitle().equals(MENU_ITEM_TITLE_CHAT))
     	{
-       		// TODO : Not correct. Fix this
-    		chat(mUsers.get(item.getItemId()).getFullName(),mUsers.get(item.getItemId()).getIPAddress());
+       		// TODO : Check if this works
+       		User user = mUsers.get(getListView().getSelectedItemPosition());
+       		
+       		if (user == null)
+       		{
+       			Log.d(LOG_TAG, "User is null");
+       		}
+       		else
+       		{
+       			Log.d(LOG_TAG, "User name : " + user.getFullName() + ", User IP : " + user.getIPAddress());
+       			
+       			chat(user.getFullName(), user.getIPAddress());
+       		}
     	}
     	
     	return true;    
@@ -379,6 +254,7 @@ Log.d(LOG_TAG, "onTouch");
     	startActivity(intent);
 	}
 
+	
 
 	private class UsersAdapter extends ArrayAdapter<User>
 	{
@@ -422,11 +298,12 @@ Log.d(LOG_TAG, "onTouch");
 			
 			// Assign the context menu to the current list item
 			view.setOnCreateContextMenuListener(ActivityUsersList.this);
+			
 			view.setOnClickListener(new OnClickListener() {
-
-				public void onClick(View v) {
-					// TODO Auto-generated method stub
-					
+				public void onClick(View v)
+				{
+					// TODO : This is a try to make the touch work
+Log.d(LOG_TAG, "Clicked on a user. Will touch work ???");					
 				}
 				
 			});
@@ -508,9 +385,4 @@ Log.d(LOG_TAG, "onTouch");
 	{
 		return mHandler;
 	}
-
-//	protected void updateListView()
-//	{
-//		// TODO Auto-generated method stub
-//	}
 }

@@ -6,17 +6,17 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Hashtable;
 import java.util.List;
+
+import android.util.Log;
 
 
 public class OSFilesManager
 {
+	private final String LOG_TAG = "SN.OSFilesManager";
+	
 	public String PATH_APP_DATA_FILES;
 
 	private static final String defaultDNS1 = "208.67.220.220";
@@ -92,6 +92,8 @@ public class OSFilesManager
 		DataOutputStream os = null;
 		try
 		{
+Log.d(LOG_TAG, "Running root command : " + command);
+
 			process = Runtime.getRuntime().exec("su");
 			os = new DataOutputStream(process.getOutputStream());
 			os.writeBytes(command + "\n");

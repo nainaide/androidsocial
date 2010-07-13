@@ -38,7 +38,7 @@ public class ActivityChat extends Activity
 		mEditTextConversation = (EditText) findViewById(R.id.EditTextChatConversation);
 		mEditTextMyMessage = (EditText) findViewById(R.id.EditTextChatMyMessage);
 		mButtonSend = (Button) findViewById(R.id.ButtonChatSend);
-		Bundle extras = getIntent().getExtras();
+//		Bundle extras = getIntent().getExtras();
 		
 		Log.d(LOG_TAG, "on create usrname:" + chatingWith + " in ip: "+chatingWithIp);
 		mButtonSend.setOnClickListener(new OnClickListener() {
@@ -106,7 +106,7 @@ public class ActivityChat extends Activity
 			{
 				return;
 			}*/
-			String text = mEditTextConversation.getText().toString();
+//			String text = mEditTextConversation.getText().toString();
 			//if(!text.equals(""))
 			//	text+="\n";
 			mEditTextConversation.setText(application.addOpenChats(chatingWith,msgChat.getSourceUserIP()));
@@ -118,6 +118,4 @@ public class ActivityChat extends Activity
 	{
 		return mHandler;
 	}
-	
-	
 }

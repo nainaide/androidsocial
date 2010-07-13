@@ -31,9 +31,6 @@ public class User
 	private final int INDEX_FIRST_NAME = 0;
 	private final int INDEX_LAST_NAME = 1;
 
-//	private final String PREFIX_HEARTBEAT = "Heartbeat:";
-//	private final String PREFIX_MESSAGE = "Message:";
-	
 	private String mFirstName = "";
 	private String mLastName = "";
 	private Sex mSex;
@@ -41,7 +38,6 @@ public class User
 
 	// TODO : Add a picture to the user
 	
-	// TODO : Add all the other needed fields
 	private String mHobbies = "";
 	private String mFavoriteMusic = "";
 
@@ -58,6 +54,8 @@ public class User
 		setSex(newSex);
 		setDateBirth(newDateBirth);
 		setIPAddress(newIPAddress);
+		
+		setLastPongTime(System.currentTimeMillis());
 	}
 
 	public User(String newFirstName, String newLastName, Sex newSex, int newBirthYear, int newBirthMonth, int newBirthDay, String newIPAddress)
@@ -65,20 +63,20 @@ public class User
 		this(newFirstName, newLastName, newSex, new GregorianCalendar(newBirthYear, newBirthMonth, newBirthDay), newIPAddress);
 	}
 
-	public User(String userFileName, String userName)
-	{
-		// TODO : Implement
-		// TODO : When extraction of username from the file (or file name) will be done, remove the additional parameter - userName
-		setFullName(userName);
-		setSex(Sex.FEMALE);
-		setDateBirth(new GregorianCalendar(1982, 8, 23));
-		
-		
-		// If the user's file exists
-		
-			// Read the details, if exist
-
-	}
+//	public User(String userFileName, String userName)
+//	{
+//		// TODO : Implement
+//		// TODO : When extraction of username from the file (or file name) will be done, remove the additional parameter - userName
+//		setFullName(userName);
+//		setSex(Sex.FEMALE);
+//		setDateBirth(new GregorianCalendar(1982, 8, 23));
+//		
+//		
+//		// If the user's file exists
+//		
+//			// Read the details, if exist
+//
+//	}
 	
 	public User(Messages.MessageNewUser msgNewUser)
 	{
@@ -87,6 +85,8 @@ public class User
 		setFullName(msgNewUser.getUsername());
 		setDateBirth(new GregorianCalendar(Integer.parseInt(msgNewUser.getDateYear()), Integer.parseInt(msgNewUser.getDateMonth()), Integer.parseInt(msgNewUser.getDateDay())));
 		setSex(Sex.valueOf(msgNewUser.getSex().toUpperCase()));
+		
+		setLastPongTime(System.currentTimeMillis());
 		
 		// TODO : Deal with the picture
 	}
@@ -220,82 +220,4 @@ public class User
 
 		return (getFullName().equals(userOther.getFullName()) && mIPaddress.equals(userOther.getIPAddress()));
 	}
-
-	
-
-//	public String makeHeartbeat(String gpsStr)
-////	public String makeHeartbeat()
-////	{
-////		String hbString = PREFIX_HEARTBEAT + PARAMS_SEPARATOR + getFullName(); // + "~" + statusMsg + "~" + gpsStr;
-////		
-////		return hbString;
-////	}
-//
-//	boolean isHeartbeat(String msg)
-//	{
-//		if (msg.startsWith(PREFIX_HEARTBEAT))
-//			return true;
-//		else
-//			return false;
-//	}
-//
-////	String parseHeartbeat(String hbString)
-//	public void parseHeartbeat(String hbString)
-//	{
-//		StringTokenizer st = new StringTokenizer(hbString, PARAMS_SEPARATOR);
-//		if (st.hasMoreTokens())
-//		{
-//			// Skip message identifier
-//			st.nextToken();
-//		}
-//		if (st.hasMoreTokens())
-//		{
-//			setFirstName(st.nextToken());
-//		}
-////		if (st.hasMoreTokens())
-////		{
-////			statusMsg = st.nextToken();
-////		}
-////		String gps = "";
-////		if (st.hasMoreTokens())
-////		{
-////			gps = st.nextToken();
-////		}
-////		return gps;
-//	}
-//
-//	public String makeMessage(String message)
-//	{
-//		String msgString = "";
-//		
-//		msgString = PREFIX_MESSAGE + PARAMS_SEPARATOR + getFullName() + PARAMS_SEPARATOR + message + PARAMS_SEPARATOR;
-//		
-//		return msgString;
-//	}
-//
-//	boolean isMessage(String msg)
-//	{
-//		return msg.startsWith(PREFIX_MESSAGE);
-//	}
-//
-//	String parseMessage(String msgString)
-//	{
-//		StringTokenizer st = new StringTokenizer(msgString, PARAMS_SEPARATOR);
-//		if (st.hasMoreTokens())
-//		{
-//			// Skip message identifier
-//			st.nextToken();
-//		}
-//		if (st.hasMoreTokens())
-//		{
-//			setFullName(st.nextToken());
-//		}
-//		String msgText = "";
-//		if (st.hasMoreTokens())
-//		{
-//			msgText = st.nextToken();
-//		}
-//		
-//		return msgText;
-//	}
 }

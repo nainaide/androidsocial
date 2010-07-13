@@ -1,7 +1,6 @@
 package main.main;
 
 import java.io.BufferedReader;
-import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -14,7 +13,6 @@ import java.io.OutputStreamWriter;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.net.Socket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -27,20 +25,18 @@ import java.util.List;
 import main.main.Messages.MessageChatMessage;
 import android.app.Application;
 import android.content.Context;
-import android.net.wifi.WifiManager;
 import android.os.Message;
+import android.text.style.LeadingMarginSpan;
 import android.util.Log;
 import android.widget.Toast;
 
 
 public class ApplicationSocialNetwork extends Application
 {
-	private final int NAP_TIME_WIFI_ENABLE = 1000;
-	private final int NAP_TIME_WIFI_DISABLE = 2000;
-	private final int NAP_TIME_ADHOC_CLIENT_ENABLE = 1000;
-	private final int NAP_TIME_ADHOC_CLIENT_DISABLE = 1000;
-	private final int NAP_TIME_ADHOC_SERVER_ENABLE = 1000;
-	private final int NAP_TIME_ADHOC_SERVER_DISABLE = 1000;
+//	private final int NAP_TIME_ADHOC_CLIENT_ENABLE = 1000;
+//	private final int NAP_TIME_ADHOC_CLIENT_DISABLE = 1000;
+//	private final int NAP_TIME_ADHOC_SERVER_ENABLE = 1000;
+//	private final int NAP_TIME_ADHOC_SERVER_DISABLE = 1000;
 	private final int NAP_TIME_STALE_CHECKER = 1000;
 	private final int NAP_TIME_SENDER = 1000;
 	private final int NAP_TIME_GET_DATAGRAM_SOCKET = 1000;
@@ -48,12 +44,14 @@ public class ApplicationSocialNetwork extends Application
 	
 	private final long TIMEOUT_STALE_CLIENT = 5 * NAP_TIME_STALE_CHECKER;
 	private final long TIMEOUT_STALE_LEADER = 5 * NAP_TIME_STALE_CHECKER;
-	private final int  TIMEOUT_SOCKET_ACCEPT = 30000;
+//	private final int  TIMEOUT_SOCKET_ACCEPT = 30000;
 
 	public final String USER_FILE_NAME_PREFIX = "user_";
 	public final String USER_FILE_NAME_SUFFIX = "";
 	public final String USER_FILE_NAME_EXTENSION = "";
 
+	private final String PROPERTY_VALUE_SEPARATOR = "=";
+	
 	private final String LOG_TAG = "SN.Application";
 	
 	private final String IP_LEADER = "192.168.2.1";
@@ -66,7 +64,6 @@ public class ApplicationSocialNetwork extends Application
 
 	private NetControlState mCurrState = NetControlState.NOT_RUNNING;
 
-	private WifiManager mWifiManager;
 	private Thread mThreadClientSender = null;
 	private Thread mThreadClientReceiver = null;
 //	private Thread mThreadLeaderSocketListener = null;
@@ -84,7 +81,6 @@ public class ApplicationSocialNetwork extends Application
 //	private HashMap<String, Socket> mMapIPToSocket = null;
 //	private Socket mSocketToLeader = null;
 	
-	boolean mWasWifiEnabledBeforeApp;
 	
 	/** Called when the application is first created. */
 	public void onCreate()
@@ -92,9 +88,6 @@ public class ApplicationSocialNetwork extends Application
 		mOSFilesManager = new OSFilesManager();
 		mOSFilesManager.setPathAppDataFiles(getApplicationContext().getFilesDir().getParent());
 
-		mWifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
-		mWasWifiEnabledBeforeApp = mWifiManager.isWifiEnabled();
-		
 		mMapIPToUser = new HashMap<String, User>();
 //		mMapIPToSocket = new HashMap<String, Socket>();
 		openChats = new Hashtable<String, String>();
@@ -107,8 +100,6 @@ public class ApplicationSocialNetwork extends Application
 		else
 		{
 			// Notify there are no root permissions and exit
-//			showToast("You don't have root permissions. The application cannot run and will now quit. Good day !");
-//			System.exit(1);
 			toastAndExit("You don't have root permissions. The application cannot run and will now quit. Good day !");
 			
 			// TODO : Is this enough or should something else be done ?
@@ -116,26 +107,16 @@ public class ApplicationSocialNetwork extends Application
 
 		mCurrState = NetControlState.NOT_RUNNING;
 
-//		resetWifi();
+//		stopDnsmasq();
 //		disableAdhocServer();
-//		disableAdhocClient();
-	}
-	public User getMe()
-	{
-		return mMe;
 	}
 	
-	private void resetWifi()
+	public void stopDnsmasq()
 	{
 		mOSFilesManager.runRootCommand(mOSFilesManager.PATH_APP_DATA_FILES + "/bin/netcontrol stop_dnsmasq");
 //		mOSFilesManager.runRootCommand(mOSFilesManager.PATH_APP_DATA_FILES + "/bin/netcontrol stop_int");
 //		mOSFilesManager.runRootCommand(mOSFilesManager.PATH_APP_DATA_FILES + "/bin/netcontrol stop_wifi");
 //		mOSFilesManager.runRootCommand(mOSFilesManager.PATH_APP_DATA_FILES + "/bin/netcontrol start_wifi");
-//
-//		if (mOSFilesManager.runRootCommand(mOSFilesManager.PATH_APP_DATA_FILES + "/bin/netcontrol reset_wifi") == false)
-//		{
-//			// TODO : Notify the user
-//		}
 	}
 
 	public void onTerminate()
@@ -173,8 +154,6 @@ public class ApplicationSocialNetwork extends Application
 		
 		// tiwlan.ini
 		copyRaw(mOSFilesManager.PATH_APP_DATA_FILES + "/conf/tiwlan.ini", R.raw.tiwlan_ini);
-		
-//		showToast("Binaries and config-files are installed");
 	}
 
 	private void copyRaw(String filename, int resource)
@@ -250,21 +229,9 @@ public class ApplicationSocialNetwork extends Application
 	
 	private void checkDirs()
 	{
-		File dir = new File(mOSFilesManager.PATH_APP_DATA_FILES);
-		
-		if (dir.exists() == false)
-		{
-//			showToast("The application's data directory doesn't exist !");
-			
-			// TODO : Exit the application ??
-			toastAndExit("The application's data directory doesn't exist !");
-		}
-		else
-		{
-			createDir("bin");
-			createDir("var");
-			createDir("conf");
-		}
+		createDir("bin");
+		createDir("var");
+		createDir("conf");
 	}
 
 	private void createDir(String dirName)
@@ -327,22 +294,24 @@ Log.d(LOG_TAG, "About to be a leader");
 //					toastAndExit("Cannot establish a connection with the network. Exiting");
 //				}
 				
+				mLeaderLastPing = System.currentTimeMillis();
+				
 				break;
 			}
 		}
 		
 		// Start the threads for sending and receiving messages
-		if (mThreadClientReceiver == null)
-		{
+//		if (mThreadClientReceiver == null)
+//		{
 			mThreadClientReceiver = new Thread(new ThreadMessageLoop());
 			mThreadClientReceiver.start();
-		}
-
-		if (mThreadClientSender == null)
-		{
+//		}
+//
+//		if (mThreadClientSender == null)
+//		{
 			mThreadClientSender = new Thread(new ThreadStaleChecker());
 			mThreadClientSender.start();
-		}
+//		}
 	}
 
 	public void stopService()
@@ -350,16 +319,18 @@ Log.d(LOG_TAG, "About to be a leader");
 		try
 		{
 			// Restore the Wifi state to the way it was before running this application
-			mWifiManager.setWifiEnabled(mWasWifiEnabledBeforeApp);
+//			mWifiManager.setWifiEnabled(mWasWifiEnabledBeforeApp);
 			
 			if (mCurrState == NetControlState.CLIENT)
 			{
-				disableAdhocClient();
+//				disableAdhocClient();
 			}
 			else if (mCurrState == NetControlState.LEADER)
 			{
 				disableAdhocServer();
 			}
+
+			mCurrState = NetControlState.NOT_RUNNING;
 
 //			if (mMapIPToSocket != null)
 //			{
@@ -383,41 +354,6 @@ Log.d(LOG_TAG, "About to be a leader");
 			int potentialDebugBreakPoint = 3;
 		}
 	}
-
-
-//	public void disableWifi()
-//	{
-//		boolean isDone = false;
-//		
-//		while (isDone == false && !Thread.currentThread().isInterrupted())
-//		{
-//			mWifiManager.setWifiEnabled(false);
-//			
-//			nap(NAP_TIME_WIFI_ENABLE);
-//			
-//			if (mWifiManager.isWifiEnabled() == false)
-//			{
-//				isDone = true;
-//			}
-//		}
-//	}
-//
-//	public void enableWifi()
-//	{
-//		boolean isDone = false;
-//		
-//		while (isDone == false && !Thread.currentThread().isInterrupted())
-//		{
-//			mWifiManager.setWifiEnabled(true);
-//			
-//			nap(NAP_TIME_WIFI_ENABLE);
-//			
-//			if (mWifiManager.isWifiEnabled())
-//			{
-//				isDone = true;
-//			}
-//		}
-//	}
 
 	public void enableAdhocServer()
 	{
@@ -450,8 +386,8 @@ Log.d(LOG_TAG, "About to be a leader");
 		mMyDhcpAddress = "";
 		if (mOSFilesManager.runRootCommand(mOSFilesManager.PATH_APP_DATA_FILES + "/bin/netcontrol start_client " + mOSFilesManager.PATH_APP_DATA_FILES) == false)
 		{
-			// TODO : Notify the user
 			// It doesn't necessarily mean the lease failed
+			// TODO : Notify the user
 			int debugPoint = 3;
 			
 		}
@@ -601,7 +537,7 @@ Log.d(LOG_TAG, "The leader is stale");
 				if ((System.currentTimeMillis() - currUser.getLastPongTime()) > TIMEOUT_STALE_CLIENT)
 				{
 					
-Log.d(LOG_TAG, "There's a stale user :" + currUser.getFullName());
+Log.d(LOG_TAG, "There's a stale user : " + currUser.getFullName() + ", now = " + System.currentTimeMillis() + ", User's lastPongTime = " + currUser.getLastPongTime());
 
 					String currIPAddress = currUser.getIPAddress();
 					
@@ -632,9 +568,6 @@ Log.d(LOG_TAG, "There's a stale user :" + currUser.getFullName());
 
 	private class ThreadMessageLoop implements Runnable
 	{
-
-//		private String LOCAL_HOST = ""; //InetAddress.getLocalHost().getHostAddress(); //"127.0.0.1";
-
 		// @Override
 		public void run()
 		{
@@ -642,14 +575,9 @@ Log.d(LOG_TAG, "There's a stale user :" + currUser.getFullName());
 			DatagramPacket packet = null;
 			DatagramSocket socket = null;
 
-//			try {
-//				LOCAL_HOST = InetAddress.getLocalHost().getHostAddress(); //"127.0.0.1";
-//			} catch (UnknownHostException e1) {
-//				e1.printStackTrace();
-//			}
-
 //			Looper.prepare();
 
+			// Getting a TCP packet
 //			BufferedReader in = new BufferedReader(new InputStreamReader(skt.getInputStream()));
 //			System.out.print("Received string: '");
 //			
@@ -679,54 +607,68 @@ Log.d(LOG_TAG, "Recevied Msg : " + strMsgReceived);
 					
 					if (msgPrefix.equals(Messages.MSG_PREFIX_NEW_USER))
 					{
-						Messages.MessageNewUser msgNewUser = new Messages.MessageNewUser(msgReceived);
-						
-						if (mCurrState == NetControlState.LEADER)
-						{
-							String ipAddressNewUser = msgNewUser.getIPAddress();
-//								User newUser = new User(msgNewUser);
+						String ipSender = packet.getAddress().getHostAddress();
+Log.d(LOG_TAG, "New user : ipSender = " + ipSender);
 
-							// Send the new user a "NewUser" message for every other client so he knows them
-							for (User currUser : mMapIPToUser.values())
+						// Check if we're the leader and if the leader broadcasted this message to all the clients.
+						// If so, we doesn't need to deal with the message, only the client that will receive it.
+						if ((mCurrState == NetControlState.LEADER && ipSender.equals(IP_LEADER)) == false)
+						{
+							Messages.MessageNewUser msgNewUser = new Messages.MessageNewUser(msgReceived);
+	
+							if (mCurrState == NetControlState.LEADER)
 							{
-								Messages.MessageNewUser msgNewUserOfExistingUserForNewcomerToKnow = new Messages.MessageNewUser(currUser);
+								String ipAddressNewUser = msgNewUser.getIPAddress();
+	
+								// Send the new user a "NewUser" message for every other client so he knows them
+								for (User currUser : mMapIPToUser.values())
+								{
+									Messages.MessageNewUser msgNewUserOfExistingUserForNewcomerToKnow = new Messages.MessageNewUser(currUser);
+									
+									sendMessage(msgNewUserOfExistingUserForNewcomerToKnow.toString(), ipAddressNewUser);
+								}
 								
-								sendMessage(msgNewUserOfExistingUserForNewcomerToKnow.toString(), ipAddressNewUser);
+								// Send the user a "NewUser" message for me (The leader)
+								Messages.MessageNewUser msgNewUserLeader = new Messages.MessageNewUser(mMe);
+								
+								sendMessage(msgNewUserLeader.toString(), ipAddressNewUser);
+								
+								// Broadcast to everybody that this user has joined us, so they know him
+								broadcast(msgNewUser.toString());
 							}
 							
-							// Send the user a "NewUser" message for me (The leader)
-							Messages.MessageNewUser msgNewUserLeader = new Messages.MessageNewUser(mMe);
-							
-							sendMessage(msgNewUserLeader.toString(), ipAddressNewUser);
-							
-							// Broadcast to everybody that this user has joined us, so they know him
-							broadcast(msgNewUser.toString());
-						}
-						
-						// Check that the new user isn't me (When a user joins, the leader broadcasts it so he will
-						//                                   also get the message about it, and should ignore it)
-						// Note : The condition is only needed when we're not the leader (Otherwise we're obviously not the new user)
-						if (msgNewUser.getIPAddress().equals(mMe.getIPAddress()) == false)
-						{
-							User newUser = new User(msgNewUser);
-							
-							addUser(newUser);
+							// Check that the new user isn't me (When a user joins, the leader broadcasts it so he will
+							//                                   also get the message about it, and should ignore it)
+							// Note : The condition is only needed when we're not the leader (Otherwise we're obviously not the new user)
+							if (msgNewUser.getIPAddress().equals(mMe.getIPAddress()) == false)
+							{
+								User newUser = new User(msgNewUser);
+								
+								addUser(newUser);
+							}
 						}
 					}
 					else if (msgPrefix.equals(Messages.MSG_PREFIX_USER_DISCONNECTED))
 					{
-						Messages.MessageUserDisconnected msgUserDisconnected = new Messages.MessageUserDisconnected(msgReceived);
-						User userDisconnected = mMapIPToUser.get(msgUserDisconnected.getIPAddress());
-
-						if (userDisconnected != null)
+						String ipSender = packet.getAddress().getHostAddress();
+						
+						// Check if we're the leader and if the leader broadcasted this message to all the clients.
+						// If so, we doesn't need to deal with the message, only the client that will receive it.
+						if ((mCurrState == NetControlState.LEADER && ipSender.equals(IP_LEADER)) == false)
 						{
-							if (mCurrState == NetControlState.LEADER)
+							Messages.MessageUserDisconnected msgUserDisconnected = new Messages.MessageUserDisconnected(msgReceived);
+							User userDisconnected = mMapIPToUser.get(msgUserDisconnected.getIPAddress());
+		
+							if (userDisconnected != null)
 							{
-								// Broadcast to everybody that this user has disconnected, so they remove him from their list
-								broadcast(msgUserDisconnected.toString());
+								if (mCurrState == NetControlState.LEADER)
+								{
+									// Broadcast to everybody that this user has disconnected, so they remove him from their list
+									broadcast(msgUserDisconnected.toString());
+								}
+								
+								removeUser(userDisconnected.getIPAddress());
 							}
-							
-							removeUser(userDisconnected.getIPAddress());
 						}
 					}
 					else if (msgPrefix.equals(Messages.MSG_PREFIX_GET_USER_DETAILS)) // Only the leader gets this message
@@ -795,14 +737,20 @@ Log.d(LOG_TAG, "Recevied Msg : " + strMsgReceived);
 							notifyActivityChat(msgChat);
 						}
 					}
-					else if (msgPrefix.equals(Messages.MSG_PREFIX_PING)) // Only a client gets this message
+					else if (msgPrefix.equals(Messages.MSG_PREFIX_PING))
 					{
-						// Send a pong message to show I'm alive
-						Messages.MessagePong msgPong = new Messages.MessagePong(mMe.getIPAddress());
-						
-						sendMessageUDP(msgPong.toString(), IP_LEADER);
-						
-						mLeaderLastPing = System.currentTimeMillis();
+						// The leader also gets this message, because he broadcasts it to everyone including himself.
+						// So check if I'm not the leader since only a client should respond to this message
+						if (mMe.getIPAddress().equals(IP_LEADER) == false)
+						{
+							// Send a pong message to show I'm alive
+							Messages.MessagePong msgPong = new Messages.MessagePong(mMe.getIPAddress());
+							
+							sendMessageUDP(msgPong.toString(), IP_LEADER);
+							
+							// Update the last ping time for leader-stale checking
+							mLeaderLastPing = System.currentTimeMillis();
+						}
 					}
 					else if (msgPrefix.equals(Messages.MSG_PREFIX_PONG)) // Only the leader gets this message
 					{
@@ -810,8 +758,12 @@ Log.d(LOG_TAG, "Recevied Msg : " + strMsgReceived);
 						String ipAddressPongged = msgPong.getIPAddress();
 						
 						User userPongged = mMapIPToUser.get(ipAddressPongged);
-						
-						userPongged.setLastPongTime(System.currentTimeMillis());
+					
+						// Check the user still exists (Maybe he disconnected since Ponging)
+						if (userPongged != null)
+						{
+							userPongged.setLastPongTime(System.currentTimeMillis());
+						}
 					}
 				}
 				catch (IOException e)
@@ -879,6 +831,7 @@ Log.d(LOG_TAG, "Recevied Msg : " + strMsgReceived);
 	public synchronized void showToast(Context context, String toastMessage)
 	{
 		Toast.makeText(context, toastMessage, Toast.LENGTH_LONG).show();
+		Toast.makeText(this, toastMessage, Toast.LENGTH_LONG).show();
 	}
 
 	private synchronized void addUser(User userToAdd)
@@ -911,15 +864,15 @@ Log.d(LOG_TAG, "Recevied Msg : " + strMsgReceived);
 Log.d(LOG_TAG, "About to notify ActivityUserDetails. Msg = " + msgUserDetails.toString());
 
 		// TODO : I think these 2 whiles are not needed anymore. Try to delete
-		while (ActivityUserDetails.instance == null)
-		{
-			// Do nothing. Just wait. If we're in this function, this means that the ActivityUserDetails will shortly appear
-			// so just wait until it does and there's an instance of it
-		}
-		
-		while (ActivityUserDetails.instance.getUpdateHandler() == null)
-		{
-		}
+//		while (ActivityUserDetails.instance == null)
+//		{
+//			// Do nothing. Just wait. If we're in this function, this means that the ActivityUserDetails will shortly appear
+//			// so just wait until it does and there's an instance of it
+//		}
+//		
+//		while (ActivityUserDetails.instance.getUpdateHandler() == null)
+//		{
+//		}
 		
 		Message msg = ActivityUserDetails.instance.getUpdateHandler().obtainMessage();
 		msg.obj = msgUserDetails;
@@ -1021,7 +974,6 @@ Log.d(LOG_TAG, "Right before notifying ActivityUserDetails");
 		mMe = new User(userName, "", sex, birthYear, birthMonth, birthDay, "");
 	}
 	
-//	public synchronized void sendMessage(String message, InetAddress dest)
 	public synchronized void sendMessage(String message, String destIP)
 	{
 		// TODO : After choosing between UDP and TCP, the only implementation will be here instead of this function call to sendMessageUPD/TCP.
@@ -1087,12 +1039,12 @@ Log.d(LOG_TAG, "Sent Msg : " + message);
 		sendMessage(message, getLeaderIP());
 	}
 	
-	private synchronized void broadcast(String message) // throws SocketException, IOException
+	private synchronized void broadcast(String message)
 	{
 		broadcastUDP(message);
 	}
 	
-	private synchronized void broadcastUDP(String message) // throws SocketException, IOException
+	private synchronized void broadcastUDP(String message)
 	{
 		byte[] buffer = new byte[1024];
 		DatagramPacket packet = null;
@@ -1100,24 +1052,29 @@ Log.d(LOG_TAG, "Sent Msg : " + message);
 		InetAddress dest = null;
 		
 		buffer = message.getBytes();
-		packet = new DatagramPacket(buffer, buffer.length, dest, PORT);
 		try
 		{
 			dest = InetAddress.getByName(calcBroadcastAddress(IP_LEADER)); //InetAddress.getByName("192.168.2.255");;
+			packet = new DatagramPacket(buffer, buffer.length, dest, PORT);
+Log.d(LOG_TAG, "Broadcast : dest = " + dest + " (calcBroadcastAddress(IP_LEADER) = " + calcBroadcastAddress(IP_LEADER) + ")");
+
 			socket = new DatagramSocket();
 			socket.setBroadcast(true);
 			socket.send(packet);
 		}
 		catch (SocketException e)
 		{
+Log.d(LOG_TAG, "Broadcast : Exception !!! SocketException");			
 			e.printStackTrace();
 		}
 		catch (UnknownHostException e)
 		{
+Log.d(LOG_TAG, "Broadcast : Exception !!! UnknownHostException");			
 			e.printStackTrace();
 		}
 		catch (IOException e)
 		{
+Log.d(LOG_TAG, "Broadcast : Exception !!! IOException");			
 			e.printStackTrace();
 		}
 	}
@@ -1162,6 +1119,11 @@ Log.d(LOG_TAG, "Sent Msg : " + message);
 		return IP_LEADER;
 	}
 	
+	public synchronized User getMe()
+	{
+		return mMe;
+	}
+	
 	public synchronized String getMyIP()
 	{
 		return mMe.getIPAddress();
@@ -1185,12 +1147,10 @@ Log.d(LOG_TAG, "Sent Msg : " + message);
 		OutputStreamWriter osw = null;
 		
 		try {
-			 fos = openFileOutput(fileName, MODE_APPEND); //MODE_PRIVATE);
+			 fos = openFileOutput(fileName, MODE_APPEND);
 			 osw = new OutputStreamWriter(fos);
-//			 BufferedWriter bw = new BufferedWriter(osw);
-			 // TODO : Make this "=" a constant
-			 osw.write(propertyName + "=" + value + "\n");
-//			 bw.write(propertyName + "=" + value + "\n");
+			 
+			 osw.write(propertyName + PROPERTY_VALUE_SEPARATOR + value + "\n");
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -1209,7 +1169,6 @@ Log.d(LOG_TAG, "Sent Msg : " + message);
 	private String readPropertyFromFile(String fileName, String propertyName)
 	{
 		FileInputStream fis = null;
-//		InputStreamReader isr = null;
 		BufferedReader br = null;
 		String currLine = "";
 		String returnedValue = "";
@@ -1218,16 +1177,13 @@ Log.d(LOG_TAG, "Sent Msg : " + message);
 			
 			fis = openFileInput(fileName);
 
-//			isr = new InputStreamReader(fis);
 			br = new BufferedReader(new InputStreamReader(fis));
 
-			// TODO : Make this "=" a constant
 			while ( (currLine = br.readLine()) != null)
 			{
 				if (currLine.contains(propertyName))
 				{
-					// TODO : Make this "=" a constant
-					returnedValue = currLine.split("=")[1];
+					returnedValue = currLine.split(PROPERTY_VALUE_SEPARATOR)[1];
 					
 					break;
 				}
@@ -1250,13 +1206,6 @@ Log.d(LOG_TAG, "Sent Msg : " + message);
 	
 	public String getUserFileName(String userName)
 	{
-//		String extension = "";
-//		
-//		if (USER_FILE_NAME_EXTENSION.equals("") == false)
-//		{
-//			extension = "." + USER_FILE_NAME_EXTENSION;
-//		}
-		
 		return USER_FILE_NAME_PREFIX + userName + USER_FILE_NAME_SUFFIX + USER_FILE_NAME_EXTENSION;
 	}
 
