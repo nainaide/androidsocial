@@ -38,7 +38,7 @@ public class ApplicationSocialNetwork extends Application
 //	private final int NAP_TIME_ADHOC_SERVER_ENABLE = 1000;
 //	private final int NAP_TIME_ADHOC_SERVER_DISABLE = 1000;
 	private final int NAP_TIME_STALE_CHECKER = 1000;
-	private final int NAP_TIME_SENDER = 1000;
+//	private final int NAP_TIME_MESSAGE_LOOP = 1000;
 	private final int NAP_TIME_GET_DATAGRAM_SOCKET = 1000;
 	private final int NAP_TIME_TOAST_AND_EXIT = 3000;
 	
@@ -64,8 +64,8 @@ public class ApplicationSocialNetwork extends Application
 
 	private NetControlState mCurrState = NetControlState.NOT_RUNNING;
 
-	private Thread mThreadClientSender = null;
-	private Thread mThreadClientReceiver = null;
+	private Thread mThreadStaleChecker = null;
+	private Thread mThreadMessagLoop = null;
 //	private Thread mThreadLeaderSocketListener = null;
 	
 	public OSFilesManager mOSFilesManager = null;
@@ -290,10 +290,13 @@ Log.d(LOG_TAG, "About to be a leader");
 //				{
 //					e.printStackTrace();
 //					
-//					// TODO : What to do here ?
 //					toastAndExit("Cannot establish a connection with the network. Exiting");
 //				}
 				
+				Messages.MessageNewUser msgNewUser = new Messages.MessageNewUser(mMe);
+
+				sendMessage(msgNewUser.toString()); //, IP_LEADER);
+
 				mLeaderLastPing = System.currentTimeMillis();
 				
 				break;
@@ -303,14 +306,14 @@ Log.d(LOG_TAG, "About to be a leader");
 		// Start the threads for sending and receiving messages
 //		if (mThreadClientReceiver == null)
 //		{
-			mThreadClientReceiver = new Thread(new ThreadMessageLoop());
-			mThreadClientReceiver.start();
+			mThreadMessagLoop = new Thread(new ThreadMessageLoop());
+			mThreadMessagLoop.start();
 //		}
 //
 //		if (mThreadClientSender == null)
 //		{
-			mThreadClientSender = new Thread(new ThreadStaleChecker());
-			mThreadClientSender.start();
+			mThreadStaleChecker = new Thread(new ThreadStaleChecker());
+			mThreadStaleChecker.start();
 //		}
 	}
 
@@ -327,7 +330,7 @@ Log.d(LOG_TAG, "About to be a leader");
 			}
 			else if (mCurrState == NetControlState.LEADER)
 			{
-				disableAdhocServer();
+				disableAdhocLeader();
 			}
 
 			mCurrState = NetControlState.NOT_RUNNING;
@@ -345,8 +348,8 @@ Log.d(LOG_TAG, "About to be a leader");
 //				mSocketToLeader.close();
 //			}
 			
-			mThreadClientReceiver.interrupt();
-			mThreadClientSender.interrupt();
+			mThreadMessagLoop.interrupt();
+			mThreadStaleChecker.interrupt();
 //			mThreadLeaderSocketListener.interrupt();
 		}
 		catch (Exception e)
@@ -355,7 +358,7 @@ Log.d(LOG_TAG, "About to be a leader");
 		}
 	}
 
-	public void enableAdhocServer()
+	public void enableAdhocLeader()
 	{
 		mOSFilesManager.updateDnsmasqConf();
 		
@@ -370,7 +373,7 @@ Log.d(LOG_TAG, "About to be a leader");
 		mCurrState = NetControlState.LEADER;
 	}
 
-	public void disableAdhocServer()
+	public void disableAdhocLeader()
 	{
 		if (mOSFilesManager.runRootCommand(mOSFilesManager.PATH_APP_DATA_FILES + "/bin/netcontrol stop_server " + mOSFilesManager.PATH_APP_DATA_FILES) == false)
 		{
@@ -462,19 +465,6 @@ Log.d(LOG_TAG, "Running as client");
 		// @Override
 		public void run()
 		{
-			// When the thread begins to run, it means the user has just logged in.
-			// If this is a client, ask for the list of users
-			if (mCurrState == NetControlState.CLIENT)
-			{
-				Messages.MessageNewUser msgNewUser = new Messages.MessageNewUser(mMe);
-
-				sendMessage(msgNewUser.toString()); //, IP_LEADER);
-			}
-			else if (mCurrState == NetControlState.LEADER)
-			{
-				// Nothing to do there (For now. FFU)
-			}
-
 //			Looper.prepare();
 			while (!Thread.currentThread().isInterrupted())
 			{
@@ -514,14 +504,16 @@ Log.d(LOG_TAG, "The leader is stale");
 					e.printStackTrace();
 				}
 
-				try
-				{
-					Thread.sleep(NAP_TIME_SENDER);
-				}
-				catch (InterruptedException e)
-				{
-					Thread.currentThread().interrupt();
-				}
+				nap(NAP_TIME_STALE_CHECKER);
+				
+//				try
+//				{
+//					Thread.sleep(NAP_TIME_SENDER);
+//				}
+//				catch (InterruptedException e)
+//				{
+//					Thread.currentThread().interrupt();
+//				}
 			}
 		}
 		

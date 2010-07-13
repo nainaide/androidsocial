@@ -65,7 +65,7 @@ public class ActivityLogin extends Activity implements OnClickListener
         // Set all the listeners (e.g for buttons, dialogs) and adapters
         setListenersAndAdapters();
         
-        // TODO : Get the list of users on the current machine and populate the spinner
+        // Get the list of users on the current machine and populate the spinner
         populateSpinnerUserNames();
 	}
 
@@ -143,7 +143,7 @@ public class ActivityLogin extends Activity implements OnClickListener
     			{
     				if (application.didRunBefore() && application.getCurrentState() == NetControlState.LEADER)
     				{
-    					application.disableAdhocServer();
+    					application.disableAdhocLeader();
     				}
     					
     				// First, set the preference whether we should auto-login the next time
