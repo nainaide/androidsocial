@@ -100,7 +100,7 @@ public class ActivityUsersList extends ListActivity
 					Looper.prepare(); // Apparently it's needed for showing a dialog (next line) in a thread
 					application.showToast(ActivityUsersList.this, "No network could be found. Creating a new one...");
 //					mProgDialog = ProgressDialog.show(ActivityConnect.this, "", "No network could be found. Starting a new one...", true);
-					application.enableAdhocServer();
+					application.enableAdhocLeader();
 //					mProgDialog.dismiss();
 				}
 				runOnUiThread(mRunnableReturnNetwork);
