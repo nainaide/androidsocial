@@ -1,23 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-		  	  android:orientation="vertical" android:layout_height="fill_parent" android:layout_width="fill_parent">
+		  	  android:orientation="vertical" android:layout_height="fill_parent" android:layout_width="fill_parent" android:scrollbars="vertical" android:layout_margin="0sp" android:padding="0sp" android:isScrollContainer="true">
 		  	  
-	<TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/TextViewCreateUserUserName" android:text="Username :"></TextView><EditText
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content"
-		android:minWidth="@dimen/min_width_edit_text" android:maxLength="25" android:text='' android:lines="1" android:layout_gravity="center_horizontal" android:hint="Enter a new user name" android:id="@+id/EditTextCreateUserUserName">
-	</EditText>
-	<TextView
-		android:text="(Up to 25 characters)"
-		android:id="@+id/TextViewNewUserName"
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content" android:layout_gravity="center_horizontal">
-	</TextView>
-<TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Sex :" android:id="@+id/TextViewCreateUserSex" android:layout_marginTop="15sp"></TextView><LinearLayout android:layout_height="wrap_content" android:layout_width="wrap_content" android:layout_gravity="center_horizontal" android:id="@+id/LinearLayoutCreateUserSex"><RadioButton android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/RadioButtonCreateUserMale" android:text="Male"></RadioButton><RadioButton android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/RadioButtonCreateUserFemale" android:text="Female" android:layout_marginLeft="30sp"></RadioButton>
+	<LinearLayout android:id="@+id/LinearLayout01" android:layout_height="wrap_content" android:orientation="vertical" android:layout_width="fill_parent"><TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/TextViewCreateUserUserName" android:text="Username :"></TextView><LinearLayout android:id="@+id/LinearLayout02" android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="vertical" android:layout_gravity="center_horizontal"><EditText android:layout_width="wrap_content" android:layout_height="wrap_content" android:lines="1" android:layout_gravity="center_horizontal" android:id="@+id/EditTextCreateUserUserName" android:layout_margin="0sp" android:maxLength="25" android:minWidth="@dimen/min_width_edit_text" android:text="User name">
+	</EditText><TextView android:text="(Up to 25 characters)" android:id="@+id/TextViewNewUserName" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center_horizontal" android:layout_margin="0sp">
+	</TextView></LinearLayout>
 
-</LinearLayout><TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/TextViewCreateUserDateBirth" android:text="Date of Birth :" android:layout_marginTop="15sp"></TextView><DatePicker android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/DatePickerCreateUserBirth" android:layout_gravity="center_horizontal"></DatePicker><LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="horizontal" android:id="@+id/LinearLayoutCreateUserButtons" android:layout_gravity="bottom|center_horizontal" android:layout_weight="1">
+</LinearLayout>
+	
+<TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/TextViewCreateUserDateBirth" android:text="Date of Birth :" android:layout_marginTop="15sp" android:layout_margin="0sp"></TextView><DatePicker android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/DatePickerCreateUserBirth" android:layout_gravity="center_horizontal" android:layout_margin="0sp" android:clipToPadding="true" android:measureAllChildren="true"></DatePicker><LinearLayout android:id="@+id/LinearLayout05" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_width="fill_parent"><LinearLayout android:id="@+id/LinearLayout07" android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="vertical"><LinearLayout android:id="@+id/LinearLayout03" android:layout_height="wrap_content" android:orientation="vertical" android:layout_width="wrap_content"><TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Sex :" android:id="@+id/TextViewCreateUserSex" android:layout_margin="0sp" android:layout_marginTop="0sp"></TextView><LinearLayout android:id="@+id/LinearLayoutCreateUserSex" android:layout_margin="0sp" android:baselineAligned="true" android:clipChildren="true" android:gravity="fill" android:layout_gravity="fill" android:orientation="vertical" android:layout_width="wrap_content" android:layout_height="fill_parent"><RadioButton android:id="@+id/RadioButtonCreateUserMale" android:text="Male" android:layout_margin="0sp" android:layout_height="wrap_content" android:layout_width="wrap_content" android:layout_gravity="left|center_horizontal" android:textSize="6pt"></RadioButton><RadioButton android:id="@+id/RadioButtonCreateUserFemale" android:text="Female" android:layout_margin="0sp" android:layout_marginLeft="0sp" android:checked="false" android:layout_gravity="right" android:layout_height="wrap_content" android:layout_width="wrap_content" android:textSize="6pt" android:freezesText="false" android:lines="1"></RadioButton>
+
+
+
+</LinearLayout></LinearLayout></LinearLayout>
+<LinearLayout android:id="@+id/LinearLayout08" android:layout_height="wrap_content" android:orientation="vertical" android:layout_width="fill_parent"><TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/txtUserPicture" android:text="User image:"></TextView><FrameLayout android:layout_height="wrap_content" android:id="@+id/FrameLayoutUserImage" android:layout_width="fill_parent"><ImageView android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/userImage" android:src="@drawable/icon" android:layout_gravity="left"></ImageView><Button android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/btnUserPicture" android:text="Browse" android:layout_gravity="right"></Button></FrameLayout></LinearLayout>
+</LinearLayout><LinearLayout android:layout_height="wrap_content" android:orientation="horizontal" android:id="@+id/LinearLayoutCreateUserButtons" android:layout_gravity="bottom|center_horizontal" android:layout_weight="1" android:layout_margin="0sp" android:layout_width="wrap_content" android:padding="0sp" android:gravity="center_horizontal" android:clipChildren="true" android:clipToPadding="true" android:addStatesFromChildren="false">
 <Button android:id="@+id/ButtonCreate" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Create" android:layout_gravity="bottom" android:minWidth="@dimen/min_width_button"></Button>
 <Button android:id="@+id/ButtonCancel" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Cancel" android:minWidth="@dimen/min_width_button" android:layout_gravity="bottom"></Button>
+
 </LinearLayout>
 
 
@@ -30,6 +30,12 @@
 	</TextView>
 -->
 	
+
+
+
+
+
+
 
 
 

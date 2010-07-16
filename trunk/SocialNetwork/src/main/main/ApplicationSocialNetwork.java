@@ -1158,7 +1158,7 @@ Log.d(LOG_TAG, "Broadcast : Exception !!! IOException");
 		}
 	}
 	
-	private String readPropertyFromFile(String fileName, String propertyName)
+	public String readPropertyFromFile(String fileName, String propertyName)
 	{
 		FileInputStream fis = null;
 		BufferedReader br = null;
