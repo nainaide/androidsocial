@@ -5,7 +5,6 @@ import java.io.FilenameFilter;
 
 import main.main.ApplicationSocialNetwork.NetControlState;
 import android.app.Activity;
-import android.app.Dialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -15,30 +14,60 @@ import android.view.View.OnClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
-import android.widget.DatePicker;
-import android.widget.EditText;
-import android.widget.RadioButton;
 import android.widget.Spinner;
 import android.widget.Toast;
 
 public class ActivityLogin extends Activity implements OnClickListener
 {
-	private final int DIALOG_ID_CREATE_USER = 0;
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		switch ( requestCode) {
+			case CREATE_NEW_USER : {
+				if ( resultCode == RESULT_OK) {
+					//TODO: Copy here user creation code.
+					String userName = mUserName =  data.getStringExtra( "userName");
+					String sex		= data.getStringExtra( "sex");
+					String dateOfBirth = data.getStringExtra( "birthday");
+					String pictureFileName = data.getStringExtra( "pictureFileName");
+					String userFileName = application.getUserFileName(userName);
+					application.writePropertyToFile( userFileName, "Username", userName);
+					application.writePropertyToFile( userFileName, "Sex", sex);
+					application.writePropertyToFile( userFileName, "Date of Birth", dateOfBirth);
+					application.writePropertyToFile( userFileName, "Picture file name", pictureFileName);
+					
+					Spinner spinnerUserNames = (Spinner) findViewById(R.id.SpinnerUserName);
+					
+					if (userName.equals("")) {
+						Toast.makeText(this, "User name cannot be empty", Toast.LENGTH_LONG).show();
+					} else {
+						// Check if the spinner already contains the created user
+						if (mAdapter.getPosition(userName) >= 0) {
+							Toast.makeText(this, "User already exists", Toast.LENGTH_LONG).show();
+						} else {
+							// Add the new user name to the spinner and sort the values
+							mAdapter.add(userName);
+							mAdapter.sort(null);
+
+							// Set the new user name in the spinner
+							spinnerUserNames.setSelection(mAdapter.getPosition(userName));
+						}
+					}
+				}
+			}
+			default : {
+				break;
+			}
+		}
+	}
+	private static final int CREATE_NEW_USER = 0x01;
 	private String FILE_NAME_PREFS; // If I final it and assign its value here, it will crash
-	private final String USER_NAME_EMPTY = "";
-//	private final String USER_FILE_NAME_PREFIX = "user_";
-//	private final String USER_FILE_NAME_SUFFIX = "";
-//	private final String USER_FILE_NAME_EXTENSION = "";
-	
-//	private final String LOG_TAG = "SN.Login";
+	private final String  USER_NAME_EMPTY = "";
 	
 	private String mUserName = USER_NAME_EMPTY;
 	private ArrayAdapter<CharSequence> mAdapter;
 	
 	ApplicationSocialNetwork application = null;
 	public static ActivityLogin instance = null;
-//	private DialogInterface.OnDismissListener mOnDismissListener;
-	
 	
     /** Called when the activity is first created. */
     @Override
@@ -107,9 +136,8 @@ public class ActivityLogin extends Activity implements OnClickListener
     	{
     		case R.id.ButtonCreateUser :
     		{
-    			// Show the user creation dialog
-    			showDialog(DIALOG_ID_CREATE_USER);
-
+    			Intent createUserActivity = new Intent( this, ActivityCreateUser.class);
+    			startActivityForResult( createUserActivity, CREATE_NEW_USER);
     			break;
     		}
     		
@@ -237,102 +265,7 @@ public class ActivityLogin extends Activity implements OnClickListener
 		}
 	}
 
-	protected Dialog onCreateDialog(int id)
-	{
-	    Dialog dialog = null;
-	    
-	    switch(id)
-	    {
-		    case DIALOG_ID_CREATE_USER:
-		    {
-		    	mUserName = "";
-		    	
-		    	dialog = new Dialog(this);
-    			
-    			dialog.setContentView(R.layout.dlg_layout_create_user);
-    			dialog.setTitle("Create A New User");
-    			
-    			Button buttonCreate = (Button) dialog.findViewById(R.id.ButtonCreate);
-    			buttonCreate.setOnClickListener(new Button.OnClickListener() {
-					public void onClick(View view)
-					{
-						Spinner spinnerUserNames = (Spinner) findViewById(R.id.SpinnerUserName);
-						EditText txtUserName = (EditText)((View)( view.getParent().getParent()) ).findViewById(R.id.EditTextCreateUserUserName);
-						String createdUserName = txtUserName.getText().toString();
-				
-						if (createdUserName.equals(USER_NAME_EMPTY))
-						{
-							Toast.makeText(ActivityLogin.this, "User name cannot be empty", Toast.LENGTH_LONG).show();
-						}
-						else
-						{
-							// Check if the spinner already contains the created user
-							if (mAdapter.getPosition(createdUserName) >= 0)
-							{
-								Toast.makeText(ActivityLogin.this, "User already exists", Toast.LENGTH_LONG).show();
-							}
-							else
-							{
-								// Add the new user name to the spinner and sort the values
-								mAdapter.add(createdUserName);
-								mAdapter.sort(null);
-														
-								// Set the new user name in the spinner
-								spinnerUserNames.setSelection(mAdapter.getPosition(createdUserName));
-								
-								mUserName = createdUserName;
-								
-								RadioButton rdoMale = (RadioButton)((View)( view.getParent().getParent()) ).findViewById(R.id.RadioButtonCreateUserMale);
-								String sex = (rdoMale.isChecked() ? User.Sex.MALE.toString() : User.Sex.FEMALE.toString());
-								DatePicker dateBirth = (DatePicker)((View)( view.getParent().getParent()) ).findViewById(R.id.DatePickerCreateUserBirth);
-								
-								String userFileName = application.getUserFileName(mUserName);
-								application.writePropertyToFile(userFileName, "Username", mUserName);
-								application.writePropertyToFile(userFileName, "Sex", sex);
-								application.writePropertyToFile(userFileName, "Date of Birth", dateBirth.getYear() + " " + dateBirth.getMonth() + " " + dateBirth.getDayOfMonth());
-							}
-							
-							dismissDialog(DIALOG_ID_CREATE_USER);
-						}
-					}
-				});
-    			
-    			Button buttonCancel = (Button) dialog.findViewById(R.id.ButtonCancel);
-    			buttonCancel.setOnClickListener(new Button.OnClickListener() {
-					public void onClick(View view) {
-						dismissDialog(DIALOG_ID_CREATE_USER);
-					}
-				});
 
-    			EditText txtNewUserName = (EditText) dialog.findViewById(R.id.EditTextCreateUserUserName);
-    			txtNewUserName.setText("keyboard broken");
-    			
-		        break;
-		    }
-		    
-		    default:
-		    {
-		        dialog = null;
-		    }
-	    }
-	    
-	    return dialog;
-	}
-	
-	public void onPrepareDialog(int id, Dialog dialog)
-	{
-		switch (id)
-		{
-			case DIALOG_ID_CREATE_USER :
-			{
-				EditText editTextNewUserName = (EditText) dialog.findViewById(R.id.EditTextCreateUserUserName);
-				
-				editTextNewUserName.setText("");
-				
-				break;
-			}
-		}
-	}
 	private Handler mHandler = new Handler() {
 		public String getUserName()
 		{

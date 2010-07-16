@@ -55,27 +55,10 @@ public class ActivityFileBrowser extends ListActivity {
 			this.currentDirectory = aDirectory;
 			fill(aDirectory.listFiles());
 		} else {
-			OnClickListener okButtonListener = new OnClickListener() {
-				// @Override
-				public void onClick(DialogInterface arg0, int arg1) {
-					Intent myIntent = new Intent(
-							android.content.Intent.ACTION_VIEW,
-							Uri.fromFile(new File("file://"
-									+ aDirectory.getAbsolutePath())));
-					startActivity(myIntent);
-				}
-			};
-			DialogInterface.OnCancelListener cancelButtonListener = new DialogInterface.OnCancelListener( ) {
-				
-				public void onCancel(DialogInterface dialog) {
-				}
-			}; 
-		    new AlertDialog.Builder(this)
-		      .setMessage("Phyllis is calling")
-		      .setTitle( "Question")
-		      .setPositiveButton( "OK", okButtonListener)
-		      .setOnCancelListener( cancelButtonListener)
-		      .show();
+			Intent data = new Intent( );
+			data.putExtra( "fileName", aDirectory.getAbsolutePath());
+			setResult(RESULT_OK, data);
+			finish( );	
 		}
 	}
 
