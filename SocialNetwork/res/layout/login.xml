@@ -38,20 +38,12 @@
 				 android:layout_weight="1">
 		</Spinner>
 		
-		<Button android:id="@+id/ButtonCreateUser"
-				android:layout_width="wrap_content"
-				android:layout_height="wrap_content"
-				android:text="Create..."
-				android:layout_alignBottom="@+id/SpinnerUserName"
-				android:layout_gravity="right">
-		</Button>
-	</LinearLayout>
+		
+	</LinearLayout><LinearLayout android:id="@+id/LinearLayout02" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_gravity="right" android:layout_width="wrap_content"><Button android:id="@+id/ButtonCreateUser" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Create..." android:layout_alignBottom="@+id/SpinnerUserName" android:layout_gravity="right">
+		</Button><Button android:id="@+id/ButtonDeleteUser" android:text="Delete" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="right">
+	</Button></LinearLayout>
 	
-	<Button android:id="@+id/ButtonDeleteUser"
-			android:text="Delete"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content">
-	</Button>
+	
 	
 	<Button android:text="Login"
 			android:id="@+id/ButtonLogin"
@@ -68,5 +60,6 @@
 			  android:layout_height="wrap_content"
 			  android:layout_marginTop="40sp">
 	</CheckBox>
+
 
 </LinearLayout>

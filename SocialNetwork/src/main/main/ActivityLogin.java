@@ -24,7 +24,6 @@ public class ActivityLogin extends Activity implements OnClickListener
 		switch ( requestCode) {
 			case CREATE_NEW_USER : {
 				if ( resultCode == RESULT_OK) {
-					//TODO: Copy here user creation code.
 					String userName = mUserName =  data.getStringExtra( "userName");
 					String sex		= data.getStringExtra( "sex");
 					String dateOfBirth = data.getStringExtra( "birthday");
