@@ -67,7 +67,7 @@ public class Messages
 			strMsg += MSG_PARAMS_SEPARATOR + currValue;
 		}
 		
-		// Revmove the last MSG_PARAM_SEPARATOR
+		// Remove the first MSG_PARAM_SEPARATOR
 		strMsg = strMsg.replaceFirst(MSG_PARAMS_SEPARATOR, "");
 		
 		return strMsg;
