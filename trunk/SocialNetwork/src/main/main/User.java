@@ -94,7 +94,7 @@ public class User
 	
 	public String getFullName()
 	{
-		return mFirstName + " " + mLastName;
+		return mFirstName + ((mLastName != null && mLastName.equals("") == false) ? " " + mLastName : "");
 	}
 
 	public String getSex()
