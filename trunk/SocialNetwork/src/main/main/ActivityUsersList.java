@@ -89,7 +89,7 @@ public class ActivityUsersList extends ListActivity
 		Runnable runnableSearchForNetwork = new Runnable(){
 			public void run()
 			{
-				application.stopDnsmasq();
+//				application.stopDnsmasq();
 				
 				mIsClientEnabled = application.enableAdhocClient();
 				
