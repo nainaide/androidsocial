@@ -275,27 +275,27 @@ Log.d(LOG_TAG, "About to be a leader");
 			
 			case CLIENT:
 			{
-				// Open a socket to the server
-//				try
-//				{
-//Log.d(LOG_TAG, "About to open a socket to the leader");
-//					mSocketToLeader = new Socket(IP_LEADER, PORT);
-//Log.d(LOG_TAG, "Opened a socket to the leader");
-//				}
-////				catch (UnknownHostException e)
+//				// Open a socket to the server
+////				try
+////				{
+////Log.d(LOG_TAG, "About to open a socket to the leader");
+////					mSocketToLeader = new Socket(IP_LEADER, PORT);
+////Log.d(LOG_TAG, "Opened a socket to the leader");
+////				}
+//////				catch (UnknownHostException e)
+//////				{
+//////					e.printStackTrace();
+//////				}
+////				catch (IOException e)
 ////				{
 ////					e.printStackTrace();
+////					
+////					toastAndExit("Cannot establish a connection with the network. Exiting");
 ////				}
-//				catch (IOException e)
-//				{
-//					e.printStackTrace();
-//					
-//					toastAndExit("Cannot establish a connection with the network. Exiting");
-//				}
-				
-				Messages.MessageNewUser msgNewUser = new Messages.MessageNewUser(mMe);
-
-				sendMessage(msgNewUser.toString()); //, IP_LEADER);
+//				
+//				Messages.MessageNewUser msgNewUser = new Messages.MessageNewUser(mMe);
+//
+//				sendMessage(msgNewUser.toString()); //, IP_LEADER);
 
 				mLeaderLastPing = System.currentTimeMillis();
 				
@@ -364,6 +364,8 @@ Log.d(LOG_TAG, "About to be a leader");
 		
 		if (mOSFilesManager.runRootCommand(mOSFilesManager.PATH_APP_DATA_FILES + "/bin/netcontrol start_server " + mOSFilesManager.PATH_APP_DATA_FILES) == false)
 		{
+			Log.d(LOG_TAG, "enableAdhocLeader : runRootCommand = false");
+			
 			// TODO : Notify the user
 			int debug = 3;
 		}
@@ -465,6 +467,15 @@ Log.d(LOG_TAG, "Running as client");
 		// @Override
 		public void run()
 		{
+			// When the thread begins to run, it means the user has just logged in.
+			// If this is a client, ask for the list of users
+			if (mCurrState == NetControlState.CLIENT)
+			{
+				Messages.MessageNewUser msgNewUser = new Messages.MessageNewUser(mMe);
+
+				sendMessage(msgNewUser.toString()); //, IP_LEADER);
+			}
+			
 //			Looper.prepare();
 			while (!Thread.currentThread().isInterrupted())
 			{
@@ -478,9 +489,10 @@ Log.d(LOG_TAG, "Running as client");
 							if (isLeaderStale())
 							{
 								// The leader is dead. We should quit the network, wait a random time and then try to connect again
-Log.d(LOG_TAG, "The leader is stale");
+//Log.d(LOG_TAG, "The leader is stale");
 
 								// TODO : What now ?
+								
 							}
 							
 							break;
@@ -488,12 +500,12 @@ Log.d(LOG_TAG, "The leader is stale");
 						
 						case LEADER :
 						{
-							updateStaleClients();
+//							updateStaleClients();
 
 							// Send a Ping message
 							Messages.MessagePing msgPing = new Messages.MessagePing();
 				
-							broadcastUDP(msgPing.toString());
+//							broadcastUDP(msgPing.toString());
 							
 							break;
 						}
@@ -826,7 +838,7 @@ Log.d(LOG_TAG, "New user : ipSender = " + ipSender);
 		Toast.makeText(this, toastMessage, Toast.LENGTH_LONG).show();
 	}
 
-	private synchronized void addUser(User userToAdd)
+	private void addUser(User userToAdd)
 	{
 		mMapIPToUser.put(userToAdd.getIPAddress(), userToAdd);
 		notifyActivityUsersList();
@@ -843,7 +855,7 @@ Log.d(LOG_TAG, "New user : ipSender = " + ipSender);
 		return mMapIPToUser.get(ipAddress);
 	}
 	
-	private synchronized void notifyActivityUsersList()
+	private void notifyActivityUsersList()
 	{
 		if (ActivityUsersList.instance != null)
 		{
@@ -915,7 +927,7 @@ Log.d(LOG_TAG, "Right before notifying ActivityUserDetails");
 	    return items;
 	}
 	
-	public synchronized String addOpenChats(String user, String ip)
+	public String addOpenChats(String user, String ip)
 	{ user = user.trim();
 		Enumeration<String> keys = this.openChats.keys();
 		boolean flag = false;
@@ -952,7 +964,7 @@ Log.d(LOG_TAG, "Right before notifying ActivityUserDetails");
 		Log.d(LOG_TAG, "UpdateOpenChats value after updating:" +this.openChats.get(ip + CHAT_SEPERATOR + user) );	
 	}
 	
-	public synchronized void loadMyDetails(String userFileName) //, String userName)
+	public void loadMyDetails(String userFileName) //, String userName)
 	{
 		// TODO : Make consts out of everything
 		String userName = readPropertyFromFile(userFileName, "Username");
@@ -966,14 +978,14 @@ Log.d(LOG_TAG, "Right before notifying ActivityUserDetails");
 		mMe = new User(userName, "", sex, birthYear, birthMonth, birthDay, "");
 	}
 	
-	public synchronized void sendMessage(String message, String destIP)
+	public void sendMessage(String message, String destIP)
 	{
 		// TODO : After choosing between UDP and TCP, the only implementation will be here instead of this function call to sendMessageUPD/TCP.
 		//        (If we end up using both, then there WILL be a function call here, calling the default, most used, one)
 		sendMessageUDP(message, destIP);
 	}
 	
-	private synchronized void sendMessageUDP(String message, String destIP)
+	private void sendMessageUDP(String message, String destIP)
 	{
 		byte[] buf = new byte[message.length()];
 		DatagramPacket pkt = null;
@@ -1026,17 +1038,17 @@ Log.d(LOG_TAG, "Sent Msg : " + message);
 //	}
 	
 	
-	public synchronized void sendMessage(String message)
+	public void sendMessage(String message)
 	{
 		sendMessage(message, getLeaderIP());
 	}
 	
-	private synchronized void broadcast(String message)
+	private void broadcast(String message)
 	{
 		broadcastUDP(message);
 	}
 	
-	private synchronized void broadcastUDP(String message)
+	private void broadcastUDP(String message)
 	{
 		byte[] buffer = new byte[1024];
 		DatagramPacket packet = null;
@@ -1080,9 +1092,10 @@ Log.d(LOG_TAG, "Broadcast : Exception !!! IOException");
 //		}
 //	}
 
-	private synchronized String calcBroadcastAddress(String ipAddress)
+//	private synchronized String calcBroadcastAddress(String ipAddress)
+	private String calcBroadcastAddress(String ipAddress)
 	{
-		int pos = ipAddress.lastIndexOf('.');
+		int pos = ipAddress.lastIndexOf(".");
 		String broadcastAddress = ipAddress.substring(0, pos) + ".255";
 		
 		return broadcastAddress;
