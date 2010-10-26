@@ -11,13 +11,14 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
-public class ClientImageSender {
+public class ImageCommunicator {
 
 	
+	public static final int IMAGE_SERVER_PORT = 1703;
 	private String host;
 	private int port;
 
-	public ClientImageSender( String host, int port) {
+	public ImageCommunicator( String host, int port) {
 		this.host = host;
 		this.port = port;
 	}
@@ -88,7 +89,7 @@ public class ClientImageSender {
 	}
 	
 	public static void main(String[] args) {
-		ClientImageSender sender = new ClientImageSender( "localhost", 1703);
+		ImageCommunicator sender = new ImageCommunicator( "localhost", IMAGE_SERVER_PORT);
 		sender.requestImage( "userTest");
 	}
 	
