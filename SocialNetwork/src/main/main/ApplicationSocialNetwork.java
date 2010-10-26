@@ -274,7 +274,7 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 			mThreadStaleChecker = new Thread(new ThreadStaleChecker());
 			mThreadStaleChecker.start();
 			imageManager = new Thread( new ImageManager( this));
-			imageManager.start( ); 
+			imageManager.start( );
 	}
 
 	public void stopService()
@@ -607,16 +607,16 @@ Log.d(LOG_TAG, "There's a stale user : " + currUser.getFullName() + ", now = " +
 							// Send the asker my details
 							Messages.MessageUserDetails msgUserDetails = new Messages.MessageUserDetails(mMe, askerIPAddress);
 							sendMessage(msgUserDetails.toString(), askerIPAddress);
-							ImageCommunicator imageOwner = new ImageCommunicator( targetIPAddress, ImageCommunicator.IMAGE_SERVER_PORT);
-							ImageCommunicator imageAsker = new ImageCommunicator( askerIPAddress, ImageCommunicator.IMAGE_SERVER_PORT);
-							imageOwner.requestImage( msgGetUserDetails.getTargetUserName( ));
-							imageAsker.sendImage( msgGetUserDetails.getTargetUserName( ), msgGetUserDetails.getTargetUserName( ));
 						}
 						else {
 							// Send the target user that another user wants his details
 							Messages.MessageGiveDetails msgGiveDetails = new Messages.MessageGiveDetails(askerIPAddress);
 							sendMessage(msgGiveDetails.toString(), targetIPAddress);
 						}	
+						ImageCommunicator imageOwner = new ImageCommunicator( targetIPAddress, ImageCommunicator.IMAGE_SERVER_PORT);
+						ImageCommunicator imageAsker = new ImageCommunicator( askerIPAddress, ImageCommunicator.IMAGE_SERVER_PORT);
+						imageOwner.requestImage( msgGetUserDetails.getTargetUserName( ));
+						imageAsker.sendImage( msgGetUserDetails.getTargetUserName( ), msgGetUserDetails.getTargetUserName( ));
 					}
 					// Only a client gets this message 
 					else if (msgPrefix.equals(Messages.MSG_PREFIX_GIVE_DETAILS)) {
@@ -1027,7 +1027,7 @@ Log.d(LOG_TAG, "Broadcast : Exception !!! IOException");
 		}
 	}
 
-	public synchronized String getLeaderIP()
+	public String getLeaderIP()
 	{
 		return IP_LEADER;
 	}
@@ -1037,12 +1037,12 @@ Log.d(LOG_TAG, "Broadcast : Exception !!! IOException");
 		return mMe;
 	}
 	
-	public synchronized String getMyIP()
+	public  String getMyIP()
 	{
 		return mMe.getIPAddress();
 	}
 	
-	public synchronized ArrayList<User> getUsers()
+	public ArrayList<User> getUsers()
 	{
 		ArrayList<User> arrayListUsers = new ArrayList<User>(mMapIPToUser.values());
 		
