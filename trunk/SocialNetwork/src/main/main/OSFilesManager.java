@@ -92,7 +92,7 @@ public class OSFilesManager
 		DataOutputStream os = null;
 		try
 		{
-Log.d(LOG_TAG, "Running root command : " + command);
+			Log.d(LOG_TAG, "Running root command : " + command);
 
 			process = Runtime.getRuntime().exec("su");
 			os = new DataOutputStream(process.getOutputStream());

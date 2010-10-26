@@ -23,15 +23,17 @@ import java.util.Hashtable;
 import java.util.List;
 
 import main.main.Messages.MessageChatMessage;
+import ac.il.technion.lccn.project.IImageNotifiable;
+import ac.il.technion.lccn.project.ImageCommunicator;
+import ac.il.technion.lccn.project.ImageManager;
 import android.app.Application;
 import android.content.Context;
 import android.os.Message;
-import android.text.style.LeadingMarginSpan;
 import android.util.Log;
 import android.widget.Toast;
 
 
-public class ApplicationSocialNetwork extends Application
+public class ApplicationSocialNetwork extends Application implements IImageNotifiable
 {
 //	private final int NAP_TIME_ADHOC_CLIENT_ENABLE = 1000;
 //	private final int NAP_TIME_ADHOC_CLIENT_DISABLE = 1000;
@@ -78,6 +80,7 @@ public class ApplicationSocialNetwork extends Application
 	private String CHAT_SEPERATOR = "@";
 	private boolean mDidRunBefore = false;
 	private Dictionary<String ,String > openChats = null;
+	private Thread imageManager;
 //	private HashMap<String, Socket> mMapIPToSocket = null;
 //	private Socket mSocketToLeader = null;
 	
@@ -251,70 +254,27 @@ public class ApplicationSocialNetwork extends Application
 	{
 		switch (mCurrState)
 		{
-			case NOT_RUNNING:
-			{
+			case NOT_RUNNING: {
 				toastAndExit("Error connecting to an existing network or creating a new one. Exiting...");
-
 				break;
 			}
-
-			case LEADER:
-			{
-Log.d(LOG_TAG, "About to be a leader");
-//				if (mThreadLeaderSocketListener == null)
-//				{
-//					mThreadLeaderSocketListener = new Thread(new LeaderSocketListener());
-//					mThreadLeaderSocketListener.start();
-//				}
-				
+			case LEADER: {
+				Log.d(LOG_TAG, "About to be a leader");
 				setMyIPAddress(IP_LEADER);
-				
 				Log.d(LOG_TAG, "Set my ip as leader");
 				break;
 			}
-			
-			case CLIENT:
-			{
-//				// Open a socket to the server
-////				try
-////				{
-////Log.d(LOG_TAG, "About to open a socket to the leader");
-////					mSocketToLeader = new Socket(IP_LEADER, PORT);
-////Log.d(LOG_TAG, "Opened a socket to the leader");
-////				}
-//////				catch (UnknownHostException e)
-//////				{
-//////					e.printStackTrace();
-//////				}
-////				catch (IOException e)
-////				{
-////					e.printStackTrace();
-////					
-////					toastAndExit("Cannot establish a connection with the network. Exiting");
-////				}
-//				
-//				Messages.MessageNewUser msgNewUser = new Messages.MessageNewUser(mMe);
-//
-//				sendMessage(msgNewUser.toString()); //, IP_LEADER);
-
+			case CLIENT: {
 				mLeaderLastPing = System.currentTimeMillis();
-				
 				break;
 			}
 		}
-		
-		// Start the threads for sending and receiving messages
-//		if (mThreadClientReceiver == null)
-//		{
 			mThreadMessagLoop = new Thread(new ThreadMessageLoop());
 			mThreadMessagLoop.start();
-//		}
-//
-//		if (mThreadClientSender == null)
-//		{
 			mThreadStaleChecker = new Thread(new ThreadStaleChecker());
 			mThreadStaleChecker.start();
-//		}
+			imageManager = new Thread( new ImageManager( this));
+			imageManager.start( ); 
 	}
 
 	public void stopService()
@@ -401,7 +361,7 @@ Log.d(LOG_TAG, "About to be a leader");
 		mMyDhcpAddress = mOSFilesManager.getMyDhcpAddress();
 		if (mMyDhcpAddress.length() > 0)
 		{
-Log.d(LOG_TAG, "Running as client");
+			Log.d(LOG_TAG, "Running as client");
 			
 			isDiscovered = true;
 			setMyIPAddress(mMyDhcpAddress);
@@ -531,12 +491,13 @@ Log.d(LOG_TAG, "Running as client");
 		
 		private boolean isLeaderStale()
 		{
-			return (System.currentTimeMillis() - mLeaderLastPing) > TIMEOUT_STALE_LEADER;
+			return false;
+			//return (System.currentTimeMillis() - mLeaderLastPing) > TIMEOUT_STALE_LEADER;
 		}
 
 		private void updateStaleClients()
 		{
-			for (User currUser : mMapIPToUser.values())
+/*			for (User currUser : mMapIPToUser.values())
 			{
 				if ((System.currentTimeMillis() - currUser.getLastPongTime()) > TIMEOUT_STALE_CLIENT)
 				{
@@ -564,8 +525,8 @@ Log.d(LOG_TAG, "There's a stale user : " + currUser.getFullName() + ", now = " +
 //					{
 //						e.printStackTrace();
 //					}
-				}
-			}
+				 }
+			}*/
 		}
 	}
 
@@ -579,161 +540,113 @@ Log.d(LOG_TAG, "There's a stale user : " + currUser.getFullName() + ", now = " +
 			DatagramPacket packet = null;
 			DatagramSocket socket = null;
 
-//			Looper.prepare();
-
-			// Getting a TCP packet
-//			BufferedReader in = new BufferedReader(new InputStreamReader(skt.getInputStream()));
-//			System.out.print("Received string: '");
-//			
-//			while (!in.ready())
-//			{
-//				
-//			}
-//			System.out.println(in.readLine());
-	              
-	              
 			socket = createDatagramSocket();
 
-			while (!Thread.currentThread().isInterrupted())
-			{
-				try
-				{
+			while (!Thread.currentThread().isInterrupted()) {
+				try {
 					packet = new DatagramPacket(buffer, buffer.length);
 					socket.receive(packet);
-
 					String strMsgReceived = new String(packet.getData(), 0, packet.getLength());
-					
-Log.d(LOG_TAG, "Recevied Msg : " + strMsgReceived);
-
+					Log.d(LOG_TAG, "Recevied Msg : " + strMsgReceived);
 					String msgPrefix = Messages.getPrefix(strMsgReceived);
 					Messages.Message msgReceived = new Messages.Message(strMsgReceived);
-					
-					
-					if (msgPrefix.equals(Messages.MSG_PREFIX_NEW_USER))
-					{
+					if (msgPrefix.equals(Messages.MSG_PREFIX_NEW_USER)) {
 						String ipSender = packet.getAddress().getHostAddress();
-Log.d(LOG_TAG, "New user : ipSender = " + ipSender);
-
+						Log.d(LOG_TAG, "New user : ipSender = " + ipSender);
 						// Check if we're the leader and if the leader broadcasted this message to all the clients.
 						// If so, we doesn't need to deal with the message, only the client that will receive it.
-						if ((mCurrState == NetControlState.LEADER && ipSender.equals(IP_LEADER)) == false)
-						{
+						if ((mCurrState == NetControlState.LEADER && ipSender.equals(IP_LEADER)) == false) {
 							Messages.MessageNewUser msgNewUser = new Messages.MessageNewUser(msgReceived);
-	
-							if (mCurrState == NetControlState.LEADER)
-							{
+							if (mCurrState == NetControlState.LEADER) {
 								String ipAddressNewUser = msgNewUser.getIPAddress();
-	
 								// Send the new user a "NewUser" message for every other client so he knows them
-								for (User currUser : mMapIPToUser.values())
-								{
+								for (User currUser : mMapIPToUser.values()) {
 									Messages.MessageNewUser msgNewUserOfExistingUserForNewcomerToKnow = new Messages.MessageNewUser(currUser);
-									
 									sendMessage(msgNewUserOfExistingUserForNewcomerToKnow.toString(), ipAddressNewUser);
 								}
 								
 								// Send the user a "NewUser" message for me (The leader)
 								Messages.MessageNewUser msgNewUserLeader = new Messages.MessageNewUser(mMe);
-								
 								sendMessage(msgNewUserLeader.toString(), ipAddressNewUser);
-								
 								// Broadcast to everybody that this user has joined us, so they know him
 								broadcast(msgNewUser.toString());
 							}
-							
 							// Check that the new user isn't me (When a user joins, the leader broadcasts it so he will
 							//                                   also get the message about it, and should ignore it)
 							// Note : The condition is only needed when we're not the leader (Otherwise we're obviously not the new user)
-							if (msgNewUser.getIPAddress().equals(mMe.getIPAddress()) == false)
-							{
+							if (msgNewUser.getIPAddress().equals(mMe.getIPAddress()) == false) {
 								User newUser = new User(msgNewUser);
-								
 								addUser(newUser);
 							}
 						}
 					}
-					else if (msgPrefix.equals(Messages.MSG_PREFIX_USER_DISCONNECTED))
-					{
+					else if (msgPrefix.equals(Messages.MSG_PREFIX_USER_DISCONNECTED)) {
 						String ipSender = packet.getAddress().getHostAddress();
-						
 						// Check if we're the leader and if the leader broadcasted this message to all the clients.
 						// If so, we doesn't need to deal with the message, only the client that will receive it.
-						if ((mCurrState == NetControlState.LEADER && ipSender.equals(IP_LEADER)) == false)
-						{
+						if ((mCurrState == NetControlState.LEADER && ipSender.equals(IP_LEADER)) == false) {
 							Messages.MessageUserDisconnected msgUserDisconnected = new Messages.MessageUserDisconnected(msgReceived);
 							User userDisconnected = mMapIPToUser.get(msgUserDisconnected.getIPAddress());
-		
-							if (userDisconnected != null)
-							{
-								if (mCurrState == NetControlState.LEADER)
-								{
+							if (userDisconnected != null) {
+								if (mCurrState == NetControlState.LEADER) {
 									// Broadcast to everybody that this user has disconnected, so they remove him from their list
 									broadcast(msgUserDisconnected.toString());
 								}
-								
 								removeUser(userDisconnected.getIPAddress());
 							}
 						}
 					}
-					else if (msgPrefix.equals(Messages.MSG_PREFIX_GET_USER_DETAILS)) // Only the leader gets this message
-					{
+					// Only the leader gets this message
+					else if (msgPrefix.equals(Messages.MSG_PREFIX_GET_USER_DETAILS))  {
 						Messages.MessageGetUserDetails msgGetUserDetails = new Messages.MessageGetUserDetails(msgReceived);
 						String targetIPAddress = msgGetUserDetails.getTargetIPAddress();
 						String askerIPAddress = packet.getAddress().getHostAddress();
 						
 						// Check if the target user (whose details the asker wants) is the leader itself
-						if (targetIPAddress.equals(getMyIP()))
-						{
+						if (targetIPAddress.equals(getMyIP())) {
 							// Send the asker my details
 							Messages.MessageUserDetails msgUserDetails = new Messages.MessageUserDetails(mMe, askerIPAddress);
-							
 							sendMessage(msgUserDetails.toString(), askerIPAddress);
+							ImageCommunicator imageOwner = new ImageCommunicator( targetIPAddress, ImageCommunicator.IMAGE_SERVER_PORT);
+							ImageCommunicator imageAsker = new ImageCommunicator( askerIPAddress, ImageCommunicator.IMAGE_SERVER_PORT);
+							imageOwner.requestImage( msgGetUserDetails.getTargetUserName( ));
+							imageAsker.sendImage( msgGetUserDetails.getTargetUserName( ), msgGetUserDetails.getTargetUserName( ));
 						}
-						else
-						{
+						else {
 							// Send the target user that another user wants his details
 							Messages.MessageGiveDetails msgGiveDetails = new Messages.MessageGiveDetails(askerIPAddress);
-							
 							sendMessage(msgGiveDetails.toString(), targetIPAddress);
 						}	
 					}
-					else if (msgPrefix.equals(Messages.MSG_PREFIX_GIVE_DETAILS)) // Only a client gets this message
-					{
+					// Only a client gets this message 
+					else if (msgPrefix.equals(Messages.MSG_PREFIX_GIVE_DETAILS)) {
 						// Send a UserDetails message to the leader with my details
 						Messages.MessageGiveDetails msgGiveDetails = new Messages.MessageGiveDetails(msgReceived);
 						Messages.MessageUserDetails msgUserDetails = new Messages.MessageUserDetails(mMe, msgGiveDetails.getAskerIPAddress());
-						
 						sendMessage(msgUserDetails.toString(), IP_LEADER);
 					}
-					else if (msgPrefix.equals(Messages.MSG_PREFIX_USER_DETAILS))
-					{
+					else if (msgPrefix.equals(Messages.MSG_PREFIX_USER_DETAILS)) {
 						Messages.MessageUserDetails msgUserDetails = new Messages.MessageUserDetails(msgReceived);
 						String askerIP = msgUserDetails.getAskerIPAddress();
 						
-						if (mCurrState == NetControlState.LEADER && askerIP.equals(getMyIP()) == false)
-						{
+						if (mCurrState == NetControlState.LEADER && askerIP.equals(getMyIP()) == false) {
 							// If it wasn't the leader who asked for the user's details, then pass the details to the asker
 							sendMessage(strMsgReceived, askerIP);
 						}
-						else
-						{
+						else {
 							// Else, if we're the leader but we're the ones who asked for the details, or if we're a client
 							// (So if we got here, we're surely the ones who asked for them), process the data
 							notifyActivityUserDetails(msgUserDetails);
 						}
 					}
-					else if (msgPrefix.equals(Messages.MSG_PREFIX_CHAT_MESSAGE))
-					{
+					else if (msgPrefix.equals(Messages.MSG_PREFIX_CHAT_MESSAGE)) {
 						Messages.MessageChatMessage msgChat = new Messages.MessageChatMessage(msgReceived);
 						String targetIP = msgChat.getTargetUserIP();
-
 						// If the message isn't for the leader, then pass it to the target user
-						if (mCurrState == NetControlState.LEADER && targetIP.equals(getMyIP()) == false)
-						{
+						if (mCurrState == NetControlState.LEADER && targetIP.equals(getMyIP()) == false) {
 							sendMessage(strMsgReceived, targetIP);
 						}
-						else
-						{
+						else {
 							// If either we're the leader and the message is for us, or we're a client (So if we're here,
 							// the message surely is for us), process the data
 							Log.d(LOG_TAG, "got chat and will update, source is : "+msgChat.getSourceUserIP());
@@ -741,28 +654,23 @@ Log.d(LOG_TAG, "New user : ipSender = " + ipSender);
 							notifyActivityChat(msgChat);
 						}
 					}
-					else if (msgPrefix.equals(Messages.MSG_PREFIX_PING))
-					{
+					else if (msgPrefix.equals(Messages.MSG_PREFIX_PING)) {
 						// The leader also gets this message, because he broadcasts it to everyone including himself.
 						// So check if I'm not the leader since only a client should respond to this message
-						if (mMe.getIPAddress().equals(IP_LEADER) == false)
-						{
+						if (mMe.getIPAddress().equals(IP_LEADER) == false) {
 							// Send a pong message to show I'm alive
 							Messages.MessagePong msgPong = new Messages.MessagePong(mMe.getIPAddress());
-							
 							sendMessageUDP(msgPong.toString(), IP_LEADER);
-							
 							// Update the last ping time for leader-stale checking
 							mLeaderLastPing = System.currentTimeMillis();
 						}
 					}
-					else if (msgPrefix.equals(Messages.MSG_PREFIX_PONG)) // Only the leader gets this message
-					{
+					// Only the leader gets this message
+					else if (msgPrefix.equals(Messages.MSG_PREFIX_PONG))   {
 						Messages.MessagePong msgPong = new Messages.MessagePong(msgReceived);
 						String ipAddressPongged = msgPong.getIPAddress();
 						
 						User userPongged = mMapIPToUser.get(ipAddressPongged);
-					
 						// Check the user still exists (Maybe he disconnected since Ponging)
 						if (userPongged != null)
 						{
@@ -1223,5 +1131,11 @@ Log.d(LOG_TAG, "Broadcast : Exception !!! IOException");
 	public boolean didRunBefore()
 	{
 		return mDidRunBefore;
+	}
+
+	public void imageReady() {
+		// TODO Update activity with user image
+		Log.d( "Notify", "Image received");
+		
 	}
 }

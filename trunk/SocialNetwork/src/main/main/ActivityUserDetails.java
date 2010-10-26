@@ -145,7 +145,7 @@ public class ActivityUserDetails extends Activity
 		else
 		{
 			// Send a command to get the rest of the selected user's details
-			Messages.MessageGetUserDetails msgGetUserDetails = new Messages.MessageGetUserDetails(lookingAtUserIp);
+			Messages.MessageGetUserDetails msgGetUserDetails = new Messages.MessageGetUserDetails(lookingAtUserIp, mUserName);
 			application.sendMessage(msgGetUserDetails.toString());
 			
 			birthDay = application.getUserByIp(lookingAtUserIp).getDateBirth().get(GregorianCalendar.DAY_OF_MONTH);

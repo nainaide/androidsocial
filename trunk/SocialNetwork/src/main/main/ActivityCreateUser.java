@@ -38,8 +38,6 @@ public class ActivityCreateUser extends Activity implements OnClickListener {
 	@Override
 	protected void onStart() {
 		super.onStart();
-		EditText userNameText = (EditText)findViewById(R.id.EditTextCreateUserUserName);
-		userNameText.setText( "");
 	}
 
 	public void onCreate( Bundle bundle) {
@@ -55,6 +53,8 @@ public class ActivityCreateUser extends Activity implements OnClickListener {
 		btnCreate.setOnClickListener( this);
 		Button btnFileBrowser = (Button)findViewById( R.id.btnUserPicture);
 		btnFileBrowser.setOnClickListener( this);
+		EditText userNameText = (EditText)findViewById(R.id.EditTextCreateUserUserName);
+		userNameText.setText( "");
 	}
 
 	public void onClick(View v) {

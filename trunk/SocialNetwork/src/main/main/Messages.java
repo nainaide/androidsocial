@@ -299,13 +299,16 @@ public class Messages
 	public static class MessageGetUserDetails
 	{
 		private final int INDEX_PARAM_TARGET_IP_ADDRESS = 1;
+		private final int INDEX_PARAM_TARGET_USERNAME = 2;
 		
 		private String mTargetIPAddress = "";
+		private String mTargetUserName = "";
 		
 		
-		public MessageGetUserDetails(String targetIPAddress)
+		public MessageGetUserDetails(String targetIPAddress, String targetUsername)
 		{
 			mTargetIPAddress = targetIPAddress;
+			mTargetUserName = targetUsername;
 		}
 		
 		public MessageGetUserDetails(Message message)
@@ -313,8 +316,12 @@ public class Messages
 			String strMessage = message.toString();
 			
 			mTargetIPAddress = strMessage.split(MSG_PARAMS_SEPARATOR)[INDEX_PARAM_TARGET_IP_ADDRESS];
+			mTargetUserName = strMessage.split(MSG_PARAMS_SEPARATOR)[INDEX_PARAM_TARGET_USERNAME];
 		}
 		
+		public String getTargetUserName( ) {
+			return mTargetUserName;
+		}
 		
 		public String getTargetIPAddress()
 		{
@@ -324,7 +331,8 @@ public class Messages
 		public String toString()
 		{
 			return MSG_PREFIX_GET_USER_DETAILS + MSG_PARAMS_SEPARATOR +
-						mTargetIPAddress;
+						mTargetIPAddress + MSG_PARAMS_SEPARATOR +
+						mTargetUserName;
 		}
 	}
 	
