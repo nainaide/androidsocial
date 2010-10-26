@@ -1133,9 +1133,9 @@ Log.d(LOG_TAG, "Broadcast : Exception !!! IOException");
 		return mDidRunBefore;
 	}
 
-	public void imageReady() {
+	public void imageReady( String imageName) {
 		// TODO Update activity with user image
-		Log.d( "Notify", "Image received");
+		Log.d( "Notify", "Image received: " + imageName);
 		
 	}
 }
