@@ -47,7 +47,7 @@ public class ImageReceiver implements Runnable {
 				stream.write( in);
 			}
 			stream.flush( );
-			notifiable.imageReady( );
+			notifiable.imageReady( userName);
 		} catch (IOException e) {
 			e.printStackTrace();
 		} finally {

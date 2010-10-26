@@ -38,7 +38,7 @@ public class ImageManager implements Runnable {
 	
 	public static void main(String[] args) {
 		final ImageManager manager = new ImageManager( new IImageNotifiable( ) {
-			public void imageReady( ) {
+			public void imageReady( String imageName) {
 			};
 		});
 		new Thread( manager).start( );
