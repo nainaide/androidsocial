@@ -20,7 +20,7 @@ public class ImageManager implements Runnable {
 	@Override
 	public void run() {
 		try {
-			socket = new ServerSocket(1703);
+			socket = new ServerSocket( ImageCommunicator.IMAGE_SERVER_PORT);
 			while (!interrupted) {
 				Socket $ = socket.accept( );
 				ImageManagerRequestHandler handler = new ImageManagerRequestHandler( executor, notifiable);
