@@ -13,12 +13,14 @@ public class ImageReceiver implements Runnable {
 	private InputStream inputStream;
 	private OutputStream outputStream;
 	private Socket socket;
+	private IImageNotifiable notifiable;
 
-	public ImageReceiver(Socket socket) {
+	public ImageReceiver(Socket socket, IImageNotifiable notifiable) {
 		try {
 			this.inputStream = socket.getInputStream( );
 			this.outputStream = socket.getOutputStream( );
 			this.socket = socket;
+			this.notifiable = notifiable;
 			if ( !new File( "userImages").exists()) {
 				new File( "userImages").mkdir( );
 			}
@@ -45,6 +47,7 @@ public class ImageReceiver implements Runnable {
 				stream.write( in);
 			}
 			stream.flush( );
+			notifiable.imageReady( );
 		} catch (IOException e) {
 			e.printStackTrace();
 		} finally {
