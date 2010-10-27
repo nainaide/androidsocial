@@ -1,5 +1,6 @@
 package main.main;
 
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -22,10 +23,10 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 
+import main.imageManager.IImageNotifiable;
+import main.imageManager.ImageCommunicator;
+import main.imageManager.ImageManager;
 import main.main.Messages.MessageChatMessage;
-import ac.il.technion.lccn.project.IImageNotifiable;
-import ac.il.technion.lccn.project.ImageCommunicator;
-import ac.il.technion.lccn.project.ImageManager;
 import android.app.Application;
 import android.content.Context;
 import android.os.Message;
