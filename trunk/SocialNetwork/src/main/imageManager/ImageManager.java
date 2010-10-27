@@ -12,7 +12,16 @@ public class ImageManager implements Runnable {
 	ServerSocket socket;
 	boolean interrupted = false;
 	private IImageNotifiable notifiable;
+	private String fileName;
 	
+	public String getFileName() {
+		return fileName;
+	}
+
+	public synchronized void setFileName(String fileName) {
+		this.fileName = fileName;
+	}
+
 	public ImageManager( IImageNotifiable notifiable) {
 		this.notifiable = notifiable;
 	}
@@ -23,7 +32,7 @@ public class ImageManager implements Runnable {
 			socket = new ServerSocket( ImageCommunicator.IMAGE_SERVER_PORT);
 			while (!interrupted) {
 				Socket $ = socket.accept( );
-				ImageManagerRequestHandler handler = new ImageManagerRequestHandler( executor, notifiable);
+				ImageManagerRequestHandler handler = new ImageManagerRequestHandler( executor, notifiable, fileName);
 				handler.handleRequest( $);
 			}
 		} catch (IOException e) {

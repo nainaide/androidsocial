@@ -4,21 +4,20 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 
 public class ImageSender implements Runnable {
 
-	private InputStream inputStream;
 	private OutputStream outputStream;
 	private Socket socket;
+	private String fileName;
 
-	public ImageSender(Socket socket) {
+	public ImageSender(Socket socket, String fileName) {
 		try {
-			this.inputStream = socket.getInputStream( );
 			this.outputStream = socket.getOutputStream( );
 			this.socket = socket;
+			this.fileName = fileName;
 		} catch (IOException e) {
 			e.printStackTrace();
 		} 
@@ -26,16 +25,10 @@ public class ImageSender implements Runnable {
 
 //	@Override
 	public void run() {
-		byte in;
+		if ( fileName == null || fileName.length() == 0 ) 
+			return;
 		try {
-			StringBuilder builder = new StringBuilder( );
-			while( (in = (byte) inputStream.read( )) != -1) {
-				if ( in == ';')
-					break;
-				builder.append( (char)in);
-			}
-			String userName = builder.toString( );
-			File userPictureFile = new File( "userImages/" + userName + ".jpg");
+			File userPictureFile = new File( fileName);
 			byte[] buffer = new byte[(int)userPictureFile.length( )];
 			BufferedInputStream stream = new BufferedInputStream( new FileInputStream( userPictureFile));
 			stream.read(buffer, 0, (int)userPictureFile.length( ));
@@ -45,8 +38,6 @@ public class ImageSender implements Runnable {
 			e.printStackTrace();
 		} finally {
 			try {
-				if ( !socket.isInputShutdown())
-					inputStream.close( );
 				if ( !socket.isOutputShutdown())
 					outputStream.close( );
 				socket.close( );

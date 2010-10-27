@@ -33,7 +33,7 @@ public class ActivityLogin extends Activity implements OnClickListener
 					application.writePropertyToFile( userFileName, "Sex", sex);
 					application.writePropertyToFile( userFileName, "Date of Birth", dateOfBirth);
 					application.writePropertyToFile( userFileName, "Picture file name", pictureFileName);
-					
+					application.setFileNameForManager( pictureFileName);
 					Spinner spinnerUserNames = (Spinner) findViewById(R.id.SpinnerUserName);
 					
 					if (userName.equals("")) {

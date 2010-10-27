@@ -61,12 +61,11 @@ public class ImageCommunicator {
 		InputStream			inputStream = null;
 		try {
 			Socket socket = new Socket(host, port);
-			fileOut = new BufferedOutputStream( new FileOutputStream( userName + ".jpg"));
+			fileOut = new BufferedOutputStream( new FileOutputStream( "/sdcard/" + userName + ".jpg"));
 			outputStream = socket.getOutputStream( );
 			inputStream = socket.getInputStream( );
 			int ch = 0;
 			outputStream.write( ImageManagerRequestHandler.RECEIVE_USER_IMAGE);
-			outputStream.write( (userName + ";").getBytes( ));
 			while ( ( ch = inputStream.read()) != -1) {
 				fileOut.write( ch);
 			}

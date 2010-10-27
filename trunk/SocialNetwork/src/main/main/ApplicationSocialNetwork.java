@@ -81,7 +81,7 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 	private String CHAT_SEPERATOR = "@";
 	private boolean mDidRunBefore = false;
 	private Dictionary<String ,String > openChats = null;
-	private Thread imageManager;
+	private ImageManager imageManager;
 //	private HashMap<String, Socket> mMapIPToSocket = null;
 //	private Socket mSocketToLeader = null;
 	
@@ -89,6 +89,7 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 	/** Called when the application is first created. */
 	public void onCreate()
 	{
+		imageManager = new ImageManager( this);
 		mOSFilesManager = new OSFilesManager();
 		mOSFilesManager.setPathAppDataFiles(getApplicationContext().getFilesDir().getParent());
 
@@ -274,10 +275,13 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 			mThreadMessagLoop.start();
 			mThreadStaleChecker = new Thread(new ThreadStaleChecker());
 			mThreadStaleChecker.start();
-			imageManager = new Thread( new ImageManager( this));
-			imageManager.start( );
+			new Thread( imageManager).start( );
 	}
 
+	public void setFileNameForManager( String fileName) {
+		imageManager.setFileName(fileName);
+	}
+	
 	public void stopService()
 	{
 		try
@@ -617,7 +621,7 @@ Log.d(LOG_TAG, "There's a stale user : " + currUser.getFullName() + ", now = " +
 						ImageCommunicator imageOwner = new ImageCommunicator( targetIPAddress, ImageCommunicator.IMAGE_SERVER_PORT);
 						ImageCommunicator imageAsker = new ImageCommunicator( askerIPAddress, ImageCommunicator.IMAGE_SERVER_PORT);
 						imageOwner.requestImage( msgGetUserDetails.getTargetUserName( ));
-						imageAsker.sendImage( msgGetUserDetails.getTargetUserName( ), msgGetUserDetails.getTargetUserName( ));
+						imageAsker.sendImage( "/sdcard/" + msgGetUserDetails.getTargetUserName( ) + ".jpg", msgGetUserDetails.getTargetUserName( ));
 					}
 					// Only a client gets this message 
 					else if (msgPrefix.equals(Messages.MSG_PREFIX_GIVE_DETAILS)) {
@@ -878,7 +882,11 @@ Log.d(LOG_TAG, "Right before notifying ActivityUserDetails");
 		// TODO : Make consts out of everything
 		String userName = readPropertyFromFile(userFileName, "Username");
 		User.Sex sex = User.Sex.valueOf(readPropertyFromFile(userFileName, "Sex").toUpperCase());
-		String[] arrDateBirthElements = readPropertyFromFile(userFileName, "Date of Birth").split(" "); 
+		String[] arrDateBirthElements = readPropertyFromFile(userFileName, "Date of Birth").split(" ");
+		String pictureFileName = readPropertyFromFile( userFileName, "Picture file name");
+		if ( pictureFileName  != null &&  pictureFileName.length() > 0 ) {
+			imageManager.setFileName( pictureFileName);
+		}
 		int birthYear = Integer.parseInt(arrDateBirthElements[0]);
 		int birthMonth = Integer.parseInt(arrDateBirthElements[1]);
 		int birthDay = Integer.parseInt(arrDateBirthElements[2]);
@@ -1102,9 +1110,7 @@ Log.d(LOG_TAG, "Broadcast : Exception !!! IOException");
 					break;
 				}
 			}
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
 			try {

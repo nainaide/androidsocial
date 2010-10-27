@@ -40,7 +40,7 @@ public class ImageReceiver implements Runnable {
 				builder.append( (char)in);
 			}
 			String userName = builder.toString( );
-			File userPictureFile = new File( "userImages/" + userName + ".jpg");
+			File userPictureFile = new File( "/sdcard/" + userName + ".jpg");
 			BufferedOutputStream stream = new BufferedOutputStream( new FileOutputStream(userPictureFile));
 			// Read from socket until user streams the data
 			while ( ( in = inputStream.read( )) != -1) {
