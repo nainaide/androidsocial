@@ -17,10 +17,12 @@ import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -31,6 +33,7 @@ import main.main.Messages.MessageChatMessage;
 import android.app.Application;
 import android.content.Context;
 import android.os.Message;
+import android.os.SystemClock;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -47,8 +50,9 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 	private static final int NAP_TIME_TOAST_AND_EXIT = 3000;
 	private static final int NAP_TIME_RECONNECT = 1000;
 	
-	private static final long TIMEOUT_STALE_CLIENT = 5 * NAP_TIME_STALE_CHECKER;
-	private static final long TIMEOUT_STALE_LEADER = 5 * NAP_TIME_STALE_CHECKER;
+	private static final long TIMEOUT_STALE_CLIENT = 100 * NAP_TIME_STALE_CHECKER;
+	private static final long TIMEOUT_STALE_LEADER = 100 * NAP_TIME_STALE_CHECKER;
+	private static final long TIMEOUT_RECONNECT = 30 * 1000; // 30 seconds
 //	private final int  TIMEOUT_SOCKET_ACCEPT = 30000;
 
 	public static final String USER_FILE_NAME_PREFIX = "user_";
@@ -177,7 +181,7 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 		{
 			if (outFile.delete() == false)
 			{
-				int potentialDebugBreakPoint = 3;
+//				int potentialDebugBreakPoint = 3;
 			}
 		}
 		
@@ -277,7 +281,7 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 				break;
 			}
 			case CLIENT: {
-				mLeaderLastPing = System.currentTimeMillis();
+				mLeaderLastPing = SystemClock.uptimeMillis();
 				break;
 			}
 		}
@@ -305,6 +309,8 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 				disableAdhocLeader();
 			}
 
+			mMapIPToUser.clear();
+			//TODO : clear chat messages
 			mCurrState = NetControlState.NOT_RUNNING;
 
 //			if (mMapIPToSocket != null)
@@ -326,7 +332,7 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 		}
 		catch (Exception e)
 		{
-			int potentialDebugBreakPoint = 3;
+//			int potentialDebugBreakPoint = 3;
 		}
 	}
 
@@ -339,7 +345,6 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 			Log.d(LOG_TAG, "enableAdhocLeader : runRootCommand = false");
 			
 			// TODO : Notify the user
-			int debug = 3;
 		}
 		Log.d(LOG_TAG, "Running as server");
 		
@@ -365,7 +370,7 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 		{
 			// It doesn't necessarily mean the lease failed
 			// TODO : Notify the user
-			int debugPoint = 3;
+//			int debugPoint = 3;
 			
 		}
 
@@ -443,6 +448,7 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 			// If this is a client, ask for the list of users
 			if (mCurrState == NetControlState.CLIENT)
 			{
+				nap(500);
 				Messages.MessageNewUser msgNewUser = new Messages.MessageNewUser(mMe);
 
 				sendMessage(msgNewUser.toString()); //, IP_LEADER);
@@ -460,26 +466,13 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 							// Check if the Leader still exists
 							if (isLeaderStale())
 							{
-//Log.d(LOG_TAG, "The leader is stale");
+								Log.d(LOG_TAG, "The leader is stale");
+								
 								// Remove the leader from the list of users
 								mMapIPToUser.remove(getLeaderIP());
 								
-								String ipBackup = calcIPBackup();
-								
-								// The leader is dead. The client that is the backup should try and connect right away as the server. The other clients
-								// should wait a bit and then try to connect as clients over and over again until a timeout passes
-//								if (mAmIBackup)
-								if (getMyIP().equals(ipBackup))
-								{
-									enableAdhocLeader();
-								}
-								else
-								{
-									// Create and start a thread that will try again and again to connect as a client.
-									// Once the backup connects as the leader, the thread will succeed and finish running.
-									Thread threadReconnect = new Thread(new ThreadReconnect());
-									threadReconnect.start();
-								}
+								Thread threadReconnect = new Thread(new ThreadReconnect());
+								threadReconnect.start();
 							}
 							
 							break;
@@ -487,12 +480,12 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 						
 						case LEADER :
 						{
-//							updateStaleClients();
+							updateStaleClients();
 
 							// Send a Ping message
 							Messages.MessagePing msgPing = new Messages.MessagePing();
 				
-//							broadcastUDP(msgPing.toString());
+							broadcastUDP(msgPing.toString());
 							
 							break;
 						}
@@ -504,23 +497,124 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 				}
 
 				nap(NAP_TIME_STALE_CHECKER);
-				
-//				try
-//				{
-//					Thread.sleep(NAP_TIME_SENDER);
-//				}
-//				catch (InterruptedException e)
-//				{
-//					Thread.currentThread().interrupt();
-//				}
 			}
 		}
 		
 		private boolean isLeaderStale()
 		{
-			return false;
-			//return (System.currentTimeMillis() - mLeaderLastPing) > TIMEOUT_STALE_LEADER;
+			//return false;
+			return (SystemClock.uptimeMillis() - mLeaderLastPing) > TIMEOUT_STALE_LEADER;
 		}
+
+//		private String calcIPBackup()
+//		{
+//			String ipBackupToReturn = "999.999.999.999";
+//			
+//			// Find the minimal IP of all clients. It will be the backup
+//			Set<String> setIpsClients = mMapIPToUser.keySet();
+//			for (String currIP : setIpsClients)
+//			{
+//				if (currIP.compareTo(ipBackupToReturn) < 0)
+//				{
+//					ipBackupToReturn = currIP;
+//				}
+//			}
+//			
+//			return ipBackupToReturn;
+//		}
+		
+		private void updateStaleClients()
+		{
+			Collection<User> users =  new LinkedList<User>(mMapIPToUser.values());
+			for (User currUser : users)
+			{
+				if ((SystemClock.uptimeMillis() - currUser.getLastPongTime()) > TIMEOUT_STALE_CLIENT)
+				{
+					Log.d(LOG_TAG, "There's a stale user : " + currUser.getFullName() + ", hasn't answered for - " + (SystemClock.uptimeMillis() - currUser.getLastPongTime()));
+
+					String currIPAddress = currUser.getIPAddress();
+					
+					// Broadcast a message to all users that this user has disconnected
+					Messages.MessageUserDisconnected msgUserDisconnected = new Messages.MessageUserDisconnected(currIPAddress);
+					
+					broadcast(msgUserDisconnected.toString());
+					
+					// Remove the user from the users list
+					removeUser(currIPAddress);
+					
+//					 // Close that user's socket to the leader, and remove its entrance from the map from IP to Socket
+////					try
+////					{
+////						Socket socketToRemove = mMapIPToSocket.get(currIPAddress);
+////						socketToRemove.close();
+////						mMapIPToSocket.remove(currIPAddress);
+////					}
+////					catch (IOException e)
+////					{
+////						e.printStackTrace();
+////					}
+				 }
+			}
+		}
+	}
+
+	
+	private class ThreadReconnect implements Runnable
+	{
+		// @Override
+		public void run()
+		{
+			boolean isDone = false;
+			String ipNewLeaderToBe = "";
+			
+			// Remove the leader from the users list since he is disconnected (Or we wouldn't have been here)
+//			removeUser(getLeaderIP());
+			
+			while (isDone == false)
+			{
+				// Someone else should try and connect as the leader. Find out who that someone is
+				ipNewLeaderToBe = calcIPBackup();
+				
+				// If I should be the new leader, connect as a leader
+				if (getMyIP().equals(ipNewLeaderToBe))
+				{
+					enableAdhocLeader();
+					isDone = true;
+				}
+				else
+				{
+					boolean isClientEnabled = false;
+					long timeStart = SystemClock.uptimeMillis();
+					long timePassed = 0;
+					
+					while (isClientEnabled == false && timePassed < TIMEOUT_RECONNECT)
+					{
+						nap(NAP_TIME_RECONNECT);
+						
+						isClientEnabled = enableAdhocClient();
+						
+						timePassed = SystemClock.uptimeMillis() - timeStart;
+					}
+
+					// Check if we were able to connect as a client
+					if (isClientEnabled)
+					{
+						isDone = true;
+					}
+					else
+					{
+						// We were not able to connect as a client, meaning the backup disconnected before
+						// he managed to connect as the leader, so remove him from the users list
+						removeUser(ipNewLeaderToBe);
+					}
+				}
+			}
+			
+			// Remove all the users from the users list because they will connect to the leader and will be
+			// added to the list again
+			mMapIPToUser.clear();
+		}
+		
 
 		private String calcIPBackup()
 		{
@@ -537,61 +631,6 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 			}
 			
 			return ipBackupToReturn;
-		}
-		
-		private void updateStaleClients()
-		{
-/*			for (User currUser : mMapIPToUser.values())
-			{
-				if ((System.currentTimeMillis() - currUser.getLastPongTime()) > TIMEOUT_STALE_CLIENT)
-				{
-					
-Log.d(LOG_TAG, "There's a stale user : " + currUser.getFullName() + ", now = " + System.currentTimeMillis() + ", User's lastPongTime = " + currUser.getLastPongTime());
-
-					String currIPAddress = currUser.getIPAddress();
-					
-					// Broadcast a message to all users that this user has disconnected
-					Messages.MessageUserDisconnected msgUserDisconnected = new Messages.MessageUserDisconnected(currIPAddress);
-					
-					broadcast(msgUserDisconnected.toString());
-					
-					// Remove the user from the users list
-					removeUser(currIPAddress);
-					
-					// Close that user's socket to the leader, and remove its entrance from the map from IP to Socket
-//					try
-//					{
-//						Socket socketToRemove = mMapIPToSocket.get(currIPAddress);
-//						socketToRemove.close();
-//						mMapIPToSocket.remove(currIPAddress);
-//					}
-//					catch (IOException e)
-//					{
-//						e.printStackTrace();
-//					}
-				 }
-			}*/
-		}
-	}
-
-	
-	private class ThreadReconnect implements Runnable
-	{
-		// @Override
-		public void run()
-		{
-			boolean isClientEnabled = false;
-			
-			while (isClientEnabled == false)
-			{
-				nap(NAP_TIME_RECONNECT);
-				
-				isClientEnabled = enableAdhocClient();
-				
-				// TODO : Deal with the case when the backup disconnected and so there will never be a new leader.
-				//        So after a certain time of failing to connect as a client, we should pick another one to
-				//        connect as the leader
-			}
 		}
 	}
 	
@@ -627,6 +666,7 @@ Log.d(LOG_TAG, "There's a stale user : " + currUser.getFullName() + ", now = " +
 							
 							if (mCurrState == NetControlState.LEADER) {
 								String ipAddressNewUser = msgNewUser.getIPAddress();
+								Log.d(LOG_TAG, "New user : ipAddressNewUser = " + ipAddressNewUser);
 								
 //								// The leader checks if he doesn't already have a backup. If not, the new user becomes the backup
 //								if (mIpBackup == null || mIpBackup == "")
@@ -651,6 +691,7 @@ Log.d(LOG_TAG, "There's a stale user : " + currUser.getFullName() + ", now = " +
 								// Broadcast to everybody that this user has joined us, so they know him
 								broadcast(msgNewUser.toString());
 							}
+							
 							// Check that the new user isn't me (When a user joins, the leader broadcasts it so he will
 							//                                   also get the message about it, and should ignore it)
 							// Note : The condition is only needed when we're not the leader (Otherwise we're obviously not the new user)
@@ -664,7 +705,8 @@ Log.d(LOG_TAG, "There's a stale user : " + currUser.getFullName() + ", now = " +
 						String ipSender = packet.getAddress().getHostAddress();
 						// Check if we're the leader and if the leader broadcasted this message to all the clients.
 						// If so, we doesn't need to deal with the message, only the client that will receive it.
-						if ((mCurrState == NetControlState.LEADER && ipSender.equals(IP_LEADER)) == false) {
+				
+						if (mCurrState != NetControlState.NOT_RUNNING && (mCurrState == NetControlState.LEADER && ipSender.equals(IP_LEADER)) == false) {
 							Messages.MessageUserDisconnected msgUserDisconnected = new Messages.MessageUserDisconnected(msgReceived);
 							User userDisconnected = mMapIPToUser.get(msgUserDisconnected.getIPAddress());
 							if (userDisconnected != null) {
@@ -677,7 +719,7 @@ Log.d(LOG_TAG, "There's a stale user : " + currUser.getFullName() + ", now = " +
 						}
 					}
 					// Only the leader gets this message
-					else if (msgPrefix.equals(Messages.MSG_PREFIX_GET_USER_DETAILS))  {
+					else if (msgPrefix.equals(Messages.MSG_PREFIX_GET_USER_DETAILS)) {
 						final Messages.MessageGetUserDetails msgGetUserDetails = new Messages.MessageGetUserDetails(msgReceived);
 						final String targetIPAddress = msgGetUserDetails.getTargetIPAddress();
 						final String askerIPAddress = packet.getAddress().getHostAddress();
@@ -748,7 +790,7 @@ Log.d(LOG_TAG, "There's a stale user : " + currUser.getFullName() + ", now = " +
 							Messages.MessagePong msgPong = new Messages.MessagePong(mMe.getIPAddress());
 							sendMessageUDP(msgPong.toString(), IP_LEADER);
 							// Update the last ping time for leader-stale checking
-							mLeaderLastPing = System.currentTimeMillis();
+							mLeaderLastPing = SystemClock.uptimeMillis();
 						}
 					}
 					// Only the leader gets this message
@@ -760,7 +802,7 @@ Log.d(LOG_TAG, "There's a stale user : " + currUser.getFullName() + ", now = " +
 						// Check the user still exists (Maybe he disconnected since Ponging)
 						if (userPongged != null)
 						{
-							userPongged.setLastPongTime(System.currentTimeMillis());
+							userPongged.setLastPongTime(SystemClock.uptimeMillis());
 						}
 					}
 					// Only a client gets this message from the leader, notifying that this client is now the backup
@@ -768,7 +810,7 @@ Log.d(LOG_TAG, "There's a stale user : " + currUser.getFullName() + ", now = " +
 //						mAmIBackup = true;
 //					}
 				}
-				catch (IOException e)
+				catch (Throwable e)
 				{
 					e.printStackTrace();
 				}
@@ -796,11 +838,11 @@ Log.d(LOG_TAG, "There's a stale user : " + currUser.getFullName() + ", now = " +
 		private DatagramSocket createDatagramSocket()
 		{
 			DatagramSocket socket = null;
-			boolean done = false;
+			boolean isDoneCreating = false;
 			
-			while (!done && !Thread.currentThread().isInterrupted())
+			while (isDoneCreating == false && Thread.currentThread().isInterrupted() == false)
 			{
-				done = true;
+				isDoneCreating = true;
 				
 				try
 				{
@@ -809,19 +851,20 @@ Log.d(LOG_TAG, "There's a stale user : " + currUser.getFullName() + ", now = " +
 				catch (SocketException e)
 				{
 					e.printStackTrace();
-					done = false;
+					isDoneCreating = false;
 				}
 				
-				if (!done)
+				if (isDoneCreating == false)
 				{
-					try
-					{
-						Thread.sleep(NAP_TIME_GET_DATAGRAM_SOCKET);
-					}
-					catch (InterruptedException e)
-					{
-						Thread.currentThread().interrupt();
-					}
+					nap (NAP_TIME_GET_DATAGRAM_SOCKET);
+//					try
+//					{
+//						Thread.sleep(NAP_TIME_GET_DATAGRAM_SOCKET);
+//					}
+//					catch (InterruptedException e)
+//					{
+//						Thread.currentThread().interrupt();
+//					}
 				}
 			}
 			
@@ -830,10 +873,11 @@ Log.d(LOG_TAG, "There's a stale user : " + currUser.getFullName() + ", now = " +
 	}
 
 
-	public synchronized void showToast(Context context, String toastMessage)
+//	public synchronized void showToast(Context context, String toastMessage)
+	public void showToast(Context context, String toastMessage)
 	{
 		Toast.makeText(context, toastMessage, Toast.LENGTH_LONG).show();
-		Toast.makeText(this, toastMessage, Toast.LENGTH_LONG).show();
+//		Toast.makeText(this, toastMessage, Toast.LENGTH_LONG).show();
 	}
 
 	private void addUser(User userToAdd)
@@ -842,7 +886,7 @@ Log.d(LOG_TAG, "There's a stale user : " + currUser.getFullName() + ", now = " +
 		notifyActivityUsersList();
 	}
 	
-	private synchronized void removeUser(String ipAddressToRemove)
+	private void removeUser(String ipAddressToRemove)
 	{
 		mMapIPToUser.remove(ipAddressToRemove);
 		notifyActivityUsersList();
@@ -1118,6 +1162,7 @@ Log.d(LOG_TAG, "Broadcast : Exception !!! IOException");
 		}
 		catch (InterruptedException e)
 		{
+			Thread.currentThread().interrupt();
 		}
 	}
 
