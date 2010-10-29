@@ -678,9 +678,9 @@ Log.d(LOG_TAG, "There's a stale user : " + currUser.getFullName() + ", now = " +
 					}
 					// Only the leader gets this message
 					else if (msgPrefix.equals(Messages.MSG_PREFIX_GET_USER_DETAILS))  {
-						Messages.MessageGetUserDetails msgGetUserDetails = new Messages.MessageGetUserDetails(msgReceived);
-						String targetIPAddress = msgGetUserDetails.getTargetIPAddress();
-						String askerIPAddress = packet.getAddress().getHostAddress();
+						final Messages.MessageGetUserDetails msgGetUserDetails = new Messages.MessageGetUserDetails(msgReceived);
+						final String targetIPAddress = msgGetUserDetails.getTargetIPAddress();
+						final String askerIPAddress = packet.getAddress().getHostAddress();
 						
 						// Check if the target user (whose details the asker wants) is the leader itself
 						if (targetIPAddress.equals(getMyIP())) {
@@ -693,10 +693,15 @@ Log.d(LOG_TAG, "There's a stale user : " + currUser.getFullName() + ", now = " +
 							Messages.MessageGiveDetails msgGiveDetails = new Messages.MessageGiveDetails(askerIPAddress);
 							sendMessage(msgGiveDetails.toString(), targetIPAddress);
 						}	
-						ImageCommunicator imageOwner = new ImageCommunicator( targetIPAddress, ImageCommunicator.IMAGE_SERVER_PORT);
-						ImageCommunicator imageAsker = new ImageCommunicator( askerIPAddress, ImageCommunicator.IMAGE_SERVER_PORT);
-						imageOwner.requestImage( msgGetUserDetails.getTargetUserName( ));
-						imageAsker.sendImage( "/sdcard/" + msgGetUserDetails.getTargetUserName( ) + ".jpg", msgGetUserDetails.getTargetUserName( ));
+						new Thread( ) {
+							@Override
+							public void run( ) {
+								ImageCommunicator imageOwner = new ImageCommunicator( targetIPAddress, ImageCommunicator.IMAGE_SERVER_PORT);
+								ImageCommunicator imageAsker = new ImageCommunicator( askerIPAddress, ImageCommunicator.IMAGE_SERVER_PORT);
+								imageOwner.requestImage( msgGetUserDetails.getTargetUserName( ));
+								imageAsker.sendImage( "/sdcard/" + msgGetUserDetails.getTargetUserName( ) + ".jpg", msgGetUserDetails.getTargetUserName( ));
+							}
+						}.start( );
 					}
 					// Only a client gets this message 
 					else if (msgPrefix.equals(Messages.MSG_PREFIX_GIVE_DETAILS)) {
