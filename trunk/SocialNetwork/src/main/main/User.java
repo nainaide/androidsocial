@@ -2,10 +2,6 @@ package main.main;
 
 import java.util.Calendar;
 import java.util.GregorianCalendar;
-import java.util.StringTokenizer;
-
-import android.app.Application;
-import android.content.Context;
 
 
 public class User
