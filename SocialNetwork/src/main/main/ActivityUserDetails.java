@@ -5,6 +5,7 @@ import java.util.GregorianCalendar;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -357,25 +358,35 @@ public class ActivityUserDetails extends Activity
 		String hobbies = msgUserDetails.getHobbies();
 		String favoriteMusic = msgUserDetails.getFavoriteMusic();
 			
-Log.d(LOG_TAG, "hobbies = " + hobbies + ", favourite music = " + favoriteMusic);
+		Log.d(LOG_TAG, "hobbies = " + hobbies + ", favourite music = " + favoriteMusic);
 
 		if (hobbies.equals("") == false)
 		{
-//			mTextViewHobbies.setVisibility(View.VISIBLE);
-//			currHobbies =hobbies;
-	        mEditTextHobbies.setText(hobbies);
+			//			mTextViewHobbies.setVisibility(View.VISIBLE);
+			//			currHobbies =hobbies;
+			mEditTextHobbies.setText(hobbies);
 		}
-		
+
 		if (favoriteMusic.equals("") == false)
 		{
-//			currFavorMusic = favoriteMusic;
-//			mTextViewFavoriteMusic.setVisibility(View.VISIBLE);
-	        mEditTextFavoriteMusic.setText(favoriteMusic);
+			//			currFavorMusic = favoriteMusic;
+			//			mTextViewFavoriteMusic.setVisibility(View.VISIBLE);
+			mEditTextFavoriteMusic.setText(favoriteMusic);
 		}
 	}
 
 	public Handler getUpdateHandler()
 	{
 		return mHandler;
+	}
+
+	public Handler getImageUpdateHandler() {
+		return new Handler() {
+    		public void handleMessage(Message msg)
+    		{
+				ImageView userPic = (ImageView)findViewById( R.id.ImageViewUserPicture);
+				userPic.setImageBitmap( BitmapFactory.decodeFile( "/sdcard/" + ((String)msg.obj) + ".jpg"));
+    		}
+    	};
 	}
 }

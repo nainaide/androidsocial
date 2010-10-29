@@ -857,23 +857,23 @@ Log.d(LOG_TAG, "There's a stale user : " + currUser.getFullName() + ", now = " +
 
 	private synchronized void notifyActivityUserDetails(Messages.MessageUserDetails msgUserDetails) //String msgUserDetails)
 	{
-Log.d(LOG_TAG, "About to notify ActivityUserDetails. Msg = " + msgUserDetails.toString());
+		Log.d(LOG_TAG, "About to notify ActivityUserDetails. Msg = " + msgUserDetails.toString());
 
 		// TODO : I think these 2 whiles are not needed anymore. Try to delete
-//		while (ActivityUserDetails.instance == null)
-//		{
-//			// Do nothing. Just wait. If we're in this function, this means that the ActivityUserDetails will shortly appear
-//			// so just wait until it does and there's an instance of it
-//		}
-//		
-//		while (ActivityUserDetails.instance.getUpdateHandler() == null)
-//		{
-//		}
-		
+		//		while (ActivityUserDetails.instance == null)
+		//		{
+		//			// Do nothing. Just wait. If we're in this function, this means that the ActivityUserDetails will shortly appear
+		//			// so just wait until it does and there's an instance of it
+		//		}
+		//		
+		//		while (ActivityUserDetails.instance.getUpdateHandler() == null)
+		//		{
+		//		}
+
 		Message msg = ActivityUserDetails.instance.getUpdateHandler().obtainMessage();
 		msg.obj = msgUserDetails;
-			
-Log.d(LOG_TAG, "Right before notifying ActivityUserDetails");
+
+		Log.d(LOG_TAG, "Right before notifying ActivityUserDetails");
 
 		ActivityUserDetails.instance.getUpdateHandler().sendMessage(msg);
 	}
@@ -1220,8 +1220,10 @@ Log.d(LOG_TAG, "Broadcast : Exception !!! IOException");
 	}
 
 	public void imageReady( String imageName) {
+		Message msg = ActivityUsersList.instance.getUpdateHandler().obtainMessage();
+		msg.obj = imageName;
 		// TODO Update activity with user image
 		Log.d( "Notify", "Image received: " + imageName);
-		
+		ActivityUserDetails.instance.getImageUpdateHandler().sendMessage(msg);
 	}
 }
