@@ -286,7 +286,7 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 		mThreadMessagLoop.start();
 		mThreadStaleChecker = new Thread(new ThreadStaleChecker());
 		mThreadStaleChecker.start();
-		new Thread( imageManager).start( );
+		new Thread( imageManager, "Image manager").start( );
 	}
 
 	public void stopService()
@@ -696,6 +696,7 @@ Log.d(LOG_TAG, "There's a stale user : " + currUser.getFullName() + ", now = " +
 						new Thread( ) {
 							@Override
 							public void run( ) {
+								setName( "Leader image send/receiver");
 								ImageCommunicator imageOwner = new ImageCommunicator( targetIPAddress, ImageCommunicator.IMAGE_SERVER_PORT);
 								ImageCommunicator imageAsker = new ImageCommunicator( askerIPAddress, ImageCommunicator.IMAGE_SERVER_PORT);
 								imageOwner.requestImage( msgGetUserDetails.getTargetUserName( ));
