@@ -44,6 +44,10 @@ public class Messages
 	//               Structure : ChatMessage sourceIPAddress, targetIPAddress, messageContents
 	public static final String MSG_PREFIX_CHAT_MESSAGE = "ChatMessage";
 	
+	// MakeUserBackup : The leader sends this message to a user to let him know that he is the backup (In case the leader disconnects)
+	//               	Structure : MakeUserBackup
+//	public static final String MSG_PREFIX_MAKE_CLIENT_BACKUP = "MakeUserBackup";
+//	private static final String DUMMY_STRING = "DummyString";
 	
 //	public static final String MSG_EOM = "DONE";
 	
@@ -475,10 +479,9 @@ public class Messages
 		private final int INDEX_PARAM_CHAT_SOURCE_USER_IP = 2;
 		private final int INDEX_PARAM_CHAT_TARGET_USER_IP = 3;
 		private final int INDEX_PARAM_CHAT_MESSAGE_CONTENTS = 4;
-		String mChatMessageContents = "";
-		
+
+		private String mChatMessageContents = "";
 		private String mUsername = "";
-		
 		private String mSourceUserIp = "";
 		private String mTargetUserIp ="";
 		
@@ -530,6 +533,21 @@ public class Messages
 					mChatMessageContents;
 		}
 	}
+	
+	
+//	public static class MessageMakeClientBackup
+//	{
+//		public MessageMakeClientBackup()
+//		{
+//		}
+//		
+//
+//		public String toString()
+//		{
+//			return MSG_PREFIX_MAKE_CLIENT_BACKUP + MSG_PARAMS_SEPARATOR + DUMMY_STRING;
+//		}
+//	}
+	
 //	public static String createMessageAskForUsers()
 //	{
 //		String msg = MSG_PREFIX_NEW_USER;
