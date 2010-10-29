@@ -22,6 +22,7 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Set;
 
 import main.imageManager.IImageNotifiable;
 import main.imageManager.ImageCommunicator;
@@ -36,29 +37,30 @@ import android.widget.Toast;
 
 public class ApplicationSocialNetwork extends Application implements IImageNotifiable
 {
-//	private final int NAP_TIME_ADHOC_CLIENT_ENABLE = 1000;
-//	private final int NAP_TIME_ADHOC_CLIENT_DISABLE = 1000;
-//	private final int NAP_TIME_ADHOC_SERVER_ENABLE = 1000;
-//	private final int NAP_TIME_ADHOC_SERVER_DISABLE = 1000;
-	private final int NAP_TIME_STALE_CHECKER = 1000;
-//	private final int NAP_TIME_MESSAGE_LOOP = 1000;
-	private final int NAP_TIME_GET_DATAGRAM_SOCKET = 1000;
-	private final int NAP_TIME_TOAST_AND_EXIT = 3000;
+//	private static final int NAP_TIME_ADHOC_CLIENT_ENABLE = 1000;
+//	private static final int NAP_TIME_ADHOC_CLIENT_DISABLE = 1000;
+//	private static final int NAP_TIME_ADHOC_SERVER_ENABLE = 1000;
+//	private static final int NAP_TIME_ADHOC_SERVER_DISABLE = 1000;
+	private static final int NAP_TIME_STALE_CHECKER = 1000;
+//	private static final int NAP_TIME_MESSAGE_LOOP = 1000;
+	private static final int NAP_TIME_GET_DATAGRAM_SOCKET = 1000;
+	private static final int NAP_TIME_TOAST_AND_EXIT = 3000;
+	private static final int NAP_TIME_RECONNECT = 1000;
 	
-	private final long TIMEOUT_STALE_CLIENT = 5 * NAP_TIME_STALE_CHECKER;
-	private final long TIMEOUT_STALE_LEADER = 5 * NAP_TIME_STALE_CHECKER;
+	private static final long TIMEOUT_STALE_CLIENT = 5 * NAP_TIME_STALE_CHECKER;
+	private static final long TIMEOUT_STALE_LEADER = 5 * NAP_TIME_STALE_CHECKER;
 //	private final int  TIMEOUT_SOCKET_ACCEPT = 30000;
 
-	public final String USER_FILE_NAME_PREFIX = "user_";
-	public final String USER_FILE_NAME_SUFFIX = "";
-	public final String USER_FILE_NAME_EXTENSION = "";
+	public static final String USER_FILE_NAME_PREFIX = "user_";
+	public static final String USER_FILE_NAME_SUFFIX = "";
+	public static final String USER_FILE_NAME_EXTENSION = "";
 
-	private final String PROPERTY_VALUE_SEPARATOR = "=";
+	private static final String PROPERTY_VALUE_SEPARATOR = "=";
 	
-	private final String LOG_TAG = "SN.Application";
+	private static final String LOG_TAG = "SN.Application";
 	
-	private final String IP_LEADER = "192.168.2.1";
-	private final int PORT = 2222;
+	private static final String IP_LEADER = "192.168.2.1";
+	private static final int PORT = 2222;
 	
 	public enum NetControlState
 	{
@@ -84,6 +86,8 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 	private ImageManager imageManager;
 //	private HashMap<String, Socket> mMapIPToSocket = null;
 //	private Socket mSocketToLeader = null;
+//	private String mIpBackup;
+//	private boolean mAmIBackup;
 	
 	
 	/** Called when the application is first created. */
@@ -112,6 +116,8 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 
 		mCurrState = NetControlState.NOT_RUNNING;
 
+//		mIpBackup = "";
+//		mAmIBackup = false;
 //		stopDnsmasq();
 //		disableAdhocServer();
 	}
@@ -252,6 +258,10 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 		}
 	}
 
+	public void setFileNameForManager( String fileName) {
+		imageManager.setFileName(fileName);
+	}
+
 	public void startService()
 	{
 		switch (mCurrState)
@@ -271,17 +281,14 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 				break;
 			}
 		}
-			mThreadMessagLoop = new Thread(new ThreadMessageLoop());
-			mThreadMessagLoop.start();
-			mThreadStaleChecker = new Thread(new ThreadStaleChecker());
-			mThreadStaleChecker.start();
-			new Thread( imageManager).start( );
+		
+		mThreadMessagLoop = new Thread(new ThreadMessageLoop());
+		mThreadMessagLoop.start();
+		mThreadStaleChecker = new Thread(new ThreadStaleChecker());
+		mThreadStaleChecker.start();
+		new Thread( imageManager).start( );
 	}
 
-	public void setFileNameForManager( String fileName) {
-		imageManager.setFileName(fileName);
-	}
-	
 	public void stopService()
 	{
 		try
@@ -453,11 +460,26 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 							// Check if the Leader still exists
 							if (isLeaderStale())
 							{
-								// The leader is dead. We should quit the network, wait a random time and then try to connect again
 //Log.d(LOG_TAG, "The leader is stale");
-
-								// TODO : What now ?
+								// Remove the leader from the list of users
+								mMapIPToUser.remove(getLeaderIP());
 								
+								String ipBackup = calcIPBackup();
+								
+								// The leader is dead. The client that is the backup should try and connect right away as the server. The other clients
+								// should wait a bit and then try to connect as clients over and over again until a timeout passes
+//								if (mAmIBackup)
+								if (getMyIP().equals(ipBackup))
+								{
+									enableAdhocLeader();
+								}
+								else
+								{
+									// Create and start a thread that will try again and again to connect as a client.
+									// Once the backup connects as the leader, the thread will succeed and finish running.
+									Thread threadReconnect = new Thread(new ThreadReconnect());
+									threadReconnect.start();
+								}
 							}
 							
 							break;
@@ -500,6 +522,23 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 			//return (System.currentTimeMillis() - mLeaderLastPing) > TIMEOUT_STALE_LEADER;
 		}
 
+		private String calcIPBackup()
+		{
+			String ipBackupToReturn = "999.999.999.999";
+			
+			// Find the minimal IP of all clients. It will be the backup
+			Set<String> setIpsClients = mMapIPToUser.keySet();
+			for (String currIP : setIpsClients)
+			{
+				if (currIP.compareTo(ipBackupToReturn) < 0)
+				{
+					ipBackupToReturn = currIP;
+				}
+			}
+			
+			return ipBackupToReturn;
+		}
+		
 		private void updateStaleClients()
 		{
 /*			for (User currUser : mMapIPToUser.values())
@@ -535,6 +574,27 @@ Log.d(LOG_TAG, "There's a stale user : " + currUser.getFullName() + ", now = " +
 		}
 	}
 
+	
+	private class ThreadReconnect implements Runnable
+	{
+		// @Override
+		public void run()
+		{
+			boolean isClientEnabled = false;
+			
+			while (isClientEnabled == false)
+			{
+				nap(NAP_TIME_RECONNECT);
+				
+				isClientEnabled = enableAdhocClient();
+				
+				// TODO : Deal with the case when the backup disconnected and so there will never be a new leader.
+				//        So after a certain time of failing to connect as a client, we should pick another one to
+				//        connect as the leader
+			}
+		}
+	}
+	
 
 	private class ThreadMessageLoop implements Runnable
 	{
@@ -555,15 +615,30 @@ Log.d(LOG_TAG, "There's a stale user : " + currUser.getFullName() + ", now = " +
 					Log.d(LOG_TAG, "Recevied Msg : " + strMsgReceived);
 					String msgPrefix = Messages.getPrefix(strMsgReceived);
 					Messages.Message msgReceived = new Messages.Message(strMsgReceived);
+					
 					if (msgPrefix.equals(Messages.MSG_PREFIX_NEW_USER)) {
 						String ipSender = packet.getAddress().getHostAddress();
 						Log.d(LOG_TAG, "New user : ipSender = " + ipSender);
+						
 						// Check if we're the leader and if the leader broadcasted this message to all the clients.
-						// If so, we doesn't need to deal with the message, only the client that will receive it.
+						// If so, we don't need to deal with the message, only the client that will receive it.
 						if ((mCurrState == NetControlState.LEADER && ipSender.equals(IP_LEADER)) == false) {
 							Messages.MessageNewUser msgNewUser = new Messages.MessageNewUser(msgReceived);
+							
 							if (mCurrState == NetControlState.LEADER) {
 								String ipAddressNewUser = msgNewUser.getIPAddress();
+								
+//								// The leader checks if he doesn't already have a backup. If not, the new user becomes the backup
+//								if (mIpBackup == null || mIpBackup == "")
+//								{
+//									// Set the backup ip to be the new user's ip
+//									mIpBackup = ipAddressNewUser;
+//									
+//									// Send the new user a message to notify him that he is the backup
+//									Messages.MessageMakeClientBackup msgmMakeUserBackup = new Messages.MessageMakeClientBackup();
+//									sendMessage(msgmMakeUserBackup.toString());
+//								}
+								
 								// Send the new user a "NewUser" message for every other client so he knows them
 								for (User currUser : mMapIPToUser.values()) {
 									Messages.MessageNewUser msgNewUserOfExistingUserForNewcomerToKnow = new Messages.MessageNewUser(currUser);
@@ -671,7 +746,7 @@ Log.d(LOG_TAG, "There's a stale user : " + currUser.getFullName() + ", now = " +
 						}
 					}
 					// Only the leader gets this message
-					else if (msgPrefix.equals(Messages.MSG_PREFIX_PONG))   {
+					else if (msgPrefix.equals(Messages.MSG_PREFIX_PONG)) {
 						Messages.MessagePong msgPong = new Messages.MessagePong(msgReceived);
 						String ipAddressPongged = msgPong.getIPAddress();
 						
@@ -682,6 +757,10 @@ Log.d(LOG_TAG, "There's a stale user : " + currUser.getFullName() + ", now = " +
 							userPongged.setLastPongTime(System.currentTimeMillis());
 						}
 					}
+					// Only a client gets this message from the leader, notifying that this client is now the backup
+//					else if (msgPrefix.equals(Messages.MSG_PREFIX_MAKE_USER_BACKUP)) {
+//						mAmIBackup = true;
+//					}
 				}
 				catch (IOException e)
 				{
