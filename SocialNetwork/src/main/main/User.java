@@ -88,6 +88,13 @@ public class User
 	}
 	
 	
+	public boolean equals(Object objOther)
+	{
+		User userOther = (User) objOther;
+		
+		return (getFullName().equals(userOther.getFullName()) && mIPaddress.equals(userOther.getIPAddress()));
+	}
+
 	public String getFullName()
 	{
 		return mFirstName + ((mLastName != null && mLastName.equals("") == false) ? " " + mLastName : "");
@@ -207,13 +214,5 @@ public class User
 	public void setFavoriteMusic(String newFavoriteMusic)
 	{
 		mFavoriteMusic = newFavoriteMusic;
-	}
-	
-	
-	public boolean equals(Object objOther)
-	{
-		User userOther = (User) objOther;
-
-		return (getFullName().equals(userOther.getFullName()) && mIPaddress.equals(userOther.getIPAddress()));
 	}
 }

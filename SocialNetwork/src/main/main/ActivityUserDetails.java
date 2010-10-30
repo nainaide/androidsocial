@@ -256,7 +256,6 @@ public class ActivityUserDetails extends Activity
 //			@Override
 			public void onClick(View view)
 			{
-				// TODO Auto-generated method stub
 				finish();
 			}
 		});
@@ -274,7 +273,6 @@ public class ActivityUserDetails extends Activity
 
     private void setAreDetailsEditable(boolean isEditable)
     {
-		// TODO Auto-generated method stub
 //		mDatePickerBirth.setClickable(isEditable);
 		mDatePickerBirth.setEnabled(isEditable);
 		mEditTextFavoriteMusic.setEnabled(isEditable);

@@ -8,7 +8,6 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.os.Handler;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.ArrayAdapter;
@@ -19,6 +18,75 @@ import android.widget.Toast;
 
 public class ActivityLogin extends Activity implements OnClickListener
 {
+	private static final int CREATE_NEW_USER = 0x01;
+	private String FILE_NAME_PREFS; // If I final it and assign its value here, it will crash
+	private static final String USER_NAME_EMPTY = "";
+	
+	private String mUserName = USER_NAME_EMPTY;
+	private ArrayAdapter<CharSequence> mAdapter;
+	
+	ApplicationSocialNetwork application = null;
+	public static ActivityLogin instance = null;
+	
+	
+    /** Called when the activity is first created. */
+    @Override
+    public void onCreate(Bundle savedInstanceState)
+    {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.login);
+
+    	application = (ApplicationSocialNetwork)getApplication();
+    	ActivityLogin.instance = this;
+        FILE_NAME_PREFS = getResources().getString(R.string.file_name_prefs);
+
+        // Get the last logged-in user name (and put it in mUserName)
+		SharedPreferences settings = getSharedPreferences(FILE_NAME_PREFS, MODE_PRIVATE);
+    	String prefNameLastLoggedInUserName = getResources().getString(R.string.pref_name_last_logged_in_user_name);
+    	mUserName = settings.getString(prefNameLastLoggedInUserName, USER_NAME_EMPTY);
+    	
+        // Check if the user checked to always login with a certain user.
+        // If so, don't display this screen. Simply login with that user
+        loginAutomaticallyIfNeeded();
+        
+        // Else, if it wasn't set to login automatically, continue (show the activity)
+        
+        // Set all the listeners (e.g for buttons, dialogs) and adapters
+        setListenersAndAdapters();
+        
+        // Get the list of users on the current machine and populate the spinner
+        populateSpinnerUserNames();
+	}
+
+	private void loginAutomaticallyIfNeeded()
+	{
+		SharedPreferences settings = getSharedPreferences(FILE_NAME_PREFS, MODE_PRIVATE);
+        String prefNameShouldLoginAutomatically = getResources().getString(R.string.pref_name_should_login_automatically);
+        boolean shouldLoginAutomatically = settings.getBoolean(prefNameShouldLoginAutomatically, false);
+
+        if (shouldLoginAutomatically)
+        {
+        	login(mUserName);
+        }
+	}
+    
+	private void setListenersAndAdapters()
+	{
+		Button buttonCreateUser = (Button)findViewById(R.id.ButtonCreateUser);
+        buttonCreateUser.setOnClickListener(this);
+
+        Button buttonDeleteUser = (Button) findViewById(R.id.ButtonDeleteUser);
+        buttonDeleteUser.setOnClickListener(this);
+        
+        Button buttonLogin = (Button) findViewById(R.id.ButtonLogin);
+        buttonLogin.setOnClickListener(this);
+        
+		Spinner spinnerUserNames = (Spinner) findViewById(R.id.SpinnerUserName);
+		mAdapter = new ArrayAdapter<CharSequence>(this, android.R.layout.simple_spinner_item);  
+		mAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+		spinnerUserNames.setAdapter(mAdapter);
+	}
+
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		switch ( requestCode) {
@@ -58,76 +126,7 @@ public class ActivityLogin extends Activity implements OnClickListener
 			}
 		}
 	}
-	private static final int CREATE_NEW_USER = 0x01;
-	private String FILE_NAME_PREFS; // If I final it and assign its value here, it will crash
-	private final String  USER_NAME_EMPTY = "";
 	
-	private String mUserName = USER_NAME_EMPTY;
-	private ArrayAdapter<CharSequence> mAdapter;
-	
-	ApplicationSocialNetwork application = null;
-	public static ActivityLogin instance = null;
-	
-    /** Called when the activity is first created. */
-    @Override
-    public void onCreate(Bundle savedInstanceState)
-    {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.login);
-
-    	application = (ApplicationSocialNetwork)getApplication();
-    	ActivityLogin.instance = this;
-        FILE_NAME_PREFS = getResources().getString(R.string.file_name_prefs);
-
-        // Get the last logged-in user name (and put it in mUserName)
-		SharedPreferences settings = getSharedPreferences(FILE_NAME_PREFS, MODE_PRIVATE);
-    	String prefNameLastLoggedInUserName = getResources().getString(R.string.pref_name_last_logged_in_user_name);
-    	mUserName = settings.getString(prefNameLastLoggedInUserName, USER_NAME_EMPTY);
-    	
-        // Check if the user checked to always login with a certain user.
-        // If so, don't display this screen. Simply login with that user
-        loginAutomaticallyIfNeeded();
-        
-        // Else, if it wasn't set to login automatically, continue (show the activity)
-        
-        // Set all the listeners (e.g for buttons, dialogs) and adapters
-        setListenersAndAdapters();
-        
-        // Get the list of users on the current machine and populate the spinner
-        populateSpinnerUserNames();
-	}
-
-
-	private void loginAutomaticallyIfNeeded()
-	{
-		SharedPreferences settings = getSharedPreferences(FILE_NAME_PREFS, MODE_PRIVATE);
-        String prefNameShouldLoginAutomatically = getResources().getString(R.string.pref_name_should_login_automatically);
-        boolean shouldLoginAutomatically = settings.getBoolean(prefNameShouldLoginAutomatically, false);
-
-        if (shouldLoginAutomatically)
-        {
-        	login(mUserName);
-        }
-	}
-
-    
-	private void setListenersAndAdapters()
-	{
-		Button buttonCreateUser = (Button)findViewById(R.id.ButtonCreateUser);
-        buttonCreateUser.setOnClickListener(this);
-
-        Button buttonDeleteUser = (Button) findViewById(R.id.ButtonDeleteUser);
-        buttonDeleteUser.setOnClickListener(this);
-        
-        Button buttonLogin = (Button) findViewById(R.id.ButtonLogin);
-        buttonLogin.setOnClickListener(this);
-        
-		Spinner spinnerUserNames = (Spinner) findViewById(R.id.SpinnerUserName);
-		mAdapter = new ArrayAdapter<CharSequence>(this, android.R.layout.simple_spinner_item);  
-		mAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-		spinnerUserNames.setAdapter(mAdapter);
-	}
-    
 	// Implement the OnClickListener callback
 	public void onClick(View view)
 	{
@@ -228,8 +227,8 @@ public class ActivityLogin extends Activity implements OnClickListener
 				boolean shouldAccecpt = false;
 				
 				// For each file, check by its name if it is in fact a user details file
-				if (fileName.startsWith(application.USER_FILE_NAME_PREFIX) &&
-					fileName.endsWith(application.USER_FILE_NAME_SUFFIX + application.USER_FILE_NAME_EXTENSION))
+				if (fileName.startsWith(ApplicationSocialNetwork.USER_FILE_NAME_PREFIX) &&
+					fileName.endsWith(ApplicationSocialNetwork.USER_FILE_NAME_SUFFIX + ApplicationSocialNetwork.USER_FILE_NAME_EXTENSION))
 				{
 					shouldAccecpt = true;
 				}
@@ -265,17 +264,17 @@ public class ActivityLogin extends Activity implements OnClickListener
 	}
 
 
-	private Handler mHandler = new Handler() {
-		public String getUserName()
-		{
-			return mUserName;
-		}
-	};
-
-	public Handler getUpdateHandler()
-	{
-		return mHandler;
-	}
+//	private Handler mHandler = new Handler() {
+//		public String getUserName()
+//		{
+//			return mUserName;
+//		}
+//	};
+//
+//	public Handler getUpdateHandler()
+//	{
+//		return mHandler;
+//	}
 	
 	public String getUserName()
 	{
