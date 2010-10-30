@@ -18,26 +18,21 @@ public class Messages
 	//           Structure : NewUser IPAddress username dateBirth Sex Picture
 	public static final String MSG_PREFIX_NEW_USER = "NewUser";
 	
-	// TODO : If in fact it's useless, delete this NewUserReply message
-//	// NewUser : Leader sends as a reply to NEW_USER with its own IP Address
-//	//           Structure : NewUserReply leaderIPAddress
-//	public static final String MSG_PREFIX_NEW_USER_REPLY = "NewUserReply";
-	
-	// NewUser : Client asks for another user's full details
-	//           Structure : GetUserDetails targetIPAddress(The unique identifier)
+	// GetUserDetails : Client asks for another user's full details
+	//           		Structure : GetUserDetails targetIPAddress(The unique identifier)
 	public static final String MSG_PREFIX_GET_USER_DETAILS = "GetUserDetails";
 	
-	// NewUser : Leader sends to user, asking for his details
-	//           Structure : GiveDetails askerIPAddress
+	// GiveDetails : Leader sends to user, asking for his details
+	//           	 Structure : GiveDetails askerIPAddress
 	public static final String MSG_PREFIX_GIVE_DETAILS = "GiveDetails";
 	
-	// NewUser : Client sends to answer the leader, giving his own details.
-	//           Leader sends to reply the asking user with the details
-	//           Structure : UserDetails askerIPAddress *all the details. TBD*
+	// UserDetails : Client sends to answer the leader, giving his own details.
+	//           	 Leader sends to reply the asking user with the details
+	//           	 Structure : UserDetails askerIPAddress *all the details. TBD*
 	public static final String MSG_PREFIX_USER_DETAILS = "UserDetails";
 	
-	// NewUser : Client (NOT Leader) sends the leader it is disconnecting
-	//           Structure : UserDisconnected IPAddress
+	// UserDisconnected : Client (NOT Leader) sends the leader it is disconnecting
+	//           		  Structure : UserDisconnected IPAddress
 	public static final String MSG_PREFIX_USER_DISCONNECTED = "UserDisconnected"; 
 
 	// ChatMessage : User sends a chat message to another user whenever the "Send" button is pressed in the chat Activity
@@ -267,38 +262,6 @@ public class Messages
 //						mDateBirth + MSG_PARAMS_SEPARATOR + mSex       + MSG_PARAMS_SEPARATOR + mPicture; 
 		}
 	}
-	
-	// TODO : If in fact it's useless, delete this NewUserReply message
-//	public static class MessageNewUserReply
-//	{
-//		private final int INDEX_PARAM_LEADER_IP = 1;
-//		
-//		private String mLeaderIP = "";
-//		
-//		public MessageNewUserReply(String leaderIP)
-//		{
-//			mLeaderIP = leaderIP;
-//		}
-//		
-//		public MessageNewUserReply(Message message)
-//		{
-//			String strMessage = message.toString();
-//			
-//			mLeaderIP = strMessage.split(MSG_PARAMS_SEPARATOR)[INDEX_PARAM_LEADER_IP];
-//		}
-//		
-//		
-//		public String getLeaderIP()
-//		{
-//			return mLeaderIP;
-//		}
-//		
-//		public String toString()
-//		{
-//			return MSG_PREFIX_NEW_USER_REPLY + MSG_PARAMS_SEPARATOR +
-//						mLeaderIP;
-//		}
-//	}
 	
 	public static class MessageGetUserDetails
 	{

@@ -14,7 +14,6 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -46,6 +45,7 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 	private static final int NAP_TIME_TOAST_AND_EXIT = 3000;
 	private static final int NAP_TIME_RECONNECT = 1000;
 	
+	// TODO : Change these Stale Timeouts back to 5 or so, after done debugging
 	private static final long TIMEOUT_STALE_CLIENT = 100 * NAP_TIME_STALE_CHECKER;
 	private static final long TIMEOUT_STALE_LEADER = 100 * NAP_TIME_STALE_CHECKER;
 	private static final long TIMEOUT_RECONNECT = 30 * 1000; // 30 seconds
@@ -70,6 +70,7 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 	private NetControlState mCurrState = NetControlState.NOT_RUNNING;
 
 	private Thread mThreadStaleChecker = null;
+	private Thread mThreadReconnect = null;
 	private Thread mThreadMessagLoop = null;
 //	private Thread mThreadLeaderSocketListener = null;
 	
@@ -82,7 +83,7 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 	private long mLeaderLastPing = -1;
 	private String CHAT_SEPERATOR = "@";
 	private boolean mDidRunBefore = false;
-	private Dictionary<String ,String > openChats = null;
+	private Hashtable<String ,String > openChats = null;
 	private ImageManager imageManager;
 //	private HashMap<String, Socket> mMapIPToSocket = null;
 //	private Socket mSocketToLeader = null;
@@ -181,7 +182,8 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 			}
 
 			mMapIPToUser.clear();
-			//TODO : clear chat messages
+			openChats.clear();
+			
 			mCurrState = NetControlState.NOT_RUNNING;
 
 //			if (mMapIPToSocket != null)
@@ -197,8 +199,12 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 //				mSocketToLeader.close();
 //			}
 			
-			mThreadMessagLoop.interrupt();
 			mThreadStaleChecker.interrupt();
+			if (mThreadReconnect != null)
+			{
+				mThreadReconnect.interrupt();
+			}
+			mThreadMessagLoop.interrupt();
 //			mThreadLeaderSocketListener.interrupt();
 		}
 		catch (Exception e)
@@ -215,8 +221,10 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 		{
 			Log.d(LOG_TAG, "enableAdhocLeader : runRootCommand = false");
 			
-			// TODO : Notify the user
+			// Notify the user that a network could not be created and the application will now quit
+			toastAndExit("There was an error trying to create a network. The application will exit. Please try again shortly.");
 		}
+		
 		Log.d(LOG_TAG, "Running as server");
 		
 		mDidRunBefore = true;
@@ -225,10 +233,7 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 
 	public void disableAdhocLeader()
 	{
-		if (mOSFilesManager.runRootCommand(mOSFilesManager.PATH_APP_DATA_FILES + "/bin/netcontrol stop_server " + mOSFilesManager.PATH_APP_DATA_FILES) == false)
-		{
-			// TODO : Notify the user
-		}
+		mOSFilesManager.runRootCommand(mOSFilesManager.PATH_APP_DATA_FILES + "/bin/netcontrol stop_server " + mOSFilesManager.PATH_APP_DATA_FILES);
 	}
 
 	public boolean enableAdhocClient()
@@ -237,13 +242,8 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 		boolean isDiscovered = false;
 		
 		mMyDhcpAddress = "";
-		if (mOSFilesManager.runRootCommand(mOSFilesManager.PATH_APP_DATA_FILES + "/bin/netcontrol start_client " + mOSFilesManager.PATH_APP_DATA_FILES) == false)
-		{
-			// It doesn't necessarily mean the lease failed
-			// TODO : Notify the user
-//			int debugPoint = 3;
-			
-		}
+		
+		mOSFilesManager.runRootCommand(mOSFilesManager.PATH_APP_DATA_FILES + "/bin/netcontrol start_client " + mOSFilesManager.PATH_APP_DATA_FILES);
 
 		// If I have a new DHCP Address, it means there's a leader who already ran the DHCP server and I'm a client
 		mMyDhcpAddress = mOSFilesManager.getMyDhcpAddress();
@@ -260,10 +260,7 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 
 	public void disableAdhocClient()
 	{
-		if (mOSFilesManager.runRootCommand(mOSFilesManager.PATH_APP_DATA_FILES + "/bin/netcontrol stop_client " + mOSFilesManager.PATH_APP_DATA_FILES) == false)
-		{
-			// TODO : Notify the user
-		}
+		mOSFilesManager.runRootCommand(mOSFilesManager.PATH_APP_DATA_FILES + "/bin/netcontrol stop_client " + mOSFilesManager.PATH_APP_DATA_FILES);
 	}
 
 	private void setMyIPAddress(String IPaddress)
@@ -326,7 +323,7 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 			}
 			
 //			Looper.prepare();
-			while (!Thread.currentThread().isInterrupted())
+			while (Thread.currentThread().isInterrupted() == false)
 			{
 				try
 				{
@@ -342,8 +339,8 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 								// Remove the leader from the list of users
 								mMapIPToUser.remove(getLeaderIP());
 								
-								Thread threadReconnect = new Thread(new ThreadReconnect());
-								threadReconnect.start();
+								mThreadReconnect = new Thread(new ThreadReconnect());
+								mThreadReconnect.start();
 							}
 							
 							break;
@@ -369,6 +366,8 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 
 				nap(NAP_TIME_STALE_CHECKER);
 			}
+			
+			Log.d(LOG_TAG, "ThreadStaleChecker : Interrupted and about to finish running");
 		}
 		
 		private boolean isLeaderStale()
@@ -424,7 +423,7 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 			// Remove the leader from the users list since he is disconnected (Or we wouldn't have been here)
 //			removeUser(getLeaderIP());
 			
-			while (isDone == false)
+			while (Thread.currentThread().isInterrupted() == false && isDone == false)
 			{
 				// Someone else should try and connect as the leader. Find out who that someone is
 				ipNewLeaderToBe = calcIPBackup();
@@ -669,6 +668,8 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 //					e.printStackTrace();
 				}
 			}
+			
+			Log.d(LOG_TAG, "ThreadMessageLoop : Interrupted and about to finish running");
 		}
 
 		private void notifyActivityChat(MessageChatMessage msgChat) {
@@ -763,21 +764,8 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 	{
 		Log.d(LOG_TAG, "About to notify ActivityUserDetails. Msg = " + msgUserDetails.toString());
 
-		// TODO : I think these 2 whiles are not needed anymore. Try to delete
-		//		while (ActivityUserDetails.instance == null)
-		//		{
-		//			// Do nothing. Just wait. If we're in this function, this means that the ActivityUserDetails will shortly appear
-		//			// so just wait until it does and there's an instance of it
-		//		}
-		//		
-		//		while (ActivityUserDetails.instance.getUpdateHandler() == null)
-		//		{
-		//		}
-
 		Message msg = ActivityUserDetails.instance.getUpdateHandler().obtainMessage();
 		msg.obj = msgUserDetails;
-
-		Log.d(LOG_TAG, "Right before notifying ActivityUserDetails");
 
 		ActivityUserDetails.instance.getUpdateHandler().sendMessage(msg);
 	}
@@ -969,18 +957,18 @@ Log.d(LOG_TAG, "Broadcast : dest = " + dest + " (calcBroadcastAddress(IP_LEADER)
 		}
 		catch (SocketException e)
 		{
-Log.d(LOG_TAG, "Broadcast : Exception !!! SocketException");			
-			e.printStackTrace();
+			Log.e(LOG_TAG, "Broadcast : Exception !!! SocketException");			
+//			e.printStackTrace();
 		}
 		catch (UnknownHostException e)
 		{
-Log.d(LOG_TAG, "Broadcast : Exception !!! UnknownHostException");			
-			e.printStackTrace();
+			Log.e(LOG_TAG, "Broadcast : Exception !!! UnknownHostException");			
+//			e.printStackTrace();
 		}
 		catch (IOException e)
 		{
-Log.d(LOG_TAG, "Broadcast : Exception !!! IOException");			
-			e.printStackTrace();
+			Log.e(LOG_TAG, "Broadcast : Exception !!! IOException");			
+//			e.printStackTrace();
 		}
 	}
 
@@ -1058,17 +1046,18 @@ Log.d(LOG_TAG, "Broadcast : Exception !!! IOException");
 			 osw = new OutputStreamWriter(fos);
 			 
 			 osw.write(propertyName + PROPERTY_VALUE_SEPARATOR + value + "\n");
+			 
 		} catch (FileNotFoundException e) {
-			e.printStackTrace();
+			Log.e(LOG_TAG, "writePropertyToFile : Properties file was not found");
 		} catch (IOException e) {
-			e.printStackTrace();
+			Log.e(LOG_TAG, "writePropertyToFile : An IOException has accured. StackTrace = " + e.getStackTrace().toString());
 		} finally {
 			try {
 				osw.flush();
 				fos.close();
 				osw.close();
 			} catch (IOException e) {
-				e.printStackTrace();
+//				e.printStackTrace();
 			}
 		}
 	}
@@ -1081,7 +1070,6 @@ Log.d(LOG_TAG, "Broadcast : Exception !!! IOException");
 		String returnedValue = "";
 		
 		try {
-			
 			fis = openFileInput(fileName);
 
 			br = new BufferedReader(new InputStreamReader(fis));
@@ -1095,14 +1083,17 @@ Log.d(LOG_TAG, "Broadcast : Exception !!! IOException");
 					break;
 				}
 			}
-		} catch (Exception e) {
-			e.printStackTrace();
+			
+		} catch (FileNotFoundException e) {
+			Log.e(LOG_TAG, "readPropertyFromFile : Properties file was not found");
+		} catch (IOException e) {
+			Log.e(LOG_TAG, "readPropertyFromFile : An IOException has accured. StackTrace = " + e.getStackTrace().toString());
 		} finally {
 			try {
 				fis.close();
 				br.close();
 			} catch (IOException e) {
-				e.printStackTrace();
+//				e.printStackTrace();
 			}
 		}
 		
