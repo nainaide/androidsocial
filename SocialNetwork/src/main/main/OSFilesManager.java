@@ -6,8 +6,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.List;
 
 import android.util.Log;
@@ -15,14 +17,17 @@ import android.util.Log;
 
 public class OSFilesManager
 {
-	private final String LOG_TAG = "SN.OSFilesManager";
+	private static final String LOG_TAG = "SN.OSFilesManager";
 	
+	private static final String DEFAULT_DNS1 = "208.67.220.220";
+	private static final String DEFAULT_DNS2 = "208.67.222.222";
+
 	public String PATH_APP_DATA_FILES;
 
-	private static final String defaultDNS1 = "208.67.220.220";
-	private static final String defaultDNS2 = "208.67.222.222";
 
+	private ApplicationSocialNetwork application;
 
+	
 	public void setPathAppDataFiles(String path)
 	{
 		this.PATH_APP_DATA_FILES = path;
@@ -128,8 +133,8 @@ public class OSFilesManager
 		String newDnsmasq = new String();
 		// Getting dns-servers
 		String dns[] = new String[2];
-		dns[0] = defaultDNS1;
-		dns[1] = defaultDNS2;
+		dns[0] = DEFAULT_DNS1;
+		dns[1] = DEFAULT_DNS2;
 		String currLine = null;
 		BufferedReader br = null;
 		boolean writeconfig = false;
@@ -254,4 +259,127 @@ public class OSFilesManager
 		}
 		return myAddress;
 	}
+	
+	public void copyRawsIfNeeded(ApplicationSocialNetwork application)
+	{
+		List<String> listFilesNames = new ArrayList<String>();
+		this.application = application;
+		
+		checkDirs();
+		
+		// netcontrol
+		copyRaw(PATH_APP_DATA_FILES + "/bin/netcontrol", R.raw.netcontrol);
+		listFilesNames.add("netcontrol");
+		
+		// dnsmasq
+		copyRaw(PATH_APP_DATA_FILES + "/bin/dnsmasq", R.raw.dnsmasq);
+		listFilesNames.add("dnsmasq");
+		
+		try
+		{
+			chmodToFile(listFilesNames);
+		}
+		catch (Exception e)
+		{
+			application.showToast(application, "Unable to change permission on binary files!");
+		}
+		
+		// dnsmasq.conf
+		copyRaw(PATH_APP_DATA_FILES + "/conf/dnsmasq.conf", R.raw.dnsmasq_conf);
+		
+		// tiwlan.ini
+		copyRaw(PATH_APP_DATA_FILES + "/conf/tiwlan.ini", R.raw.tiwlan_ini);
+	}
+
+	private void copyRaw(String filename, int resource)
+	{
+		File outFile = new File(filename);
+		
+		// TODO : The deletion of files is because I've changed the files and I want to make sure they get re-copied.
+		//        After the files will be final, this deletion can be deleted.
+		if (outFile.exists())
+		{
+			if (outFile.delete() == false)
+			{
+//				int potentialDebugBreakPoint = 3;
+			}
+		}
+		
+//		if (outFile.exists() == false)
+//		{
+		
+			InputStream is = application.getResources().openRawResource(resource);
+			OutputStream out = null;
+			byte buf[] = new byte[1024];
+			int lengthLine = 0;
+			
+			try
+			{
+				out = new FileOutputStream(outFile);
+				
+				while ((lengthLine = is.read(buf)) > 0)
+				{
+					out.write(buf, 0, lengthLine);
+				}
+			}
+			catch (IOException e)
+			{
+				application.showToast(application, "Couldn't install file - " + filename + " !");
+			}
+			finally
+			{
+				closeStream(out);
+				closeStream(is);
+			}
+//		}
+	}
+
+	private void closeStream(InputStream inStream)
+	{
+		try
+		{
+			if (inStream != null)
+			{
+				inStream.close();
+			}
+		}
+		catch (IOException e)
+		{
+		}
+	}
+	
+	private void closeStream(OutputStream outStream)
+	{
+		try
+		{
+			if (outStream != null)
+			{
+				outStream.close();
+			}
+		}
+		catch (IOException e)
+		{
+		}
+	}
+	
+	private void checkDirs()
+	{
+		createDir("bin");
+		createDir("var");
+		createDir("conf");
+	}
+
+	private void createDir(String dirName)
+	{
+		File dir = new File(PATH_APP_DATA_FILES + "/" + dirName);
+		
+		if (dir.exists() == false)
+		{
+			if (!dir.mkdir())
+			{
+				application.showToast(application, "Couldn't create " + dirName + " directory!");
+			}
+		}
+	}
+
 }

@@ -1,15 +1,11 @@
 package main.main;
 
-
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -108,14 +104,12 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 		// Check for root permissions
 		if (mOSFilesManager.doesHaveRootPermission())
 		{
-			copyRawsIfNeeded();
+			mOSFilesManager.copyRawsIfNeeded(this);
 		}
 		else
 		{
 			// Notify there are no root permissions and exit
 			toastAndExit("You don't have root permissions. The application cannot run and will now quit. Good day !");
-			
-			// TODO : Is this enough or should something else be done ?
 		}
 
 		mCurrState = NetControlState.NOT_RUNNING;
@@ -126,13 +120,10 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 //		disableAdhocServer();
 	}
 	
-	public void stopDnsmasq()
-	{
-		mOSFilesManager.runRootCommand(mOSFilesManager.PATH_APP_DATA_FILES + "/bin/netcontrol stop_dnsmasq");
-//		mOSFilesManager.runRootCommand(mOSFilesManager.PATH_APP_DATA_FILES + "/bin/netcontrol stop_int");
-//		mOSFilesManager.runRootCommand(mOSFilesManager.PATH_APP_DATA_FILES + "/bin/netcontrol stop_wifi");
-//		mOSFilesManager.runRootCommand(mOSFilesManager.PATH_APP_DATA_FILES + "/bin/netcontrol start_wifi");
-	}
+//	public void stopDnsmasq()
+//	{
+//		mOSFilesManager.runRootCommand(mOSFilesManager.PATH_APP_DATA_FILES + "/bin/netcontrol stop_dnsmasq");
+//	}
 
 	public void onTerminate()
 	{
@@ -141,126 +132,6 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 		stopService();
 	}
 
-	private void copyRawsIfNeeded()
-	{
-		List<String> listFilesNames = new ArrayList<String>();
-		
-		checkDirs();
-		
-		// netcontrol
-		copyRaw(mOSFilesManager.PATH_APP_DATA_FILES + "/bin/netcontrol", R.raw.netcontrol);
-		listFilesNames.add("netcontrol");
-		
-		// dnsmasq
-		copyRaw(mOSFilesManager.PATH_APP_DATA_FILES + "/bin/dnsmasq", R.raw.dnsmasq);
-		listFilesNames.add("dnsmasq");
-		
-		try
-		{
-			mOSFilesManager.chmodToFile(listFilesNames);
-		}
-		catch (Exception e)
-		{
-			showToast(this, "Unable to change permission on binary files!");
-		}
-		
-		// dnsmasq.conf
-		copyRaw(mOSFilesManager.PATH_APP_DATA_FILES + "/conf/dnsmasq.conf", R.raw.dnsmasq_conf);
-		
-		// tiwlan.ini
-		copyRaw(mOSFilesManager.PATH_APP_DATA_FILES + "/conf/tiwlan.ini", R.raw.tiwlan_ini);
-	}
-
-	private void copyRaw(String filename, int resource)
-	{
-		File outFile = new File(filename);
-		
-		// TODO : The deletion of files is because I've changed the files and I want to make sure they get re-copied.
-		//        After the files will be final, this deletion can be deleted.
-		if (outFile.exists())
-		{
-			if (outFile.delete() == false)
-			{
-//				int potentialDebugBreakPoint = 3;
-			}
-		}
-		
-//		if (outFile.exists() == false)
-//		{
-		
-			InputStream is = getResources().openRawResource(resource);
-			OutputStream out = null;
-			byte buf[] = new byte[1024];
-			int lengthLine = 0;
-			
-			try
-			{
-				out = new FileOutputStream(outFile);
-				
-				while ((lengthLine = is.read(buf)) > 0)
-				{
-					out.write(buf, 0, lengthLine);
-				}
-			}
-			catch (IOException e)
-			{
-				showToast(this, "Couldn't install file - " + filename + " !");
-			}
-			finally
-			{
-				closeStream(out);
-				closeStream(is);
-			}
-//		}
-	}
-
-	private void closeStream(InputStream inStream)
-	{
-		try
-		{
-			if (inStream != null)
-			{
-				inStream.close();
-			}
-		}
-		catch (IOException e)
-		{
-		}
-	}
-	
-	private void closeStream(OutputStream outStream)
-	{
-		try
-		{
-			if (outStream != null)
-			{
-				outStream.close();
-			}
-		}
-		catch (IOException e)
-		{
-		}
-	}
-	
-	private void checkDirs()
-	{
-		createDir("bin");
-		createDir("var");
-		createDir("conf");
-	}
-
-	private void createDir(String dirName)
-	{
-		File dir = new File(mOSFilesManager.PATH_APP_DATA_FILES + "/" + dirName);
-		
-		if (dir.exists() == false)
-		{
-			if (!dir.mkdir())
-			{
-				showToast(this, "Couldn't create " + dirName + " directory!");
-			}
-		}
-	}
 
 	public void setFileNameForManager( String fileName) {
 		imageManager.setFileName(fileName);
@@ -506,23 +377,6 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 			return (SystemClock.uptimeMillis() - mLeaderLastPing) > TIMEOUT_STALE_LEADER;
 		}
 
-//		private String calcIPBackup()
-//		{
-//			String ipBackupToReturn = "999.999.999.999";
-//			
-//			// Find the minimal IP of all clients. It will be the backup
-//			Set<String> setIpsClients = mMapIPToUser.keySet();
-//			for (String currIP : setIpsClients)
-//			{
-//				if (currIP.compareTo(ipBackupToReturn) < 0)
-//				{
-//					ipBackupToReturn = currIP;
-//				}
-//			}
-//			
-//			return ipBackupToReturn;
-//		}
-		
 		private void updateStaleClients()
 		{
 			Collection<User> users =  new LinkedList<User>(mMapIPToUser.values());
@@ -810,9 +664,9 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 //						mAmIBackup = true;
 //					}
 				}
-				catch (Throwable e)
+				catch (Exception e)
 				{
-					e.printStackTrace();
+//					e.printStackTrace();
 				}
 			}
 		}
@@ -873,8 +727,8 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 	}
 
 
-//	public synchronized void showToast(Context context, String toastMessage)
-	public void showToast(Context context, String toastMessage)
+	public synchronized void showToast(Context context, String toastMessage)
+//	public void showToast(Context context, String toastMessage)
 	{
 		Toast.makeText(context, toastMessage, Toast.LENGTH_LONG).show();
 //		Toast.makeText(this, toastMessage, Toast.LENGTH_LONG).show();
@@ -952,11 +806,11 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 	    Log.d(LOG_TAG, "Going throught all open chats, have :"+openChats.size() +" open chats");
 	    while(keys.hasMoreElements())
 	    	{
-	    	 String key = keys.nextElement();
-	    	 //items[i] = key.split(CHAT_SEPERATOR)[1];
-	    	 itemsList.add(key.split(CHAT_SEPERATOR)[1]);
-	    	 Log.d(LOG_TAG, "open chat with key  :"+key);
-	    	 i++;
+	    	String key = keys.nextElement();
+	    	//items[i] = key.split(CHAT_SEPERATOR)[1];
+	    	itemsList.add(key.split(CHAT_SEPERATOR)[1]);
+	    	Log.d(LOG_TAG, "open chat with key  :"+key);
+	    	i++;
 	    	}
 	    CharSequence[] items = new CharSequence[itemsList.size()];
 	    for(int j=0; j<itemsList.size();j++)
@@ -970,7 +824,8 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 	}
 	
 	public String addOpenChats(String user, String ip)
-	{ user = user.trim();
+	{
+		user = user.trim();
 		Enumeration<String> keys = this.openChats.keys();
 		boolean flag = false;
 		String res ="";
@@ -1001,7 +856,7 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 		addOpenChats(user, ip);
 		Log.d(LOG_TAG, "Update chat to user :"+user +"    with ip: "+ip);
 		Log.d(LOG_TAG, "UpdateOpenChats value prev updating:" +this.openChats.get(ip + CHAT_SEPERATOR + user) );
-		Log.d(LOG_TAG,"Value to add= " + value);
+		Log.d(LOG_TAG, "Value to add= " + value);
 		this.openChats.put(ip + CHAT_SEPERATOR + user,this.openChats.get(ip + CHAT_SEPERATOR + user)+value);
 		Log.d(LOG_TAG, "UpdateOpenChats value after updating:" +this.openChats.get(ip + CHAT_SEPERATOR + user) );	
 	}
@@ -1013,7 +868,7 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 		User.Sex sex = User.Sex.valueOf(readPropertyFromFile(userFileName, "Sex").toUpperCase());
 		String[] arrDateBirthElements = readPropertyFromFile(userFileName, "Date of Birth").split(" ");
 		String pictureFileName = readPropertyFromFile( userFileName, "Picture file name");
-		if ( pictureFileName  != null &&  pictureFileName.length() > 0 ) {
+		if ( pictureFileName != null && pictureFileName.length() > 0 ) {
 			imageManager.setFileName( pictureFileName);
 		}
 		int birthYear = Integer.parseInt(arrDateBirthElements[0]);
