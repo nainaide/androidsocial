@@ -382,6 +382,8 @@ public class ActivityUserDetails extends Activity
 		return new Handler() {
     		public void handleMessage(Message msg)
     		{
+    			Log.d(LOG_TAG, "Image handleMessage : msg = " + (String)msg.obj);
+    			
 				ImageView userPic = (ImageView)findViewById( R.id.ImageViewUserPicture);
 				userPic.setImageBitmap( BitmapFactory.decodeFile( "/sdcard/" + ((String)msg.obj) + ".jpg"));
     		}

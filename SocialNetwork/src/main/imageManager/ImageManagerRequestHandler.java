@@ -5,8 +5,12 @@ import java.io.InputStream;
 import java.net.Socket;
 import java.util.concurrent.ExecutorService;
 
+import android.util.Log;
+
 public class ImageManagerRequestHandler {
 
+	private static final String LOG_TAG = "ImageManagerRequestHandler";
+	
 	private ExecutorService executor;
 
 	private IImageNotifiable notifiable;
@@ -34,7 +38,8 @@ public class ImageManagerRequestHandler {
 			}
 			executor.execute(handler);
 		} catch (IOException e) {
-			e.printStackTrace();
+			Log.e(LOG_TAG, "run() : IOException occurred. e.getMessage() = " + e.getMessage());
+//			e.printStackTrace();
 		}
 		
 	}
