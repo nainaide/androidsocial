@@ -3,7 +3,6 @@ package main.main;
 import java.io.File;
 import java.io.FilenameFilter;
 
-import main.main.ApplicationSocialNetwork.NetControlState;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -167,10 +166,10 @@ public class ActivityLogin extends Activity implements OnClickListener
     			}
     			else
     			{
-    				if (application.didRunBefore() && application.getCurrentState() == NetControlState.LEADER)
-    				{
-    					application.disableAdhocLeader();
-    				}
+//    				if (application.didRunBefore() && application.getCurrentState() == NetControlState.LEADER)
+//    				{
+//    					application.disableAdhocLeader();
+//    				}
     					
     				// First, set the preference whether we should auto-login the next time
     				SharedPreferences prefs = getSharedPreferences(FILE_NAME_PREFS, MODE_PRIVATE);

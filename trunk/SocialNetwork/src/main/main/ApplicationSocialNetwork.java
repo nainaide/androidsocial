@@ -27,6 +27,7 @@ import main.imageManager.ImageManager;
 import main.main.Messages.MessageChatMessage;
 import android.app.Application;
 import android.content.Context;
+import android.os.Looper;
 import android.os.Message;
 import android.os.SystemClock;
 import android.util.Log;
@@ -57,7 +58,8 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 
 	private static final String PROPERTY_VALUE_SEPARATOR = "=";
 	
-	private static final String LOG_TAG = "SN.Application";
+	private static final String LOG_TAG_PREFIX = "SN.Application";
+	private static String LOG_TAG = LOG_TAG_PREFIX;
 	
 	private static final String IP_LEADER = "192.168.2.1";
 	private static final int PORT = 2222;
@@ -72,6 +74,7 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 	private Thread mThreadStaleChecker = null;
 	private Thread mThreadReconnect = null;
 	private Thread mThreadMessagLoop = null;
+//	private Thread mThreadImageManager = null;
 //	private Thread mThreadLeaderSocketListener = null;
 	
 	public OSFilesManager mOSFilesManager = null;
@@ -82,7 +85,7 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 	private HashMap<String, User> mMapIPToUser = null;
 	private long mLeaderLastPing = -1;
 	private String CHAT_SEPERATOR = "@";
-	private boolean mDidRunBefore = false;
+//	private boolean mDidRunBefore = false;
 	private Hashtable<String ,String > openChats = null;
 	private ImageManager imageManager;
 //	private HashMap<String, Socket> mMapIPToSocket = null;
@@ -158,11 +161,15 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 			}
 		}
 		
+		LOG_TAG = LOG_TAG_PREFIX + " : " + mCurrState.toString();
+		
 		mThreadMessagLoop = new Thread(new ThreadMessageLoop());
 		mThreadMessagLoop.start();
 		mThreadStaleChecker = new Thread(new ThreadStaleChecker());
 		mThreadStaleChecker.start();
 		new Thread( imageManager, "Image manager").start( );
+//		mThreadImageManager = new Thread(imageManager);
+//		mThreadImageManager.start();
 	}
 
 	public void stopService()
@@ -205,6 +212,8 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 				mThreadReconnect.interrupt();
 			}
 			mThreadMessagLoop.interrupt();
+//			mThreadImageManager.interrupt();
+			imageManager.shutdown();
 //			mThreadLeaderSocketListener.interrupt();
 		}
 		catch (Exception e)
@@ -227,7 +236,7 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 		
 		Log.d(LOG_TAG, "Running as server");
 		
-		mDidRunBefore = true;
+//		mDidRunBefore = true;
 		mCurrState = NetControlState.LEADER;
 	}
 
@@ -316,7 +325,7 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 			// If this is a client, ask for the list of users
 			if (mCurrState == NetControlState.CLIENT)
 			{
-				nap(500);
+//				nap(500);
 				Messages.MessageNewUser msgNewUser = new Messages.MessageNewUser(mMe);
 
 				sendMessage(msgNewUser.toString()); //, IP_LEADER);
@@ -334,13 +343,13 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 							// Check if the Leader still exists
 							if (isLeaderStale())
 							{
-								Log.d(LOG_TAG, "The leader is stale");
-								
-								// Remove the leader from the list of users
-								mMapIPToUser.remove(getLeaderIP());
-								
-								mThreadReconnect = new Thread(new ThreadReconnect());
-								mThreadReconnect.start();
+//								Log.d(LOG_TAG, "The leader is stale");
+//								
+//								// Remove the leader from the list of users
+//								mMapIPToUser.remove(getLeaderIP());
+//								
+//								mThreadReconnect = new Thread(new ThreadReconnect());
+//								mThreadReconnect.start();
 							}
 							
 							break;
@@ -361,7 +370,8 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 				}
 				catch (Exception e)
 				{
-					e.printStackTrace();
+//					e.printStackTrace();
+					Log.e(LOG_TAG, "ThreadStaleChecker : run() : e.getMessage() = " + e.getMessage());
 				}
 
 				nap(NAP_TIME_STALE_CHECKER);
@@ -380,6 +390,7 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 		{
 			Collection<User> users =  new LinkedList<User>(mMapIPToUser.values());
 			for (User currUser : users)
+//			for (User currUser : mMapIPToUser.values())
 			{
 				if ((SystemClock.uptimeMillis() - currUser.getLastPongTime()) > TIMEOUT_STALE_CLIENT)
 				{
@@ -504,7 +515,12 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 					packet = new DatagramPacket(buffer, buffer.length);
 					socket.receive(packet);
 					String strMsgReceived = new String(packet.getData(), 0, packet.getLength());
-					Log.d(LOG_TAG, "Recevied Msg : " + strMsgReceived);
+					
+					if (shouldLog(strMsgReceived))
+					{
+						Log.d(LOG_TAG, "Recevied Msg : " + strMsgReceived);
+					}
+					
 					String msgPrefix = Messages.getPrefix(strMsgReceived);
 					Messages.Message msgReceived = new Messages.Message(strMsgReceived);
 					
@@ -666,8 +682,11 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 				catch (Exception e)
 				{
 //					e.printStackTrace();
+					Log.e(LOG_TAG, "ThreadMessageLoop : Exception. e.getMessage() = " + e.getMessage());
 				}
 			}
+			
+			socket.close();
 			
 			Log.d(LOG_TAG, "ThreadMessageLoop : Interrupted and about to finish running");
 		}
@@ -705,7 +724,8 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 				}
 				catch (SocketException e)
 				{
-					e.printStackTrace();
+//					e.printStackTrace();
+					Log.e(LOG_TAG, "createDatagramSocket : SocketException. e.getMessage() = " + e.getMessage());
 					isDoneCreating = false;
 				}
 				
@@ -760,7 +780,8 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 		}
 	}
 
-	private synchronized void notifyActivityUserDetails(Messages.MessageUserDetails msgUserDetails) //String msgUserDetails)
+//	private synchronized void notifyActivityUserDetails(Messages.MessageUserDetails msgUserDetails) //String msgUserDetails)
+	private void notifyActivityUserDetails(Messages.MessageUserDetails msgUserDetails) //String msgUserDetails)
 	{
 		Log.d(LOG_TAG, "About to notify ActivityUserDetails. Msg = " + msgUserDetails.toString());
 
@@ -881,9 +902,14 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 		DatagramSocket sock = null;
 		InetAddress dest = null;
 		
-Log.d(LOG_TAG, "About to send Msg : " + message);
-Log.d(LOG_TAG, "About to send Msg to ip: " + destIP);
-
+//		boolean shouldLog = message.startsWith(Messages.MSG_PREFIX_PING) == false && message.startsWith(Messages.MSG_PREFIX_PONG) == false;
+		
+		if (shouldLog(message))
+		{
+			Log.d(LOG_TAG, "About to send Msg : " + message);
+			Log.d(LOG_TAG, "About to send Msg to ip: " + destIP);
+		}
+		
 		try
 		{
 			dest = InetAddress.getByName(destIP);
@@ -892,12 +918,15 @@ Log.d(LOG_TAG, "About to send Msg to ip: " + destIP);
 			sock = new DatagramSocket();
 			sock.send(pkt);
 			
-Log.d(LOG_TAG, "Sent Msg : " + message);
-
+			if (shouldLog(message))
+			{
+				Log.d(LOG_TAG, "Sent Msg : " + message);
+			}
 		}
 		catch (Exception e)
 		{
-			e.printStackTrace();
+//			e.printStackTrace();
+			Log.e(LOG_TAG, "sendMessage failed. e.getMessage() = " + e.getMessage());
 		}
 	}
 	
@@ -949,8 +978,12 @@ Log.d(LOG_TAG, "Sent Msg : " + message);
 		{
 			dest = InetAddress.getByName(calcBroadcastAddress(IP_LEADER)); //InetAddress.getByName("192.168.2.255");;
 			packet = new DatagramPacket(buffer, buffer.length, dest, PORT);
-Log.d(LOG_TAG, "Broadcast : dest = " + dest + " (calcBroadcastAddress(IP_LEADER) = " + calcBroadcastAddress(IP_LEADER) + ")");
-
+			
+			if (shouldLog(message))
+			{
+				Log.d(LOG_TAG, "Broadcast : message = " + message);
+			}
+			
 			socket = new DatagramSocket();
 			socket.setBroadcast(true);
 			socket.send(packet);
@@ -972,6 +1005,11 @@ Log.d(LOG_TAG, "Broadcast : dest = " + dest + " (calcBroadcastAddress(IP_LEADER)
 		}
 	}
 
+	private boolean shouldLog(String message)
+	{
+		return message.startsWith(Messages.MSG_PREFIX_PING) == false && message.startsWith(Messages.MSG_PREFIX_PONG) == false;
+	}
+	
 //	private synchronized void broadcastTCP(String message) // throws SocketException, IOException
 //	{
 //		// TODO : Go over the sockets and send them one by one
@@ -1014,12 +1052,12 @@ Log.d(LOG_TAG, "Broadcast : dest = " + dest + " (calcBroadcastAddress(IP_LEADER)
 		return IP_LEADER;
 	}
 	
-	public synchronized User getMe()
+	public User getMe()
 	{
 		return mMe;
 	}
 	
-	public  String getMyIP()
+	public String getMyIP()
 	{
 		return mMe.getIPAddress();
 	}
@@ -1031,10 +1069,10 @@ Log.d(LOG_TAG, "Broadcast : dest = " + dest + " (calcBroadcastAddress(IP_LEADER)
 		return arrayListUsers; //(ArrayList<User>)mMapIPToUser.values();
 	}
 	
-	public synchronized NetControlState getCurrentState()
-	{
-		return mCurrState;
-	}
+//	public synchronized NetControlState getCurrentState()
+//	{
+//		return mCurrState;
+//	}
 
 	public void writePropertyToFile(String fileName, String propertyName, String value)
 	{
@@ -1111,16 +1149,18 @@ Log.d(LOG_TAG, "Broadcast : dest = " + dest + " (calcBroadcastAddress(IP_LEADER)
 									  userFileName.length() - (USER_FILE_NAME_SUFFIX.length() + USER_FILE_NAME_EXTENSION.length())); 
 	}
 	
-	public boolean didRunBefore()
-	{
-		return mDidRunBefore;
-	}
+//	public boolean didRunBefore()
+//	{
+//		return mDidRunBefore;
+//	}
 
 	public void imageReady( String imageName) {
-		Message msg = ActivityUsersList.instance.getUpdateHandler().obtainMessage();
+		Looper.prepare();
+//		Message msg = ActivityUsersList.instance.getUpdateHandler().obtainMessage();
+		Message msg = ActivityUserDetails.instance.getImageUpdateHandler().obtainMessage();
 		msg.obj = imageName;
 		// TODO Update activity with user image
-		Log.d( "Notify", "Image received: " + imageName);
+		Log.d(LOG_TAG, "Image received: " + imageName);
 		ActivityUserDetails.instance.getImageUpdateHandler().sendMessage(msg);
 	}
 }

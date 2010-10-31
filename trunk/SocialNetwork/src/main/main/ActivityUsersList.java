@@ -319,6 +319,9 @@ Log.d(LOG_TAG, "Clicked on a user. Will touch work ???");
 		public void handleMessage(Message msg)
 		{
 			Boolean flag = false;
+			
+			Log.d(LOG_TAG, "In ActivityUsersList's handleMessage");
+			
 			try{
 			 Messages.MessageChatMessage msgChat = (Messages.MessageChatMessage)msg.obj;
 			 chat(msgChat.getChatMessageUser(), msgChat.getSourceUserIP());
