@@ -5,13 +5,10 @@
 
 	<LinearLayout
 		android:id="@+id/LinearLayoutPictureAndMainDetails"
-		android:layout_height="wrap_content"
-		android:orientation="horizontal" android:layout_width="fill_parent">
+		android:orientation="horizontal" android:layout_height="wrap_content" android:layout_width="fill_parent">
 		
-		<ImageView
-			android:id="@+id/ImageViewUserPicture"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content">
+		<TextView android:id="@+id/TextViewMainDetails" android:text="@+id/TextViewMainDetails" android:layout_weight="1" android:layout_height="fill_parent" android:layout_width="fill_parent">
+		</TextView><ImageView android:id="@+id/ImageViewUserPicture" android:layout_height="@dimen/image_size" android:layout_width="@dimen/image_size">
 		</ImageView>
 	
 <!--		
@@ -23,12 +20,7 @@
 		</LinearLayout>
 -->
 	
-		<TextView
-			android:id="@+id/TextViewMainDetails"
-			android:text="@+id/TextViewMainDetails"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content" android:layout_weight="1">
-		</TextView>
+		
 		
 		<Button
 			android:text="Chat"
@@ -37,7 +29,8 @@
 			android:layout_height="wrap_content" android:minWidth="70sp">
 		</Button>
 		
-	</LinearLayout>
+	
+</LinearLayout>
 	
 	<TextView
 		android:layout_width="wrap_content"

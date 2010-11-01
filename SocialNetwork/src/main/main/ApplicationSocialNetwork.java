@@ -46,9 +46,8 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 	private static final int NAP_TIME_TOAST_AND_EXIT = 3000;
 	private static final int NAP_TIME_RECONNECT = 1000;
 	
-	// TODO : Change these Stale Timeouts back to 5 or so, after done debugging
-	private static final long TIMEOUT_STALE_CLIENT = 100 * NAP_TIME_STALE_CHECKER;
-	private static final long TIMEOUT_STALE_LEADER = 100 * NAP_TIME_STALE_CHECKER;
+	private static final long TIMEOUT_STALE_CLIENT = 5 * NAP_TIME_STALE_CHECKER;
+	private static final long TIMEOUT_STALE_LEADER = 5 * NAP_TIME_STALE_CHECKER;
 	private static final long TIMEOUT_RECONNECT = 30 * 1000; // 30 seconds
 //	private final int  TIMEOUT_SOCKET_ACCEPT = 30000;
 
