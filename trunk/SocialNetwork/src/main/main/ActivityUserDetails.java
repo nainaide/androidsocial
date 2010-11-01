@@ -43,6 +43,7 @@ public class ActivityUserDetails extends Activity
     private Button mButtonCancel = null;
     
 	private Handler mHandler = null;
+	private Handler mHandlerImage = null;
 	private boolean isEditable;
 	private int birthDay;
 	private int birthMonth;
@@ -269,7 +270,17 @@ public class ActivityUserDetails extends Activity
     			updateUserDetails(msgUserDetails);
     		}
     	};
-	}        
+    	
+    	mHandlerImage = new Handler() {
+    		public void handleMessage(Message msg)
+    		{
+    			Log.d(LOG_TAG, "Image handleMessage : msg = " + (String)msg.obj);
+    			
+				ImageView userPic = (ImageView)findViewById( R.id.ImageViewUserPicture);
+				userPic.setImageBitmap( BitmapFactory.decodeFile( "/sdcard/" + ((String)msg.obj) + ".jpg"));
+    		}
+    	};
+	}
 
     private void setAreDetailsEditable(boolean isEditable)
     {
@@ -379,14 +390,6 @@ public class ActivityUserDetails extends Activity
 	}
 
 	public Handler getImageUpdateHandler() {
-		return new Handler() {
-    		public void handleMessage(Message msg)
-    		{
-    			Log.d(LOG_TAG, "Image handleMessage : msg = " + (String)msg.obj);
-    			
-				ImageView userPic = (ImageView)findViewById( R.id.ImageViewUserPicture);
-				userPic.setImageBitmap( BitmapFactory.decodeFile( "/sdcard/" + ((String)msg.obj) + ".jpg"));
-    		}
-    	};
+		return mHandlerImage;
 	}
 }
