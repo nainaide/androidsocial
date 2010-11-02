@@ -1,12 +1,10 @@
 package main.main;
 
-import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
+import java.io.InterruptedIOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -19,7 +17,7 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
+import java.util.Properties;
 
 import main.imageManager.IImageNotifiable;
 import main.imageManager.ImageCommunicator;
@@ -48,14 +46,14 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 	
 	private static final long TIMEOUT_STALE_CLIENT = 5 * NAP_TIME_STALE_CHECKER;
 	private static final long TIMEOUT_STALE_LEADER = 5 * NAP_TIME_STALE_CHECKER;
-	private static final long TIMEOUT_RECONNECT = 30 * 1000; // 30 seconds
+	private static final long TIMEOUT_RECONNECT = 40 * 1000; // 30 seconds
 //	private final int  TIMEOUT_SOCKET_ACCEPT = 30000;
 
 	public static final String USER_FILE_NAME_PREFIX = "user_";
 	public static final String USER_FILE_NAME_SUFFIX = "";
 	public static final String USER_FILE_NAME_EXTENSION = "";
 
-	private static final String PROPERTY_VALUE_SEPARATOR = "=";
+//	private static final String PROPERTY_VALUE_SEPARATOR = "=";
 	
 	private static final String LOG_TAG_PREFIX = "SN.Application";
 	private static String LOG_TAG = LOG_TAG_PREFIX;
@@ -236,6 +234,7 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 		Log.d(LOG_TAG, "Running as server");
 		
 //		mDidRunBefore = true;
+		setMyIPAddress(IP_LEADER);
 		mCurrState = NetControlState.LEADER;
 	}
 
@@ -257,7 +256,7 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 		mMyDhcpAddress = mOSFilesManager.getMyDhcpAddress();
 		if (mMyDhcpAddress.length() > 0)
 		{
-			Log.d(LOG_TAG, "Running as client");
+			Log.d(LOG_TAG, "Running as client. My ip = " + mMyDhcpAddress);
 			
 			isDiscovered = true;
 			setMyIPAddress(mMyDhcpAddress);
@@ -342,13 +341,14 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 							// Check if the Leader still exists
 							if (isLeaderStale())
 							{
-//								Log.d(LOG_TAG, "The leader is stale");
-//								
-//								// Remove the leader from the list of users
-//								mMapIPToUser.remove(getLeaderIP());
-//								
-//								mThreadReconnect = new Thread(new ThreadReconnect());
-//								mThreadReconnect.start();
+								Log.d(LOG_TAG, "The leader is stale");
+								
+								// Remove the leader from the list of users
+								removeUser(getLeaderIP());
+								
+								mThreadReconnect = new Thread(new ThreadReconnect());
+								mThreadReconnect.start();
+								mThreadReconnect.join();
 							}
 							
 							break;
@@ -438,10 +438,21 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 				// Someone else should try and connect as the leader. Find out who that someone is
 				ipNewLeaderToBe = calcIPBackup();
 				
+				Log.d(LOG_TAG, "Reconnect : ipNewLeaderToBe = " + ipNewLeaderToBe);
+				
 				// If I should be the new leader, connect as a leader
 				if (getMyIP().equals(ipNewLeaderToBe))
 				{
+					Log.d(LOG_TAG, "Reconnect : I'm the new leader. About to enable leader");
+					
+					disableAdhocClient();
 					enableAdhocLeader();
+					
+					Log.d(LOG_TAG, "Reconnect : I'm the new leader. Returned from enabling leader");
+
+					// DEBUG
+					broadcast("Testing");
+					
 					isDone = true;
 				}
 				else
@@ -450,6 +461,8 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 					long timeStart = SystemClock.uptimeMillis();
 					long timePassed = 0;
 					
+					Log.d(LOG_TAG, "Reconnect : I'm not the new leader. About to try to connect as a client");
+					
 					while (isClientEnabled == false && timePassed < TIMEOUT_RECONNECT)
 					{
 						nap(NAP_TIME_RECONNECT);
@@ -457,8 +470,12 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 						isClientEnabled = enableAdhocClient();
 						
 						timePassed = SystemClock.uptimeMillis() - timeStart;
+						
+						Log.d(LOG_TAG, "Reconnect : Tried to enable client. isClientEnabled = " + isClientEnabled + ", timePassed = " + timePassed);
 					}
 
+					Log.d(LOG_TAG, "Reconnect : Out of the inner while. isClientEnabled = " + isClientEnabled);
+					
 					// Check if we were able to connect as a client
 					if (isClientEnabled)
 					{
@@ -482,9 +499,10 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 		private String calcIPBackup()
 		{
 			String ipBackupToReturn = "999.999.999.999";
-			
+//			List<String> tmpList = mMapIPToUser.keySet().;
 			// Find the minimal IP of all clients. It will be the backup
-			Set<String> setIpsClients = mMapIPToUser.keySet();
+			List<String> setIpsClients = new LinkedList<String>(mMapIPToUser.keySet());
+			setIpsClients.add(getMyIP());
 			for (String currIP : setIpsClients)
 			{
 				if (currIP.compareTo(ipBackupToReturn) < 0)
@@ -509,9 +527,10 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 
 			socket = createDatagramSocket();
 
-			while (!Thread.currentThread().isInterrupted()) {
+			while (Thread.currentThread().isInterrupted() == false) {
 				try {
 					packet = new DatagramPacket(buffer, buffer.length);
+					socket.setSoTimeout((int)TIMEOUT_STALE_LEADER + 100);
 					socket.receive(packet);
 					String strMsgReceived = new String(packet.getData(), 0, packet.getLength());
 					
@@ -677,6 +696,9 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 //					else if (msgPrefix.equals(Messages.MSG_PREFIX_MAKE_USER_BACKUP)) {
 //						mAmIBackup = true;
 //					}
+				}
+				catch (InterruptedIOException e)
+				{
 				}
 				catch (Exception e)
 				{
@@ -897,8 +919,8 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 	private void sendMessageUDP(String message, String destIP)
 	{
 		byte[] buf = new byte[message.length()];
-		DatagramPacket pkt = null;
-		DatagramSocket sock = null;
+		DatagramPacket packet = null;
+		DatagramSocket socket = null;
 		InetAddress dest = null;
 		
 //		boolean shouldLog = message.startsWith(Messages.MSG_PREFIX_PING) == false && message.startsWith(Messages.MSG_PREFIX_PONG) == false;
@@ -913,9 +935,9 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 		{
 			dest = InetAddress.getByName(destIP);
 			buf = message.getBytes();
-			pkt = new DatagramPacket(buf, buf.length, dest, PORT);
-			sock = new DatagramSocket();
-			sock.send(pkt);
+			packet = new DatagramPacket(buf, buf.length, dest, PORT);
+			socket = new DatagramSocket();
+			socket.send(packet);
 			
 			if (shouldLog(message))
 			{
@@ -926,6 +948,13 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 		{
 //			e.printStackTrace();
 			Log.e(LOG_TAG, "sendMessage failed. e.getMessage() = " + e.getMessage());
+		}
+		finally
+		{
+			if (socket != null)
+			{
+				socket.close();
+			}
 		}
 	}
 	
@@ -978,6 +1007,8 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 			dest = InetAddress.getByName(calcBroadcastAddress(IP_LEADER)); //InetAddress.getByName("192.168.2.255");;
 			packet = new DatagramPacket(buffer, buffer.length, dest, PORT);
 			
+//			Log.d(LOG_TAG, "broadcast : Created packet");
+			
 			if (shouldLog(message))
 			{
 				Log.d(LOG_TAG, "Broadcast : message = " + message);
@@ -1001,6 +1032,13 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 		{
 			Log.e(LOG_TAG, "Broadcast : Exception !!! IOException");			
 //			e.printStackTrace();
+		}
+		finally
+		{
+			if (socket != null)
+			{
+				socket.close();
+			}
 		}
 	}
 
@@ -1075,14 +1113,30 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 
 	public void writePropertyToFile(String fileName, String propertyName, String value)
 	{
+		Properties properties = new Properties();
+		FileInputStream fis = null;
 		FileOutputStream fos = null;
-		OutputStreamWriter osw = null;
+//		OutputStreamWriter osw = null;
 		
 		try {
-			 fos = openFileOutput(fileName, MODE_APPEND);
-			 osw = new OutputStreamWriter(fos);
-			 
-			 osw.write(propertyName + PROPERTY_VALUE_SEPARATOR + value + "\n");
+			// Load the properties from the properties file
+			try {
+				fis = openFileInput(fileName);
+				properties.load(fis);
+			} catch (FileNotFoundException e) {
+			}
+			
+			// Set the new value of the property
+			properties.setProperty(propertyName, value);
+			
+			fos = openFileOutput(fileName, MODE_PRIVATE);
+//			fos = openFileOutput(fileName, MODE_PRIVATE);
+			properties.store(fos, null);
+			
+//			 fos = openFileOutput(fileName, MODE_APPEND);
+//			 osw = new OutputStreamWriter(fos);
+//			 
+//			 osw.write(propertyName + PROPERTY_VALUE_SEPARATOR + value + "\n");
 			 
 		} catch (FileNotFoundException e) {
 			Log.e(LOG_TAG, "writePropertyToFile : Properties file was not found");
@@ -1090,10 +1144,11 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 			Log.e(LOG_TAG, "writePropertyToFile : An IOException has accured. StackTrace = " + e.getStackTrace().toString());
 		} finally {
 			try {
-				osw.flush();
+//				osw.flush();
 				fos.close();
-				osw.close();
-			} catch (IOException e) {
+//				osw.close();
+				fis.close();
+			} catch (Exception e) {
 //				e.printStackTrace();
 			}
 		}
@@ -1101,25 +1156,28 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 	
 	public String readPropertyFromFile(String fileName, String propertyName)
 	{
+		Properties properties = new Properties();
 		FileInputStream fis = null;
-		BufferedReader br = null;
-		String currLine = "";
+//		BufferedReader br = null;
+//		String currLine = "";
 		String returnedValue = "";
 		
 		try {
 			fis = openFileInput(fileName);
+			properties.load(fis);
 
-			br = new BufferedReader(new InputStreamReader(fis));
-
-			while ( (currLine = br.readLine()) != null)
-			{
-				if (currLine.contains(propertyName))
-				{
-					returnedValue = currLine.split(PROPERTY_VALUE_SEPARATOR)[1];
-					
-					break;
-				}
-			}
+			returnedValue = properties.getProperty(propertyName);
+//			br = new BufferedReader(new InputStreamReader(fis));
+//
+//			while ( (currLine = br.readLine()) != null)
+//			{
+//				if (currLine.contains(propertyName))
+//				{
+//					returnedValue = currLine.split(PROPERTY_VALUE_SEPARATOR)[1];
+//					
+//					break;
+//				}
+//			}
 			
 		} catch (FileNotFoundException e) {
 			Log.e(LOG_TAG, "readPropertyFromFile : Properties file was not found");
@@ -1128,8 +1186,8 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 		} finally {
 			try {
 				fis.close();
-				br.close();
-			} catch (IOException e) {
+//				br.close();
+			} catch (Exception e) {
 //				e.printStackTrace();
 			}
 		}

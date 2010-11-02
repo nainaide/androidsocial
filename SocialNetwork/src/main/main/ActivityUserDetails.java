@@ -1,6 +1,5 @@
 package main.main;
 
-import java.io.File;
 import java.util.GregorianCalendar;
 
 import android.app.Activity;
@@ -12,19 +11,23 @@ import android.os.Message;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.View.OnTouchListener;
 import android.widget.Button;
-import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 public class ActivityUserDetails extends Activity
 {
-    private final String MENU_ITEM_TITLE_CHAT = "Chat With";
-    private final String LOG_TAG = "SN.UserDetails";
-    private final String FIELD_NOT_FILLED = "-- Not Filled By User --";
+    private static final String MENU_ITEM_TITLE_CHAT = "Chat With";
+    private static final String LOG_TAG = "SN.UserDetails";
+    private static final String FIELD_NOT_FILLED = "-- Not Filled By User --";
+    private static final String DATE_ELEMENTS_SERPARATOR = ".";
+    
+    private static final int REQUEST_CODE_BROWSE_PIC = 1;
     
 //	String[] mArrMenuItemsTitles = {MENU_ITEM_TITLE_CHAT};
 	
@@ -37,10 +40,12 @@ public class ActivityUserDetails extends Activity
 	private ApplicationSocialNetwork application = null;
 //    private TextView mTextViewFavoriteMusic = null;
     private EditText mEditTextFavoriteMusic = null;
-    private DatePicker mDatePickerBirth = null;
+    private TextView mTextViewDateBirth = null;
     private Button mButtonChat = null;
+    private Button mButtonBrowse = null;
     private Button mButtonOK = null;
     private Button mButtonCancel = null;
+    private ImageView imageViewUserPicture = null;
     
 	private Handler mHandler = null;
 	private Handler mHandlerImage = null;
@@ -88,6 +93,7 @@ public class ActivityUserDetails extends Activity
         	Log.d(LOG_TAG, "on create hobbies is NOT null");
         else
         	Log.d(LOG_TAG, "on create hobbies is null");
+        
 //        mTextViewHobbies = (TextView) findViewById(R.id.TextViewUserDetailsHobbies);
         mEditTextHobbies = (EditText) findViewById(R.id.EditTextUserDetailsHobbies);
       //  mEditTextHobbies.setText(FIELD_NOT_FILLED);
@@ -96,9 +102,10 @@ public class ActivityUserDetails extends Activity
         mEditTextFavoriteMusic = (EditText) findViewById(R.id.EditTextUserDetailsFavoriteMusic);
        // mEditTextFavoriteMusic.setText(FIELD_NOT_FILLED);
         
-        mDatePickerBirth = (DatePicker) findViewById(R.id.DatePickerUserDetailsDateBirth);
+        mTextViewDateBirth = (TextView) findViewById(R.id.TextViewUserDetailsDateBirth);
         
         mButtonChat = (Button) findViewById(R.id.ButtonUserDetailsChat);
+        mButtonBrowse = (Button) findViewById(R.id.ButtonUserDetailsBrowse);
         mButtonOK =  (Button) findViewById(R.id.ButtonUserDetailsOK);
         mButtonCancel =  (Button) findViewById(R.id.ButtonUserDetailsCancel);
         
@@ -117,12 +124,45 @@ public class ActivityUserDetails extends Activity
 //        
 //        mTextViewMainDetails.setText(mainData);
         
-        // TODO : Also get and show the user picture
-        ImageView imageViewUserPicture = (ImageView) findViewById(R.id.ImageViewUserPicture);
-        imageViewUserPicture.setImageResource(R.drawable.icon);
-        
         populateFields();
+        
+        // TODO : Also get and show the user picture
+		String userFileName = application.getUserFileName(mUserName);
+		String pictureFileName = application.readPropertyFromFile(userFileName, "Picture file name");
+        imageViewUserPicture = (ImageView) findViewById(R.id.ImageViewUserPicture);
+        
+        if (pictureFileName != null && pictureFileName.equals("") == false)
+        {
+        	imageViewUserPicture.setImageBitmap(BitmapFactory.decodeFile( pictureFileName));
+        }
+        else
+        {
+        	imageViewUserPicture.setImageResource(R.drawable.icon);
+        }
     }
+    
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		switch( requestCode) {
+			case REQUEST_CODE_BROWSE_PIC :
+			{
+				if (resultCode == RESULT_OK)
+				{
+					// Set the ImageView to show the new selected picture
+					String pictureFileName = data.getStringExtra("fileName");
+					imageViewUserPicture.setImageBitmap(BitmapFactory.decodeFile( pictureFileName));
+					
+					// Update the picture file name property in the user's properties file
+					String userFileName = application.getUserFileName(mUserName);
+					application.writePropertyToFile(userFileName, "Picture file name", pictureFileName);
+				}
+			}
+			default :
+			{
+				break;
+			}
+		}
+	}
     
 	private void populateFields()
 	{
@@ -143,6 +183,10 @@ public class ActivityUserDetails extends Activity
 			birthYear = me.getDateBirth().get(GregorianCalendar.YEAR);
 			mEditTextFavoriteMusic.setText(me.getFavoriteMusic());
 			mEditTextHobbies.setText(me.getHobbies());
+			
+			// Show the browse picture button and hide the chat button
+//			mButtonBrowse.setVisibility(View.VISIBLE);
+//			mButtonChat.setVisibility(View.GONE);
 		}
 		else
 		{
@@ -155,6 +199,10 @@ public class ActivityUserDetails extends Activity
 			birthYear = application.getUserByIp(lookingAtUserIp).getDateBirth().get(GregorianCalendar.YEAR);
 			//mEditTextFavoriteMusic.setText(currFavorMusic);
 			//mEditTextHobbies.setText(currHobbies);
+			
+			// Show the chat button and hide the browse picture button
+//			mButtonChat.setVisibility(View.VISIBLE);
+//			mButtonBrowse.setVisibility(View.GONE);
 		}
 		
 		if(mEditTextHobbies.getText().toString().equals(""))
@@ -162,9 +210,10 @@ public class ActivityUserDetails extends Activity
 		if(mEditTextFavoriteMusic.getText().toString().equals(""))
 			mEditTextFavoriteMusic.setText(FIELD_NOT_FILLED);	
 		
-        mDatePickerBirth.updateDate(birthYear, birthMonth, birthDay);
+		String dateBirth = birthDay + DATE_ELEMENTS_SERPARATOR + birthMonth + DATE_ELEMENTS_SERPARATOR + birthYear;
+        mTextViewDateBirth.setText(dateBirth);
         
-        setAreDetailsEditable(isEditable);
+        setViewOrEdit(isEditable);
         
         String mainData = "";
         for (String currData : arrMainData)
@@ -218,6 +267,14 @@ public class ActivityUserDetails extends Activity
 				chat();
 			}
 		});
+		
+		mButtonBrowse.setOnClickListener(new OnClickListener () {
+			public void onClick(View view)
+			{
+				Intent intentFileBrowser = new Intent(ActivityUserDetails.this, ActivityFileBrowser.class);
+				startActivityForResult(intentFileBrowser, REQUEST_CODE_BROWSE_PIC);
+			}
+		});
         
         mButtonOK.setOnClickListener(new OnClickListener() {
 //			@Override
@@ -225,27 +282,22 @@ public class ActivityUserDetails extends Activity
 			{
 				// Save the details to mMe
 				User me = application.getMe();
-				String sex = me.getSex();
-				int birthYear = mDatePickerBirth.getYear();
-				int birthMonth = mDatePickerBirth.getMonth();
-				int birthDay = mDatePickerBirth.getDayOfMonth();
-				
-				me.setDateBirth(new GregorianCalendar(birthYear, birthMonth, birthDay));
+//				String sex = me.getSex();
+
 				me.setFavoriteMusic(mEditTextFavoriteMusic.getText().toString());
 				me.setHobbies(mEditTextHobbies.getText().toString());
 
 				// Delete the user's file and create a new updated one
 				String userFileName = application.getUserFileName(me.getFullName());
-				File userFile = new File(userFileName);
-				
-				if (userFile != null)
-				{
-					userFile.delete();
-				}
+//				File userFile = new File(userFileName);
+//				
+//				if (userFile != null)
+//				{
+//					userFile.delete();
+//				}
 
-				application.writePropertyToFile(userFileName, "Username", mUserName);
-				application.writePropertyToFile(userFileName, "Sex", sex);
-				application.writePropertyToFile(userFileName, "Date of Birth", birthYear + " " + birthMonth + " " + birthDay);
+//				application.writePropertyToFile(userFileName, "Username", mUserName);
+//				application.writePropertyToFile(userFileName, "Sex", sex);
 				application.writePropertyToFile(userFileName, "Hobbies", mEditTextHobbies.getText().toString());
 				application.writePropertyToFile(userFileName, "FavoriteMusic", mEditTextFavoriteMusic.getText().toString());
 				
@@ -280,12 +332,54 @@ public class ActivityUserDetails extends Activity
 				userPic.setImageBitmap( BitmapFactory.decodeFile( "/sdcard/" + ((String)msg.obj) + ".jpg"));
     		}
     	};
+    	
+    	mEditTextFavoriteMusic.setOnClickListener(new OnClickListener() {
+			public void onClick(View view)
+			{
+				handleHint(mEditTextFavoriteMusic);
+			}
+		});
+    	
+    	mEditTextFavoriteMusic.setOnTouchListener(new OnTouchListener() {
+			public boolean onTouch(View view, MotionEvent event)
+			{
+				handleHint(mEditTextFavoriteMusic);
+				
+				// Returning false so that the keyboard will show up
+				return false;
+			}
+    	});
+    	
+    	mEditTextHobbies.setOnClickListener(new OnClickListener() {
+			public void onClick(View view)
+			{
+				handleHint(mEditTextHobbies);
+			}
+		});
+
+    	mEditTextHobbies.setOnTouchListener(new OnTouchListener() {
+			public boolean onTouch(View view, MotionEvent event)
+			{
+				handleHint(mEditTextHobbies);
+				
+				// Returning false so that the keyboard will show up
+				return false;
+			}
+    	});
 	}
 
-    private void setAreDetailsEditable(boolean isEditable)
+	private void handleHint(EditText editText)
+	{
+		if(editText.getText().toString().equals(FIELD_NOT_FILLED))
+		{
+			editText.setText("");
+		}
+	}
+	
+    private void setViewOrEdit(boolean isEditable)
     {
 //		mDatePickerBirth.setClickable(isEditable);
-		mDatePickerBirth.setEnabled(isEditable);
+		mTextViewDateBirth.setEnabled(isEditable);
 		mEditTextFavoriteMusic.setEnabled(isEditable);
 		mEditTextHobbies.setEnabled(isEditable);
 		
@@ -301,11 +395,13 @@ public class ActivityUserDetails extends Activity
 //		mEditTextFavoriteMusic.setVisibility(visibilityEditingViews);
 //		mEditTextHobbies.setVisibility(visibilityEditingViews);
 		mButtonOK.setVisibility(visibilityEditingViews);
-		mButtonCancel.setVisibility(visibilityEditingViews);
+//		mButtonCancel.setVisibility(visibilityEditingViews);
+		mButtonCancel.setText(isEditable ? "Cancel" : "Close");
 		
 //		mTextViewFavoriteMusic.setVisibility(visibilityViewingViews);
 //		mTextViewHobbies.setVisibility(visibilityViewingViews);
 		mButtonChat.setVisibility(visibilityViewingViews);
+		mButtonBrowse.setVisibility(visibilityEditingViews);
 	}
 
 	@Override
@@ -356,8 +452,8 @@ public class ActivityUserDetails extends Activity
     private void chat()
     {
     	Intent intent = new Intent(this, ActivityChat.class);
-    	intent.putExtra("ActivityChat.userName", mUserName);
     	Log.d(LOG_TAG, "on open chat from details with : " + mUserName + " and ip is : "+lookingAtUserIp);
+    	intent.putExtra("ActivityChat.userName", mUserName);
     	intent.putExtra("ActivityChat.userIp", lookingAtUserIp);
     	startActivity(intent);
     }

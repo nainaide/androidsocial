@@ -66,6 +66,9 @@ public class ActivityChat extends Activity
 		// Set the other user's details
 		mTextViewChatOtherUserDetails = (TextView)findViewById(R.id.TextViewChatOtherUserDetails);
 		mTextViewChatOtherUserDetails.setText("Chatting With : " + chatingWith);
+		
+		if(mEditTextConversation.length()!=0)
+			mEditTextConversation.setSelection(mEditTextConversation.length()-1);
 	}
 	
 	private void send()
@@ -91,6 +94,8 @@ public class ActivityChat extends Activity
 		
 		application.sendMessage(msgChat.toString());
 		mEditTextMyMessage.setText("");
+		if(mEditTextConversation.length()!=0)
+			mEditTextConversation.setSelection(mEditTextConversation.length()-1);
 	}
 	
 	private Handler mHandler = new Handler() {
@@ -111,6 +116,8 @@ public class ActivityChat extends Activity
 			//	text+="\n";
 			mEditTextConversation.setText(application.addOpenChats(chatingWith,msgChat.getSourceUserIP()));
 					//text+msgChat.getChatMessageContents());
+			if(mEditTextConversation.length()!=0)
+				mEditTextConversation.setSelection(mEditTextConversation.length()-1);
 		}
 	};
 
