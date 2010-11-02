@@ -7,7 +7,6 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.ArrayAdapter;
@@ -23,7 +22,7 @@ public class ActivityLogin extends Activity implements OnClickListener
 	private static final String USER_NAME_EMPTY = "";
 	
 	private String mUserName = USER_NAME_EMPTY;
-	private ArrayAdapter<CharSequence> mAdapter;
+	private ArrayAdapter<CharSequence> mArrayAdapter;
 	
 	ApplicationSocialNetwork application = null;
 	public static ActivityLogin instance = null;
@@ -82,9 +81,9 @@ public class ActivityLogin extends Activity implements OnClickListener
         buttonLogin.setOnClickListener(this);
         
 		Spinner spinnerUserNames = (Spinner) findViewById(R.id.SpinnerUserName);
-		mAdapter = new ArrayAdapter<CharSequence>(this, android.R.layout.simple_spinner_item);  
-		mAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-		spinnerUserNames.setAdapter(mAdapter);
+		mArrayAdapter = new ArrayAdapter<CharSequence>(this, android.R.layout.simple_spinner_item);  
+		mArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+		spinnerUserNames.setAdapter(mArrayAdapter);
 	}
 
 	@Override
@@ -92,31 +91,34 @@ public class ActivityLogin extends Activity implements OnClickListener
 		switch ( requestCode) {
 			case CREATE_NEW_USER : {
 				if ( resultCode == RESULT_OK) {
-					String userName = mUserName =  data.getStringExtra( "userName");
+					String userName = mUserName = data.getStringExtra( "userName");
 					String sex		= data.getStringExtra( "sex");
 					String dateOfBirth = data.getStringExtra( "birthday");
 					String pictureFileName = data.getStringExtra( "pictureFileName");
 					String userFileName = application.getUserFileName(userName);
-					application.writePropertyToFile( userFileName, "Username", userName);
-					application.writePropertyToFile( userFileName, "Sex", sex);
-					application.writePropertyToFile( userFileName, "Date of Birth", dateOfBirth);
-					application.writePropertyToFile( userFileName, "Picture file name", pictureFileName);
+					application.writePropertyToFile( userFileName, ApplicationSocialNetwork.USER_PROPERTY_USERNAME, userName);
+					application.writePropertyToFile( userFileName, ApplicationSocialNetwork.USER_PROPERTY_SEX, sex);
+					application.writePropertyToFile( userFileName, ApplicationSocialNetwork.USER_PROPERTY_DATE_OF_BIRTH, dateOfBirth);
+					application.writePropertyToFile( userFileName, ApplicationSocialNetwork.USER_PROPERTY_PIC_FILE_NAME, pictureFileName);
 					application.setFileNameForManager( pictureFileName);
 					Spinner spinnerUserNames = (Spinner) findViewById(R.id.SpinnerUserName);
 					
+					// Validation checks
 					if (userName.equals("")) {
-						Toast.makeText(this, "User name cannot be empty", Toast.LENGTH_LONG).show();
+						//Toast.makeText(this, "User name cannot be empty", Toast.LENGTH_LONG).show();
+						application.showToast(this, "User name cannot be empty");
 					} else {
 						// Check if the spinner already contains the created user
-						if (mAdapter.getPosition(userName) >= 0) {
-							Toast.makeText(this, "User already exists", Toast.LENGTH_LONG).show();
+						if (mArrayAdapter.getPosition(userName) >= 0) {
+//							Toast.makeText(this, "User already exists", Toast.LENGTH_LONG).show();
+							application.showToast(this, "User already exists");
 						} else {
 							// Add the new user name to the spinner and sort the values
-							mAdapter.add(userName);
-							mAdapter.sort(null);
+							mArrayAdapter.add(userName);
+							mArrayAdapter.sort(null);
 
 							// Set the new user name in the spinner
-							spinnerUserNames.setSelection(mAdapter.getPosition(userName));
+							spinnerUserNames.setSelection(mArrayAdapter.getPosition(userName));
 						}
 					}
 				}
@@ -150,7 +152,7 @@ public class ActivityLogin extends Activity implements OnClickListener
 				getApplicationContext().deleteFile(application.getUserFileName(userNameToDelete));
 				
 				// Remove the user name from the spinner
-				mAdapter.remove(userNameToDelete);
+				mArrayAdapter.remove(userNameToDelete);
     			
     			break;
     		}
@@ -240,19 +242,19 @@ public class ActivityLogin extends Activity implements OnClickListener
 		// Add all the users to the spinner
 		for (String currUserFileName : userFilesNames)
 		{
-			mAdapter.add(application.getUserNameFromUserFileName(currUserFileName));
+			mArrayAdapter.add(application.getUserNameFromUserFileName(currUserFileName));
 		}
 
 		// Sort the users by their names
-		mAdapter.sort(null);
+		mArrayAdapter.sort(null);
 
 		// Select the last logged-in user in the spinner
 		if (mUserName.equals(USER_NAME_EMPTY) == false)
 		{
 			// Check if the spinner contains the last logged-in user
-			if (mAdapter.getPosition(mUserName) >= 0)
+			if (mArrayAdapter.getPosition(mUserName) >= 0)
 			{
-				spinnerUserNames.setSelection(mAdapter.getPosition(mUserName));
+				spinnerUserNames.setSelection(mArrayAdapter.getPosition(mUserName));
 			}
 			else
 			{

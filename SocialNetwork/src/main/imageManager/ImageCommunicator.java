@@ -26,8 +26,9 @@ public class ImageCommunicator {
 	public void sendImage( String fileName, String userName) {
 		BufferedInputStream inputStream = null;
 		OutputStream 		outputStream = null;
+		Socket socket		= null;
 		try {
-			Socket socket = new Socket(host, port);
+			socket = new Socket(host, port);
 			File file = new File( fileName);
 			byte[] sendBuffer = new byte[(int)file.length( )];
 			inputStream = new BufferedInputStream( new FileInputStream( file));
@@ -50,6 +51,9 @@ public class ImageCommunicator {
 				if ( outputStream != null) {
 					outputStream.close( );
 				}
+				if (socket != null) {
+					socket.close();
+				}
 			} catch (IOException e) {
 			}
 		}
@@ -57,10 +61,11 @@ public class ImageCommunicator {
 	
 	public void requestImage( String userName) {
 		BufferedOutputStream fileOut = null;
-		OutputStream 		outputStream = null;
-		InputStream			inputStream = null;
+		OutputStream 		 outputStream = null;
+		InputStream			 inputStream = null;
+		Socket				 socket = null;
 		try {
-			Socket socket = new Socket(host, port);
+			socket = new Socket(host, port);
 			fileOut = new BufferedOutputStream( new FileOutputStream( "/sdcard/" + userName + ".jpg"));
 			outputStream = socket.getOutputStream( );
 			inputStream = socket.getInputStream( );
@@ -82,6 +87,8 @@ public class ImageCommunicator {
 					outputStream.close( );
 				if ( inputStream != null) 
 					inputStream.close( );
+				if (socket != null)
+					socket.close();
 			} catch (IOException e) {
 			}
 		}
