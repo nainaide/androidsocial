@@ -84,7 +84,9 @@ public class ActivityCreateUser extends Activity implements OnClickListener {
 				Intent resultData = new Intent( );
 				resultData.putExtra( "userName", userName);
 				resultData.putExtra( "sex", sex);
-				resultData.putExtra( "birthday", dateBirth.getYear() + " " + dateBirth.getMonth() + " " + dateBirth.getDayOfMonth());
+				resultData.putExtra( "birthday", dateBirth.getYear() 		+ ActivityUserDetails.DATE_ELEMENTS_SEPARATOR +
+												 (dateBirth.getMonth() + 1) + ActivityUserDetails.DATE_ELEMENTS_SEPARATOR +
+												 dateBirth.getDayOfMonth());
 				resultData.putExtra( "pictureFileName", pictureFileName);
 				setResult( RESULT_OK, resultData);
 				finish( );

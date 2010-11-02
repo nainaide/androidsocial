@@ -25,13 +25,14 @@ public class ActivityUserDetails extends Activity
     private static final String MENU_ITEM_TITLE_CHAT = "Chat With";
     private static final String LOG_TAG = "SN.UserDetails";
     private static final String FIELD_NOT_FILLED = "-- Not Filled By User --";
-    private static final String DATE_ELEMENTS_SERPARATOR = ".";
+    public static final String DATE_ELEMENTS_SEPARATOR = "/";
     
     private static final int REQUEST_CODE_BROWSE_PIC = 1;
     
 //	String[] mArrMenuItemsTitles = {MENU_ITEM_TITLE_CHAT};
 	
     private String mUserName = "";
+    private String mPictureFileName;
     private String lookingAtUserIp;
     
     private TextView mTextViewMainDetails = null;
@@ -45,7 +46,7 @@ public class ActivityUserDetails extends Activity
     private Button mButtonBrowse = null;
     private Button mButtonOK = null;
     private Button mButtonCancel = null;
-    private ImageView imageViewUserPicture = null;
+    private ImageView mImageViewUserPicture = null;
     
 	private Handler mHandler = null;
 	private Handler mHandlerImage = null;
@@ -108,6 +109,7 @@ public class ActivityUserDetails extends Activity
         mButtonBrowse = (Button) findViewById(R.id.ButtonUserDetailsBrowse);
         mButtonOK =  (Button) findViewById(R.id.ButtonUserDetailsOK);
         mButtonCancel =  (Button) findViewById(R.id.ButtonUserDetailsCancel);
+        mImageViewUserPicture = (ImageView) findViewById(R.id.ImageViewUserPicture);
         
         setListenersAndHandlers();
 
@@ -126,19 +128,18 @@ public class ActivityUserDetails extends Activity
         
         populateFields();
         
-        // TODO : Also get and show the user picture
-		String userFileName = application.getUserFileName(mUserName);
-		String pictureFileName = application.readPropertyFromFile(userFileName, "Picture file name");
-        imageViewUserPicture = (ImageView) findViewById(R.id.ImageViewUserPicture);
-        
-        if (pictureFileName != null && pictureFileName.equals("") == false)
-        {
-        	imageViewUserPicture.setImageBitmap(BitmapFactory.decodeFile( pictureFileName));
-        }
-        else
-        {
-        	imageViewUserPicture.setImageResource(R.drawable.icon);
-        }
+//		String userFileName = application.getUserFileName(mUserName);
+////		String pictureFileName = application.readPropertyFromFile(userFileName, "Picture file name");
+//		mPictureFileName = application.readPropertyFromFile(userFileName, ApplicationSocialNetwork.USER_PROPERTY_PIC_FILE_NAME);
+//        
+//        if (mPictureFileName != null && mPictureFileName.equals("") == false)
+//        {
+//        	mImageViewUserPicture.setImageBitmap(BitmapFactory.decodeFile( mPictureFileName));
+//        }
+//        else
+//        {
+//        	mImageViewUserPicture.setImageResource(R.drawable.icon);
+//        }
     }
     
 	@Override
@@ -149,12 +150,12 @@ public class ActivityUserDetails extends Activity
 				if (resultCode == RESULT_OK)
 				{
 					// Set the ImageView to show the new selected picture
-					String pictureFileName = data.getStringExtra("fileName");
-					imageViewUserPicture.setImageBitmap(BitmapFactory.decodeFile( pictureFileName));
+					mPictureFileName = data.getStringExtra("fileName");
+					mImageViewUserPicture.setImageBitmap(BitmapFactory.decodeFile(mPictureFileName));
 					
 					// Update the picture file name property in the user's properties file
-					String userFileName = application.getUserFileName(mUserName);
-					application.writePropertyToFile(userFileName, "Picture file name", pictureFileName);
+//					String userFileName = application.getUserFileName(mUserName);
+//					application.writePropertyToFile(userFileName, ApplicationSocialNetwork.USER_PROPERTY_PIC_FILE_NAME, pictureFileName);
 				}
 			}
 			default :
@@ -174,6 +175,7 @@ public class ActivityUserDetails extends Activity
 		mUserName = extras.getString("ActivityDetails.userName");
 		isEditable = extras.getBoolean("ActivityDetails.isEditable");
 		Log.d(LOG_TAG, "is editable:" + isEditable);
+		
 		if(isEditable)
 		{
 			User me = application.getMe();
@@ -187,6 +189,19 @@ public class ActivityUserDetails extends Activity
 			// Show the browse picture button and hide the chat button
 //			mButtonBrowse.setVisibility(View.VISIBLE);
 //			mButtonChat.setVisibility(View.GONE);
+			
+			String userFileName = application.getUserFileName(mUserName);
+//			String pictureFileName = application.readPropertyFromFile(userFileName, "Picture file name");
+			mPictureFileName = application.readPropertyFromFile(userFileName, ApplicationSocialNetwork.USER_PROPERTY_PIC_FILE_NAME);
+	        
+	        if (mPictureFileName != null && mPictureFileName.equals("") == false)
+	        {
+	        	mImageViewUserPicture.setImageBitmap(BitmapFactory.decodeFile( mPictureFileName));
+	        }
+	        else
+	        {
+	        	mImageViewUserPicture.setImageResource(R.drawable.icon);
+	        }
 		}
 		else
 		{
@@ -203,6 +218,8 @@ public class ActivityUserDetails extends Activity
 			// Show the chat button and hide the browse picture button
 //			mButtonChat.setVisibility(View.VISIBLE);
 //			mButtonBrowse.setVisibility(View.GONE);
+
+        	mImageViewUserPicture.setImageResource(R.drawable.icon);
 		}
 		
 		if(mEditTextHobbies.getText().toString().equals(""))
@@ -210,7 +227,7 @@ public class ActivityUserDetails extends Activity
 		if(mEditTextFavoriteMusic.getText().toString().equals(""))
 			mEditTextFavoriteMusic.setText(FIELD_NOT_FILLED);	
 		
-		String dateBirth = birthDay + DATE_ELEMENTS_SERPARATOR + birthMonth + DATE_ELEMENTS_SERPARATOR + birthYear;
+		String dateBirth = birthDay + DATE_ELEMENTS_SEPARATOR + birthMonth + DATE_ELEMENTS_SEPARATOR + birthYear;
         mTextViewDateBirth.setText(dateBirth);
         
         setViewOrEdit(isEditable);
@@ -289,17 +306,11 @@ public class ActivityUserDetails extends Activity
 
 				// Delete the user's file and create a new updated one
 				String userFileName = application.getUserFileName(me.getFullName());
-//				File userFile = new File(userFileName);
-//				
-//				if (userFile != null)
-//				{
-//					userFile.delete();
-//				}
 
-//				application.writePropertyToFile(userFileName, "Username", mUserName);
-//				application.writePropertyToFile(userFileName, "Sex", sex);
-				application.writePropertyToFile(userFileName, "Hobbies", mEditTextHobbies.getText().toString());
-				application.writePropertyToFile(userFileName, "FavoriteMusic", mEditTextFavoriteMusic.getText().toString());
+				application.writePropertyToFile(userFileName, ApplicationSocialNetwork.USER_PROPERTY_FAVORITE_MUSIC, mEditTextFavoriteMusic.getText().toString());
+				application.writePropertyToFile(userFileName, ApplicationSocialNetwork.USER_PROPERTY_HOBBIES, mEditTextHobbies.getText().toString());
+				application.writePropertyToFile(userFileName, ApplicationSocialNetwork.USER_PROPERTY_PIC_FILE_NAME, mPictureFileName);
+				application.setFileNameForManager(mPictureFileName);
 				
 				finish();
 			}
@@ -328,8 +339,8 @@ public class ActivityUserDetails extends Activity
     		{
     			Log.d(LOG_TAG, "Image handleMessage : msg = " + (String)msg.obj);
     			
-				ImageView userPic = (ImageView)findViewById( R.id.ImageViewUserPicture);
-				userPic.setImageBitmap( BitmapFactory.decodeFile( "/sdcard/" + ((String)msg.obj) + ".jpg"));
+//				ImageView userPic = (ImageView)findViewById( R.id.ImageViewUserPicture);
+    			mImageViewUserPicture.setImageBitmap( BitmapFactory.decodeFile( "/sdcard/" + ((String)msg.obj) + ".jpg"));
     		}
     	};
     	

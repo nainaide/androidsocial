@@ -44,15 +44,25 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 	private static final int NAP_TIME_TOAST_AND_EXIT = 3000;
 	private static final int NAP_TIME_RECONNECT = 1000;
 	
-	private static final long TIMEOUT_STALE_CLIENT = 5 * NAP_TIME_STALE_CHECKER;
-	private static final long TIMEOUT_STALE_LEADER = 5 * NAP_TIME_STALE_CHECKER;
-	private static final long TIMEOUT_RECONNECT = 40 * 1000; // 30 seconds
+	private static final int TIMEOUT_STALE_CLIENT = 5 * NAP_TIME_STALE_CHECKER;
+	private static final int TIMEOUT_STALE_LEADER = 5 * NAP_TIME_STALE_CHECKER;
+	private static final int TIMEOUT_RECONNECT = 40 * 1000; // 30 seconds
 //	private final int  TIMEOUT_SOCKET_ACCEPT = 30000;
 
+	public static final int TIMEOUT_SOCKET_RECEIVE = TIMEOUT_STALE_LEADER + 100;
+	
 	public static final String USER_FILE_NAME_PREFIX = "user_";
 	public static final String USER_FILE_NAME_SUFFIX = "";
 	public static final String USER_FILE_NAME_EXTENSION = "";
 
+	public static final String USER_PROPERTY_USERNAME		= "Username";
+	public static final String USER_PROPERTY_SEX			= "Sex";
+	public static final String USER_PROPERTY_DATE_OF_BIRTH	= "Date of Birth";
+	public static final String USER_PROPERTY_PIC_FILE_NAME	= "Picture File Name";
+	public static final String USER_PROPERTY_HOBBIES		= "Hobbies";
+	public static final String USER_PROPERTY_FAVORITE_MUSIC	= "Favorite Music";
+	
+	
 //	private static final String PROPERTY_VALUE_SEPARATOR = "=";
 	
 	private static final String LOG_TAG_PREFIX = "SN.Application";
@@ -326,7 +336,7 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 //				nap(500);
 				Messages.MessageNewUser msgNewUser = new Messages.MessageNewUser(mMe);
 
-				sendMessage(msgNewUser.toString()); //, IP_LEADER);
+				sendMessage(msgNewUser.toString());
 			}
 			
 //			Looper.prepare();
@@ -346,6 +356,7 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 								// Remove the leader from the list of users
 								removeUser(getLeaderIP());
 								
+								// TODO : Should we just delete the ThreadReconnect and put its contents as a function here ?
 								mThreadReconnect = new Thread(new ThreadReconnect());
 								mThreadReconnect.start();
 								mThreadReconnect.join();
@@ -526,11 +537,14 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 			DatagramSocket socket = null;
 
 			socket = createDatagramSocket();
+			try {
+				socket.setSoTimeout(TIMEOUT_SOCKET_RECEIVE);
+			} catch (SocketException e) {
+			}
 
 			while (Thread.currentThread().isInterrupted() == false) {
 				try {
 					packet = new DatagramPacket(buffer, buffer.length);
-					socket.setSoTimeout((int)TIMEOUT_STALE_LEADER + 100);
 					socket.receive(packet);
 					String strMsgReceived = new String(packet.getData(), 0, packet.getLength());
 					
@@ -626,10 +640,11 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 							@Override
 							public void run( ) {
 								setName( "Leader image send/receiver");
+								String targetUsername = msgGetUserDetails.getTargetUserName();
 								ImageCommunicator imageOwner = new ImageCommunicator( targetIPAddress, ImageCommunicator.IMAGE_SERVER_PORT);
 								ImageCommunicator imageAsker = new ImageCommunicator( askerIPAddress, ImageCommunicator.IMAGE_SERVER_PORT);
-								imageOwner.requestImage( msgGetUserDetails.getTargetUserName( ));
-								imageAsker.sendImage( "/sdcard/" + msgGetUserDetails.getTargetUserName( ) + ".jpg", msgGetUserDetails.getTargetUserName( ));
+								imageOwner.requestImage(targetUsername);
+								imageAsker.sendImage( "/sdcard/" + targetUsername + ".jpg", targetUsername);
 							}
 						}.start( );
 					}
@@ -723,7 +738,7 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 			}
 			if (ActivityChat.instance != null)
 			{
-				Log.d(LOG_TAG, "Activity Caht != null");	
+				Log.d(LOG_TAG, "Activity Chat != null");	
 				Message msg = ActivityChat.instance.getUpdateHandler().obtainMessage();
 				msg.obj = msgChat; 
 				ActivityChat.instance.getUpdateHandler().sendMessage(msg);
@@ -891,13 +906,12 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 		Log.d(LOG_TAG, "UpdateOpenChats value after updating:" +this.openChats.get(ip + CHAT_SEPERATOR + user) );	
 	}
 	
-	public void loadMyDetails(String userFileName) //, String userName)
+	public void loadMyDetails(String userFileName)
 	{
-		// TODO : Make consts out of everything
-		String userName = readPropertyFromFile(userFileName, "Username");
-		User.Sex sex = User.Sex.valueOf(readPropertyFromFile(userFileName, "Sex").toUpperCase());
-		String[] arrDateBirthElements = readPropertyFromFile(userFileName, "Date of Birth").split(" ");
-		String pictureFileName = readPropertyFromFile( userFileName, "Picture file name");
+		String userName = readPropertyFromFile(userFileName, USER_PROPERTY_USERNAME);
+		User.Sex sex = User.Sex.valueOf(readPropertyFromFile(userFileName, USER_PROPERTY_SEX).toUpperCase());
+		String[] arrDateBirthElements = readPropertyFromFile(userFileName, USER_PROPERTY_DATE_OF_BIRTH).split(ActivityUserDetails.DATE_ELEMENTS_SEPARATOR);
+		String pictureFileName = readPropertyFromFile( userFileName, USER_PROPERTY_PIC_FILE_NAME);
 		if ( pictureFileName != null && pictureFileName.length() > 0 ) {
 			imageManager.setFileName( pictureFileName);
 		}
@@ -907,6 +921,9 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 		
 		// TODO : Deal with the whole full name thing
 		mMe = new User(userName, "", sex, birthYear, birthMonth, birthDay, "");
+		
+		mMe.setFavoriteMusic(readPropertyFromFile(userFileName, USER_PROPERTY_FAVORITE_MUSIC));
+		mMe.setHobbies(readPropertyFromFile(userFileName, USER_PROPERTY_HOBBIES));
 	}
 	
 	public void sendMessage(String message, String destIP)
@@ -1167,6 +1184,12 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 			properties.load(fis);
 
 			returnedValue = properties.getProperty(propertyName);
+			
+			if (returnedValue == null)
+			{
+				returnedValue = "";
+			}
+			
 //			br = new BufferedReader(new InputStreamReader(fis));
 //
 //			while ( (currLine = br.readLine()) != null)
@@ -1213,10 +1236,9 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 
 	public void imageReady( String imageName) {
 		Looper.prepare();
-//		Message msg = ActivityUsersList.instance.getUpdateHandler().obtainMessage();
 		Message msg = ActivityUserDetails.instance.getImageUpdateHandler().obtainMessage();
 		msg.obj = imageName;
-		// TODO Update activity with user image
+		// Update activity with user image
 		Log.d(LOG_TAG, "Image received: " + imageName);
 		ActivityUserDetails.instance.getImageUpdateHandler().sendMessage(msg);
 	}

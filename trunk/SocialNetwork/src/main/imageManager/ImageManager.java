@@ -1,11 +1,13 @@
 package main.imageManager;
 
 import java.io.IOException;
+import java.io.InterruptedIOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import main.main.ApplicationSocialNetwork;
 import android.os.Looper;
 import android.util.Log;
 
@@ -35,12 +37,16 @@ public class ImageManager implements Runnable {
 	public void run() {
 		try {
 			serverSocket = new ServerSocket( ImageCommunicator.IMAGE_SERVER_PORT);
+			serverSocket.setSoTimeout(ApplicationSocialNetwork.TIMEOUT_SOCKET_RECEIVE);
 			Looper.prepare();
 			while (!interrupted) {
 //			while (Thread.currentThread().isInterrupted() == false) {
-				Socket socket = serverSocket.accept( );
-				ImageManagerRequestHandler handler = new ImageManagerRequestHandler( executor, notifiable, fileName);
-				handler.handleRequest( socket);
+				try {
+					Socket socket = serverSocket.accept( );
+					ImageManagerRequestHandler handler = new ImageManagerRequestHandler( executor, notifiable, fileName);
+					handler.handleRequest( socket);
+				} catch (InterruptedIOException e) {
+				}
 			}
 		} catch (IOException e) {
 //			e.printStackTrace();
@@ -51,7 +57,7 @@ public class ImageManager implements Runnable {
 				Log.d(LOG_TAG, "run() : About to close the serverSocket and finish");
 				
 				serverSocket.close();
-			} catch (IOException e) {
+			} catch (Exception e) {
 			}
 		}
 	}
