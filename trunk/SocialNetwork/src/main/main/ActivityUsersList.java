@@ -17,6 +17,7 @@ import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
 import android.view.ContextMenu;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -198,17 +199,22 @@ Log.d(LOG_TAG, "Got to mRunnableReturnNetwork");
     	}
     	else if (item.getTitle().equals(CTXT_MENU_ITEM_TITLE_LOGOUT))
     	{
-    		Messages.MessageUserDisconnected msgUserDisconnected = new Messages.MessageUserDisconnected(application.getMyIP());
-    		
-    		application.sendMessage(msgUserDisconnected.toString());
-    		
-    		application.stopService();
-    		
-    		finish();
+    		logout();
     	}
     	
     	return true;
     }
+    
+    public boolean onKeyDown(int keyCode, KeyEvent event) 
+	{ 
+		if (keyCode == KeyEvent.KEYCODE_BACK && event.getRepeatCount() == 0) 
+		{     
+			logout();
+			
+			return true;        
+		}        
+		return super.onKeyDown(keyCode, event);    
+	}
     
     @Override
     public void onCreateContextMenu(ContextMenu menu, View view, ContextMenuInfo menuInfo) 
@@ -248,6 +254,17 @@ Log.d(LOG_TAG, "Got to mRunnableReturnNetwork");
     	return true;    
     }    
 	
+    private void logout()
+    {
+		Messages.MessageUserDisconnected msgUserDisconnected = new Messages.MessageUserDisconnected(application.getMyIP());
+		
+		application.sendMessage(msgUserDisconnected.toString());
+		
+		application.stopService();
+		
+		finish();
+    }
+    
 	private void chat(String username, String ip)
 	{
     	Intent intent = new Intent(this, ActivityChat.class);

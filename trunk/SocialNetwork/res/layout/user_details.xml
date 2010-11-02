@@ -5,11 +5,12 @@
 
 	<LinearLayout
 		android:id="@+id/LinearLayoutPictureAndMainDetails"
-		android:orientation="horizontal" android:layout_height="wrap_content" android:layout_width="fill_parent">
+		android:orientation="horizontal" android:layout_height="wrap_content" android:layout_width="wrap_content">
 		
 		<TextView android:id="@+id/TextViewMainDetails" android:text="@+id/TextViewMainDetails" android:layout_weight="1" android:layout_height="fill_parent" android:layout_width="fill_parent">
 		</TextView><ImageView android:id="@+id/ImageViewUserPicture" android:layout_height="@dimen/image_size" android:layout_width="@dimen/image_size">
-		</ImageView>
+		</ImageView><LinearLayout android:id="@+id/LinearLayoutChatBrowse" android:layout_height="wrap_content" android:orientation="vertical" android:layout_gravity="bottom" android:layout_marginTop="8sp" android:layout_width="wrap_content"><Button android:text="Chat" android:id="@+id/ButtonUserDetailsChat" android:layout_height="wrap_content" android:minWidth="70sp" android:layout_width="wrap_content">
+		</Button><Button android:text="Browse..." android:id="@+id/ButtonUserDetailsBrowse" android:layout_height="wrap_content" android:layout_width="fill_parent"></Button></LinearLayout>
 	
 <!--		
 		<LinearLayout
@@ -22,30 +23,18 @@
 	
 		
 		
-		<Button
-			android:text="Chat"
-			android:id="@+id/ButtonUserDetailsChat"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content" android:minWidth="70sp">
-		</Button>
+		
 		
 	
+
+
+
 </LinearLayout>
 	
-	<TextView
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content"
-		android:id="@+id/TextViewUserDetailsDateBirthLabel"
-		android:text="Date of Birth :"
-		android:layout_marginTop="20sp">
-	</TextView>
+	<LinearLayout android:id="@+id/LinearLayoutDateBirth" android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="horizontal"><TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/TextViewUserDetailsDateBirthLabel" android:layout_marginTop="20sp" android:text="Date of Birth : ">
+	</TextView><TextView android:text="@+id/TextViewUserDetailsDateBirth" android:id="@+id/TextViewUserDetailsDateBirth" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center_horizontal"></TextView></LinearLayout>
 	
-	<DatePicker
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content"
-		android:id="@+id/DatePickerUserDetailsDateBirth"
-		android:layout_gravity="center_horizontal">
-	</DatePicker>
+	
 	
 	<TextView
 		android:layout_width="wrap_content"
@@ -92,28 +81,17 @@
 		android:id="@+id/TextViewUserDetailsFavoriteMusic"
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content" android:visibility="gone">
-	</TextView>
-
-	<LinearLayout
-		android:id="@+id/LinearLayoutUserDetailsOKCancelButtons"
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content"
-		android:layout_gravity="center_horizontal"
-		android:layout_marginTop="20sp">
+	</TextView><LinearLayout android:id="@+id/LinearLayoutUserDetailsOKCancelButtons" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="20sp" android:orientation="horizontal" android:layout_gravity="center_horizontal">
 	
-		<Button
-			android:text="OK"
-			android:id="@+id/ButtonUserDetailsOK"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content" android:minWidth="@dimen/min_width_button">
+		<Button android:text="OK" android:id="@+id/ButtonUserDetailsOK" android:layout_width="wrap_content" android:layout_height="wrap_content" android:minWidth="@dimen/min_width_button">
 		</Button>
 		
-		<Button
-			android:text="Cancel"
-			android:id="@+id/ButtonUserDetailsCancel"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content" android:minWidth="@dimen/min_width_button">
+		<Button android:text="Cancel" android:id="@+id/ButtonUserDetailsCancel" android:layout_width="wrap_content" android:layout_height="wrap_content" android:minWidth="@dimen/min_width_button">
 		</Button>
 	</LinearLayout>
+
+	
+
+
 
 </LinearLayout>
