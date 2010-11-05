@@ -28,7 +28,7 @@ public class Messages
 	
 	// UserDetails : Client sends to answer the leader, giving his own details.
 	//           	 Leader sends to reply the asking user with the details
-	//           	 Structure : UserDetails askerIPAddress *all the details. TBD*
+	//           	 Structure : UserDetails askerIPAddress ipAddress hobbies favoriteMusic
 	public static final String MSG_PREFIX_USER_DETAILS = "UserDetails";
 	
 	// UserDisconnected : Client (NOT Leader) sends the leader it is disconnecting
@@ -73,8 +73,8 @@ public class Messages
 	}
 	
 	// This class was made as a way to initialize other Message___ objects, since
-	// the message string couldn't directly be passed to their Ctor as often there is
-	// already a Ctor receiving a String, such as a username
+	// the message string couldn't directly be passed to their Constructor as often there is
+	// already a Constructor receiving a String, such as a username
 	public static class Message
 	{
 		String mMessage = "";
@@ -138,6 +138,9 @@ public class Messages
 	}
 	
 	// Structure : NewUser username IPAddress dateBirth Sex Picture
+	// Note : This message uses a different implementation using a HashMap instead of an array like all the rest (The code for using an array is
+	//        still present and is commented). This was a test and it worked. The other messages can also be converted to also use the more general and
+	//        less order-dependent HashTable.
 	public static class MessageNewUser
 	{
 		private static final int INDEX_PARAM_IP_ADDRESS = 1;
@@ -146,7 +149,6 @@ public class Messages
 		private static final int INDEX_PARAM_DATE_BIRTH_MONTH = 4;
 		private static final int INDEX_PARAM_DATE_BIRTH_DAY = 5;
 		private static final int INDEX_PARAM_SEX = 6;
-//		private static final int INDEX_PARAM_PICTURE = 7;
 		
 //		private List<String> listParams = new LinkedList<String>();
 		private HashMap<Integer, String> mMapIndexToValue = new HashMap<Integer, String>();
@@ -157,27 +159,6 @@ public class Messages
 //		private int    mBirthMonth;
 //		private int    mBirthDay;
 //		private String mSex = "";
-//		private String mPicture = "";
-		
-//		public MessageNewUser(String ipAddress, String username, int birthYear, int birthMonth, int birthDay, String sex, String picture)
-//		{
-////			listParams.ad
-//			mMapIndexToValue.put(INDEX_PARAM_PREFIX, MSG_PREFIX_NEW_USER);
-//			mMapIndexToValue.put(INDEX_PARAM_IP_ADDRESS, ipAddress);
-//			mMapIndexToValue.put(INDEX_PARAM_USERNAME, username);
-//			mMapIndexToValue.put(INDEX_PARAM_DATE_BIRTH_YEAR, String.valueOf(birthYear));
-//			mMapIndexToValue.put(INDEX_PARAM_DATE_BIRTH_MONTH, String.valueOf(birthMonth));
-//			mMapIndexToValue.put(INDEX_PARAM_DATE_BIRTH_DAY, String.valueOf(birthDay));
-//			mMapIndexToValue.put(INDEX_PARAM_SEX, sex);
-////			mMapIndexToValue.put(INDEX_PARAM_PICTURE, picture);
-////			mIPAddress = ipAddress;
-////			mUsername = username;
-////			mBirthYear = birthYear;
-////			mBirthMonth = birthMonth;
-////			mBirthDay = birthDay;
-////			mSex = sex;
-////			mPicture = picture;
-//		}
 		
 		public MessageNewUser(Message message)
 		{
@@ -191,14 +172,12 @@ public class Messages
 			mMapIndexToValue.put(INDEX_PARAM_DATE_BIRTH_MONTH, arrParams[INDEX_PARAM_DATE_BIRTH_MONTH]);
 			mMapIndexToValue.put(INDEX_PARAM_DATE_BIRTH_DAY, arrParams[INDEX_PARAM_DATE_BIRTH_DAY]);
 			mMapIndexToValue.put(INDEX_PARAM_SEX, arrParams[INDEX_PARAM_SEX]);
-//			mMapIndexToValue.put(INDEX_PARAM_PICTURE, arrParams[INDEX_PARAM_PICTURE]);
 //			mIPAddress = arrParams[INDEX_PARAM_IP_ADDRESS];
 //			mUsername = arrParams[INDEX_PARAM_USERNAME];
 //			mBirthYear = arrParams[INDEX_PARAM_DATE_BIRTH_YEAR];
 //			mBirthMonth = arrParams[INDEX_PARAM_DATE_BIRTH_MONTH];
 //			mBirthDay = arrParams[INDEX_PARAM_DATE_BIRTH_DAY];
 //			mSex = arrParams[INDEX_PARAM_SEX];
-//			mPicture = arrParams[INDEX_PARAM_PICTURE];
 		}
 		
 		public MessageNewUser(User currUser)
@@ -210,12 +189,10 @@ public class Messages
 			mMapIndexToValue.put(INDEX_PARAM_DATE_BIRTH_MONTH, String.valueOf(currUser.getDateBirth().get(GregorianCalendar.MONTH)));
 			mMapIndexToValue.put(INDEX_PARAM_DATE_BIRTH_DAY, String.valueOf(currUser.getDateBirth().get(GregorianCalendar.DAY_OF_MONTH)));
 			mMapIndexToValue.put(INDEX_PARAM_SEX, currUser.getSex());
-//			mMapIndexToValue.put(INDEX_PARAM_PICTURE, "StubPic"); //currUser.getPicture());
 //			mIPAddress = currUser.getIPAddress();
 //			mUsername = currUser.getFullName();
 //			mDateBirth = currUser.getDateBirth().toString();
 //			mSex = currUser.getSex();
-//			mPicture = "PicData";
 		}
 
 		public String getUsername()
@@ -248,17 +225,12 @@ public class Messages
 			return mMapIndexToValue.get(INDEX_PARAM_SEX);
 		}
 		
-//		public String getPicture()
-//		{
-//			return mMapIndexToValue.get(INDEX_PARAM_PICTURE);
-//		}
-		
 		public String toString()
 		{
 			return Messages.makeMessageString(mMapIndexToValue);
 //			return MSG_PREFIX_NEW_USER + MSG_PARAMS_SEPARATOR +
 //						mUsername  + MSG_PARAMS_SEPARATOR + mIPAddress + MSG_PARAMS_SEPARATOR +
-//						mDateBirth + MSG_PARAMS_SEPARATOR + mSex       + MSG_PARAMS_SEPARATOR + mPicture; 
+//						mDateBirth + MSG_PARAMS_SEPARATOR + mSex; 
 		}
 	}
 	
@@ -333,7 +305,7 @@ public class Messages
 		}
 	}
 	
-	// Structure : UserDetails askerIPAddress *all the details. TBD*
+	// Structure : UserDetails askerIPAddress ipAddress hobbies favoriteMusic
 	public static class MessageUserDetails
 	{
 	    private static final String FIELD_NOT_FILLED = "-- Not Filled By User --";
@@ -348,11 +320,6 @@ public class Messages
 		private String mHobbies = FIELD_NOT_FILLED;
 		private String mFavoriteMusic = FIELD_NOT_FILLED;
 		
-		
-//		public MessageUserDetails(String askerIPAddress)
-//		{
-//			mAskerIPAddress = askerIPAddress;
-//		}
 		
 		public MessageUserDetails(Message message)
 		{
