@@ -13,8 +13,8 @@ import java.net.UnknownHostException;
 
 public class ImageCommunicator {
 
-	
 	public static final int IMAGE_SERVER_PORT = 1703;
+	
 	private String host;
 	private int port;
 
@@ -26,17 +26,21 @@ public class ImageCommunicator {
 	public void sendImage( String fileName, String userName) {
 		BufferedInputStream inputStream = null;
 		OutputStream 		outputStream = null;
-		Socket socket		= null;
+		Socket				socket = null;
 		try {
 			socket = new Socket(host, port);
+			
 			File file = new File( fileName);
 			byte[] sendBuffer = new byte[(int)file.length( )];
+			
 			inputStream = new BufferedInputStream( new FileInputStream( file));
 			inputStream.read(sendBuffer, 0, sendBuffer.length);
+			
 			outputStream = socket.getOutputStream( );
 			outputStream.write( ImageManagerRequestHandler.SEND_USER_IMAGE);
 			outputStream.write( (userName + ";").getBytes( ), 0, (userName + ";").length( ));
-			outputStream.write(sendBuffer,  0, sendBuffer.length);
+			outputStream.write(sendBuffer, 0, sendBuffer.length);
+			
 			if ( !socket.isOutputShutdown( ))
 				outputStream.flush( );
 		} catch (UnknownHostException e) {
@@ -66,11 +70,14 @@ public class ImageCommunicator {
 		Socket				 socket = null;
 		try {
 			socket = new Socket(host, port);
-			fileOut = new BufferedOutputStream( new FileOutputStream( "/sdcard/" + userName + ".jpg"));
+			
 			outputStream = socket.getOutputStream( );
 			inputStream = socket.getInputStream( );
-			int ch = 0;
+			
 			outputStream.write( ImageManagerRequestHandler.RECEIVE_USER_IMAGE);
+			
+			int ch = 0;
+			fileOut = new BufferedOutputStream( new FileOutputStream( "/sdcard/" + userName + ".jpg"));
 			while ( ( ch = inputStream.read()) != -1) {
 				fileOut.write( ch);
 			}
@@ -93,10 +100,9 @@ public class ImageCommunicator {
 			}
 		}
 	}
-	
-	public static void main(String[] args) {
-		ImageCommunicator sender = new ImageCommunicator( "localhost", IMAGE_SERVER_PORT);
-		sender.requestImage( "userTest");
-	}
-	
+//	
+//	public static void main(String[] args) {
+//		ImageCommunicator sender = new ImageCommunicator( "localhost", IMAGE_SERVER_PORT);
+//		sender.requestImage( "userTest");
+//	}
 }

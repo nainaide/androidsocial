@@ -14,47 +14,43 @@ import android.widget.RadioButton;
 
 public class ActivityCreateUser extends Activity implements OnClickListener {
 	
-	
 	private static final int GET_PICTURE_FILE_NAME = 0x01;
+	
+	public static final String EXTRA_KEY_USERNAME = "userName";
+	public static final String EXTRA_KEY_SEX = "sex";
+	public static final String EXTRA_KEY_DATE_BIRTH = "birthday";
+	public static final String EXTRA_KEY_PIC_FILENAME = "pictureFileName";
+	
+	
 	private String pictureFileName = "";
 	
 	
-	@Override
-	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-		switch( requestCode) {
-			case GET_PICTURE_FILE_NAME : {
-				if ( resultCode == RESULT_OK) {
-					pictureFileName  = data.getStringExtra( "fileName");
-					ImageView userPic = (ImageView)findViewById( R.id.userImage);
-					userPic.setImageBitmap( BitmapFactory.decodeFile( pictureFileName));
-				}
-			}
-			default:  {
-				break;
-			}
-		}
+	public void onCreate( Bundle bundle) {
+		super.onCreate(bundle);
+		setContentView( R.layout.create_user);
+		
+		RadioButton radioFemale = (RadioButton)findViewById( R.id.RadioButtonCreateUserFemale);
+		radioFemale.setOnClickListener( this);
+		
+		RadioButton radioMale = (RadioButton)findViewById( R.id.RadioButtonCreateUserMale);
+		radioMale.setOnClickListener( this);
+		
+		Button btnCancel = (Button)findViewById( R.id.ButtonCancel);
+		btnCancel.setOnClickListener( this);
+		
+		Button btnCreate = (Button)findViewById( R.id.ButtonCreate);
+		btnCreate.setOnClickListener( this);
+		
+		Button btnFileBrowser = (Button)findViewById( R.id.btnUserPicture);
+		btnFileBrowser.setOnClickListener( this);
+		
+		EditText userNameText = (EditText)findViewById(R.id.EditTextCreateUserUserName);
+		userNameText.setText( "");
 	}
-	
+
 	@Override
 	protected void onStart() {
 		super.onStart();
-	}
-
-	public void onCreate( Bundle bundle) {
-		super.onCreate(bundle);
-		setContentView( R.layout.dlg_layout_create_user);
-		RadioButton radioFemale = (RadioButton)findViewById( R.id.RadioButtonCreateUserFemale);
-		radioFemale.setOnClickListener( this);
-		RadioButton radioMale = (RadioButton)findViewById( R.id.RadioButtonCreateUserMale);
-		radioMale.setOnClickListener( this);
-		Button btnCancel = (Button)findViewById( R.id.ButtonCancel);
-		btnCancel.setOnClickListener(this);
-		Button btnCreate = (Button)findViewById( R.id.ButtonCreate);
-		btnCreate.setOnClickListener( this);
-		Button btnFileBrowser = (Button)findViewById( R.id.btnUserPicture);
-		btnFileBrowser.setOnClickListener( this);
-		EditText userNameText = (EditText)findViewById(R.id.EditTextCreateUserUserName);
-		userNameText.setText( "");
 	}
 
 	public void onClick(View v) {
@@ -82,12 +78,12 @@ public class ActivityCreateUser extends Activity implements OnClickListener {
 				DatePicker dateBirth = (DatePicker)findViewById(R.id.DatePickerCreateUserBirth);
 				
 				Intent resultData = new Intent( );
-				resultData.putExtra( "userName", userName);
-				resultData.putExtra( "sex", sex);
-				resultData.putExtra( "birthday", dateBirth.getYear() 		+ ActivityUserDetails.DATE_ELEMENTS_SEPARATOR +
-												 (dateBirth.getMonth() + 1) + ActivityUserDetails.DATE_ELEMENTS_SEPARATOR +
-												 dateBirth.getDayOfMonth());
-				resultData.putExtra( "pictureFileName", pictureFileName);
+				resultData.putExtra(EXTRA_KEY_USERNAME, userName);
+				resultData.putExtra(EXTRA_KEY_SEX, sex);
+				resultData.putExtra(EXTRA_KEY_DATE_BIRTH, dateBirth.getYear()  + ActivityUserDetails.DATE_ELEMENTS_SEPARATOR +
+											 			  dateBirth.getMonth() + ActivityUserDetails.DATE_ELEMENTS_SEPARATOR +
+											 			  dateBirth.getDayOfMonth());
+				resultData.putExtra(EXTRA_KEY_PIC_FILENAME, pictureFileName);
 				setResult( RESULT_OK, resultData);
 				finish( );
 				break;
@@ -104,5 +100,19 @@ public class ActivityCreateUser extends Activity implements OnClickListener {
 	}
 	
 	
-
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		switch( requestCode) {
+			case GET_PICTURE_FILE_NAME : {
+				if ( resultCode == RESULT_OK) {
+					pictureFileName = data.getStringExtra(ActivityFileBrowser.EXTRA_KEY_FILENAME);
+					ImageView userPic = (ImageView)findViewById( R.id.userImage);
+					userPic.setImageBitmap( BitmapFactory.decodeFile( pictureFileName));
+				}
+			}
+			default:  {
+				break;
+			}
+		}
+	}
 }

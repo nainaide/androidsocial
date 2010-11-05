@@ -6,6 +6,7 @@ import java.io.FilenameFilter;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -13,7 +14,6 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.Spinner;
-import android.widget.Toast;
 
 public class ActivityLogin extends Activity implements OnClickListener
 {
@@ -24,8 +24,10 @@ public class ActivityLogin extends Activity implements OnClickListener
 	private String mUserName = USER_NAME_EMPTY;
 	private ArrayAdapter<CharSequence> mArrayAdapter;
 	
-	ApplicationSocialNetwork application = null;
+	private ApplicationSocialNetwork application = null;
 	public static ActivityLogin instance = null;
+	
+	private SharedPreferences mPrefs = null;
 	
 	
     /** Called when the activity is first created. */
@@ -40,15 +42,15 @@ public class ActivityLogin extends Activity implements OnClickListener
         FILE_NAME_PREFS = getResources().getString(R.string.file_name_prefs);
 
         // Get the last logged-in user name (and put it in mUserName)
-		SharedPreferences settings = getSharedPreferences(FILE_NAME_PREFS, MODE_PRIVATE);
+//		SharedPreferences settings = getSharedPreferences(FILE_NAME_PREFS, MODE_PRIVATE);
+		mPrefs = getSharedPreferences(FILE_NAME_PREFS, MODE_PRIVATE);
+		
     	String prefNameLastLoggedInUserName = getResources().getString(R.string.pref_name_last_logged_in_user_name);
-    	mUserName = settings.getString(prefNameLastLoggedInUserName, USER_NAME_EMPTY);
+    	mUserName = mPrefs.getString(prefNameLastLoggedInUserName, USER_NAME_EMPTY);
     	
-        // Check if the user checked to always login with a certain user.
-        // If so, don't display this screen. Simply login with that user
+        // Check if the user checked to automatically login with a certain user.
+        // If so, don't display this activity. Simply login with that user
         loginAutomaticallyIfNeeded();
-        
-        // Else, if it wasn't set to login automatically, continue (show the activity)
         
         // Set all the listeners (e.g for buttons, dialogs) and adapters
         setListenersAndAdapters();
@@ -59,9 +61,9 @@ public class ActivityLogin extends Activity implements OnClickListener
 
 	private void loginAutomaticallyIfNeeded()
 	{
-		SharedPreferences settings = getSharedPreferences(FILE_NAME_PREFS, MODE_PRIVATE);
+//		SharedPreferences settings = getSharedPreferences(FILE_NAME_PREFS, MODE_PRIVATE);
         String prefNameShouldLoginAutomatically = getResources().getString(R.string.pref_name_should_login_automatically);
-        boolean shouldLoginAutomatically = settings.getBoolean(prefNameShouldLoginAutomatically, false);
+        boolean shouldLoginAutomatically = mPrefs.getBoolean(prefNameShouldLoginAutomatically, false);
 
         if (shouldLoginAutomatically)
         {
@@ -91,17 +93,18 @@ public class ActivityLogin extends Activity implements OnClickListener
 		switch ( requestCode) {
 			case CREATE_NEW_USER : {
 				if ( resultCode == RESULT_OK) {
-					String userName = mUserName = data.getStringExtra( "userName");
-					String sex		= data.getStringExtra( "sex");
-					String dateOfBirth = data.getStringExtra( "birthday");
-					String pictureFileName = data.getStringExtra( "pictureFileName");
+					String userName = mUserName = data.getStringExtra(ActivityCreateUser.EXTRA_KEY_USERNAME);
+					String sex		= data.getStringExtra(ActivityCreateUser.EXTRA_KEY_SEX);
+					String dateOfBirth = data.getStringExtra(ActivityCreateUser.EXTRA_KEY_DATE_BIRTH);
+					String pictureFileName = data.getStringExtra(ActivityCreateUser.EXTRA_KEY_PIC_FILENAME);
 					String userFileName = application.getUserFileName(userName);
+					
 					application.writePropertyToFile( userFileName, ApplicationSocialNetwork.USER_PROPERTY_USERNAME, userName);
 					application.writePropertyToFile( userFileName, ApplicationSocialNetwork.USER_PROPERTY_SEX, sex);
 					application.writePropertyToFile( userFileName, ApplicationSocialNetwork.USER_PROPERTY_DATE_OF_BIRTH, dateOfBirth);
 					application.writePropertyToFile( userFileName, ApplicationSocialNetwork.USER_PROPERTY_PIC_FILE_NAME, pictureFileName);
+					
 					application.setFileNameForManager( pictureFileName);
-					Spinner spinnerUserNames = (Spinner) findViewById(R.id.SpinnerUserName);
 					
 					// Validation checks
 					if (userName.equals("")) {
@@ -118,6 +121,7 @@ public class ActivityLogin extends Activity implements OnClickListener
 							mArrayAdapter.sort(null);
 
 							// Set the new user name in the spinner
+							Spinner spinnerUserNames = (Spinner) findViewById(R.id.SpinnerUserName);
 							spinnerUserNames.setSelection(mArrayAdapter.getPosition(userName));
 						}
 					}
@@ -132,12 +136,14 @@ public class ActivityLogin extends Activity implements OnClickListener
 	// Implement the OnClickListener callback
 	public void onClick(View view)
 	{
+		// All the clickable views set "this" as their handler, so we need to first find out which view was clicked
     	switch (view.getId())
     	{
     		case R.id.ButtonCreateUser :
     		{
     			Intent createUserActivity = new Intent( this, ActivityCreateUser.class);
     			startActivityForResult( createUserActivity, CREATE_NEW_USER);
+    			
     			break;
     		}
     		
@@ -165,7 +171,8 @@ public class ActivityLogin extends Activity implements OnClickListener
     			
     			if (selectedUserName == null || selectedUserName.equals(USER_NAME_EMPTY))
     			{
-    				Toast.makeText(this, "You must select a user in order to login", Toast.LENGTH_SHORT).show();
+//    				Toast.makeText(this, "You must select a user in order to login", Toast.LENGTH_SHORT).show();
+    				application.showToast(this, "You must select a user in order to login");
     			}
     			else
     			{
@@ -175,8 +182,8 @@ public class ActivityLogin extends Activity implements OnClickListener
 //    				}
     					
     				// First, set the preference whether we should auto-login the next time
-    				SharedPreferences prefs = getSharedPreferences(FILE_NAME_PREFS, MODE_PRIVATE);
-    				SharedPreferences.Editor prefEditor = prefs.edit();
+//    				SharedPreferences prefs = getSharedPreferences(FILE_NAME_PREFS, MODE_PRIVATE);
+    				Editor prefEditor = mPrefs.edit();
     				String prefNameShouldLoginAutomatically = getResources().getString(R.string.pref_name_should_login_automatically);
     				CheckBox checkBoxAutomaticallyLoginWithUser = (CheckBox) findViewById(R.id.CheckBoxAutomaticallyLoginWithUser);
 
@@ -195,23 +202,25 @@ public class ActivityLogin extends Activity implements OnClickListener
 	
 	private void login(String userNameToLogin)
 	{
+		// Another check that the username isn't empty, to be sure
 		if (userNameToLogin.equals(USER_NAME_EMPTY) == false)
 		{
 			// First, set the preference whether we should auto-login the next time
-			SharedPreferences prefs = getSharedPreferences(FILE_NAME_PREFS, MODE_PRIVATE);
-			SharedPreferences.Editor prefEditor = prefs.edit();
+//			SharedPreferences prefs = getSharedPreferences(FILE_NAME_PREFS, MODE_PRIVATE);
+			Editor prefEditor = mPrefs.edit();
         	String prefNameLastLoggedInUserName = getResources().getString(R.string.pref_name_last_logged_in_user_name);
         	
 			prefEditor.putString(prefNameLastLoggedInUserName, userNameToLogin);
 			
 			prefEditor.commit();
 
+			mUserName = userNameToLogin;
+			
 			// Get the application to load the user's data, if available
 			application.loadMyDetails(application.getUserFileName(userNameToLogin));
 			
-			// Open the opening screen's activity
+			// Open the opening screen's activity - the users list
 			Intent intent = new Intent(this, ActivityUsersList.class);
-//			intent.putExtra(getResources().getString(R.string.extra_key_login_user_name), userNameToLogin);
 			startActivity(intent);
 		}
 	}
@@ -265,19 +274,6 @@ public class ActivityLogin extends Activity implements OnClickListener
 		}
 	}
 
-
-//	private Handler mHandler = new Handler() {
-//		public String getUserName()
-//		{
-//			return mUserName;
-//		}
-//	};
-//
-//	public Handler getUpdateHandler()
-//	{
-//		return mHandler;
-//	}
-	
 	public String getUserName()
 	{
 		return mUserName;

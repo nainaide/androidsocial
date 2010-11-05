@@ -404,7 +404,7 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 			{
 				if ((SystemClock.uptimeMillis() - currUser.getLastPongTime()) > TIMEOUT_STALE_CLIENT)
 				{
-					Log.d(LOG_TAG, "There's a stale user : " + currUser.getFullName() + ", hasn't answered for - " + (SystemClock.uptimeMillis() - currUser.getLastPongTime()));
+					Log.d(LOG_TAG, "There's a stale user : " + currUser.getUsername() + ", hasn't answered for - " + (SystemClock.uptimeMillis() - currUser.getLastPongTime()));
 
 					String currIPAddress = currUser.getIPAddress();
 					
@@ -537,10 +537,10 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 			DatagramSocket socket = null;
 
 			socket = createDatagramSocket();
-			try {
-				socket.setSoTimeout(TIMEOUT_SOCKET_RECEIVE);
-			} catch (SocketException e) {
-			}
+//			try {
+//				socket.setSoTimeout(TIMEOUT_SOCKET_RECEIVE);
+//			} catch (SocketException e) {
+//			}
 
 			while (Thread.currentThread().isInterrupted() == false) {
 				try {
@@ -589,6 +589,7 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 								// Send the user a "NewUser" message for me (The leader)
 								Messages.MessageNewUser msgNewUserLeader = new Messages.MessageNewUser(mMe);
 								sendMessage(msgNewUserLeader.toString(), ipAddressNewUser);
+								
 								// Broadcast to everybody that this user has joined us, so they know him
 								broadcast(msgNewUser.toString());
 							}
@@ -873,12 +874,14 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 		user = user.trim();
 		Enumeration<String> keys = this.openChats.keys();
 		boolean flag = false;
-		String res ="";
+		String res = "";
 		String key = ip + CHAT_SEPERATOR + user;
+		
 		Log.d(LOG_TAG, "in addOpenChats lookin for key:"+key);
+		
 		while(keys.hasMoreElements())
 		{
-			String currKey =keys.nextElement(); 
+			String currKey = keys.nextElement(); 
 			Log.d(LOG_TAG, "curr key is :"+currKey);
 			if(currKey.equals(key))
 				{
@@ -919,8 +922,7 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 		int birthMonth = Integer.parseInt(arrDateBirthElements[1]);
 		int birthDay = Integer.parseInt(arrDateBirthElements[2]);
 		
-		// TODO : Deal with the whole full name thing
-		mMe = new User(userName, "", sex, birthYear, birthMonth, birthDay, "");
+		mMe = new User(userName, sex, birthYear, birthMonth, birthDay);
 		
 		mMe.setFavoriteMusic(readPropertyFromFile(userFileName, USER_PROPERTY_FAVORITE_MUSIC));
 		mMe.setHobbies(readPropertyFromFile(userFileName, USER_PROPERTY_HOBBIES));
@@ -939,8 +941,6 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 		DatagramPacket packet = null;
 		DatagramSocket socket = null;
 		InetAddress dest = null;
-		
-//		boolean shouldLog = message.startsWith(Messages.MSG_PREFIX_PING) == false && message.startsWith(Messages.MSG_PREFIX_PONG) == false;
 		
 		if (shouldLog(message))
 		{
@@ -1037,18 +1037,15 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 		}
 		catch (SocketException e)
 		{
-			Log.e(LOG_TAG, "Broadcast : Exception !!! SocketException");			
-//			e.printStackTrace();
+			Log.e(LOG_TAG, "Broadcast : Exception !!! SocketException, message = " + message + ", e.getMessage() = " + e.getMessage());			
 		}
 		catch (UnknownHostException e)
 		{
-			Log.e(LOG_TAG, "Broadcast : Exception !!! UnknownHostException");			
-//			e.printStackTrace();
+			Log.e(LOG_TAG, "Broadcast : Exception !!! UnknownHostException, e.getMessage() = " + e.getMessage());			
 		}
 		catch (IOException e)
 		{
-			Log.e(LOG_TAG, "Broadcast : Exception !!! IOException");			
-//			e.printStackTrace();
+			Log.e(LOG_TAG, "Broadcast : Exception !!! IOException, e.getMessage() = " + e.getMessage());			
 		}
 		finally
 		{

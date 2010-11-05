@@ -1,5 +1,6 @@
 package main.main;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -10,6 +11,7 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
@@ -33,31 +35,27 @@ import android.widget.TextView;
 
 public class ActivityUsersList extends ListActivity
 {
-	private final String MENU_ITEM_TITLE_CHAT = "Chat";
-	private final String[] mArrContextMenuItemsTitles = {MENU_ITEM_TITLE_CHAT};
+	private static final String MENU_ITEM_TITLE_CHAT = "Chat";
+	private static final String[] mArrContextMenuItemsTitles = {MENU_ITEM_TITLE_CHAT};
 	
-	private final String CTXT_MENU_ITEM_TITLE_EDIT_DETAILS = "Edit My Details";
-	private final String CTXT_MENU_ITEM_TITLE_LOGOUT = "Logout";
-	private final String[] mArrMenuItemsTitles = {CTXT_MENU_ITEM_TITLE_EDIT_DETAILS, CTXT_MENU_ITEM_TITLE_LOGOUT};
+	private static final String CTXT_MENU_ITEM_TITLE_EDIT_DETAILS = "Edit My Details";
+	private static final String CTXT_MENU_ITEM_TITLE_LOGOUT = "Logout";
+	private static final String[] mArrMenuItemsTitles = {CTXT_MENU_ITEM_TITLE_EDIT_DETAILS, CTXT_MENU_ITEM_TITLE_LOGOUT};
 
-	private final String LOG_TAG = "SN.UsersList";
-	
-    public static ActivityUsersList instance = null;
+	private static final String LOG_TAG = "SN.UsersList";
 
-    private ProgressDialog mProgDialog = null;
+    private ProgressDialog mProgressDialog = null;
 
-//	private ProgressDialog mProgressDialog = null;
 	private ArrayList<User> mUsers = null;
 	private UsersAdapter mUsersAdapter = null;
-	private ApplicationSocialNetwork application = null;
 	private Button chatButton = null;
 	private TextView mTextViewNoUsers = null;
 
-	boolean mIsClientEnabled;
+	private boolean mIsClientEnabled;
 	
-//	private static void setCurrent(ActivityUsersList current){
-//		ActivityUsersList = current;
-//	}
+	private ApplicationSocialNetwork application = null;
+	public static ActivityUsersList instance = null;
+	
 	
 	/** Called when the activity is first created. */
 	@Override
@@ -69,43 +67,52 @@ public class ActivityUsersList extends ListActivity
 	    ActivityUsersList.instance = this;
 	    application = (ApplicationSocialNetwork)getApplication();
 		
-		mUsers = new ArrayList<User>();
-		mUsersAdapter = new UsersAdapter(this, R.layout.user, mUsers);
 		chatButton = (Button) findViewById(R.id.OpenChatsButton);
 		chatButton.setVisibility(View.INVISIBLE);
 		mTextViewNoUsers = (TextView) findViewById(R.id.TextViewNoUsers);
 		mTextViewNoUsers.setVisibility(View.GONE);
 		
+		mUsers = new ArrayList<User>();
+		mUsersAdapter = new UsersAdapter(this, R.layout.user, mUsers);
 		setListAdapter(mUsersAdapter);
 
 		connect();
 	}
 
+	public void onStart()
+	{
+		super.onStart();
+		
+		mUsersAdapter.notifyDataSetChanged();
+	}
 	    
 	private void connect()
 	{
-        mProgDialog = ProgressDialog.show(this, "", "Searching for an existing network. Please wait...", true);
+        mProgressDialog = ProgressDialog.show(this, "", "Searching for an existing network. Please wait...", true);
                 
 		// Search for a network
 		Runnable runnableSearchForNetwork = new Runnable(){
 			public void run()
 			{
-//				application.stopDnsmasq();
-				
+				// First try to connect as a client
 				mIsClientEnabled = application.enableAdhocClient();
 				
-				mProgDialog.dismiss();
+				mProgressDialog.dismiss();
 				
+				// Check if couldn't connect as a client
 				if (mIsClientEnabled == false)
 				{
-Log.d(LOG_TAG, "connect : Not a client");
+					Log.d(LOG_TAG, "connect : Not a client");
 
+					// Notify the user that we're about to create a new network and then connect as a leader
 					Looper.prepare(); // Apparently it's needed for showing a dialog (next line) in a thread
 					application.showToast(ActivityUsersList.this, "No network could be found. Creating a new one...");
 //					mProgDialog = ProgressDialog.show(ActivityConnect.this, "", "No network could be found. Starting a new one...", true);
 					application.enableAdhocLeader();
 //					mProgDialog.dismiss();
 				}
+				
+				// Run the thread created below in the thread that can handle the GUI
 				runOnUiThread(mRunnableReturnNetwork);
 			}
 		};
@@ -117,7 +124,7 @@ Log.d(LOG_TAG, "connect : Not a client");
 	private  Runnable mRunnableReturnNetwork = new Runnable() {
 		public void run()
 		{
-Log.d(LOG_TAG, "Got to mRunnableReturnNetwork");
+			Log.d(LOG_TAG, "Got to mRunnableReturnNetwork");
 
 			if (mIsClientEnabled == false)
 			{
@@ -136,23 +143,24 @@ Log.d(LOG_TAG, "Got to mRunnableReturnNetwork");
 	{
 //		super.onListItemClick(parent, view, position, id);
 		
-		Intent intent = new Intent(this, ActivityUserDetails.class);
 		User user = mUsers.get(position);
 		
 		if (user != null)
 		{
 			List<String> listMainDataValues = new LinkedList<String>();
-			listMainDataValues.add("Name: " + user.getFullName());
+			listMainDataValues.add("Name: " + user.getUsername());
 			listMainDataValues.add(user.getSex() + ", " + user.getAge());
 			
 			String[] arrMainDataValues = listMainDataValues.toArray(new String[0]);
+			Intent intent = new Intent(this, ActivityUserDetails.class);
 			
 			intent.putExtra(getResources().getString(R.string.extra_key_main_data), arrMainDataValues);
-			intent.putExtra("ActivityDetails.userIp", user.getIPAddress());
-			intent.putExtra("ActivityDetails.userName", user.getFullName());
-			intent.putExtra("ActivityDetails.isEditable", false);
-			// TODO : Also pass the picture
-			Log.d(LOG_TAG, "selected username :"+user.getFullName() + " and his ip is : 0"+ user.getIPAddress() );
+			intent.putExtra(ActivityUserDetails.EXTRA_KEY_USER_IP, user.getIPAddress());
+			intent.putExtra(ActivityUserDetails.EXTRA_KEY_USER_NAME, user.getUsername());
+			intent.putExtra(ActivityUserDetails.EXTRA_KEY_IS_EDITABLE, false);
+
+			Log.d(LOG_TAG, "selected username :" + user.getUsername() + " and his ip is : 0"+ user.getIPAddress());
+			
 			startActivity(intent);
 		}
 	}
@@ -165,8 +173,6 @@ Log.d(LOG_TAG, "Got to mRunnableReturnNetwork");
      	for (int indexMenuItem = 0; indexMenuItem < mArrMenuItemsTitles.length; ++indexMenuItem)
     	{
     		menu.add(Menu.NONE, indexMenuItem, indexMenuItem, mArrMenuItemsTitles[indexMenuItem]);
-//    		menuItemChat.setAlphabeticShortcut('a');
-//    		menuItemChat.setIcon(R.drawable.alert_dialog_icon);
     	}
 
      	return true;
@@ -177,23 +183,22 @@ Log.d(LOG_TAG, "Got to mRunnableReturnNetwork");
     {
     	if (item.getTitle().equals(CTXT_MENU_ITEM_TITLE_EDIT_DETAILS))
     	{
-    		Intent intent = new Intent(this, ActivityUserDetails.class);
     		User user = application.getMe();
     		
     		if (user != null)
     		{
     			List<String> listMainDataValues = new LinkedList<String>();
-    			listMainDataValues.add("Name: " + user.getFullName());
+    			listMainDataValues.add("Name: " + user.getUsername());
     			listMainDataValues.add(user.getSex() + ", " + user.getAge());
     			
     			String[] arrMainDataValues = listMainDataValues.toArray(new String[0]);
+    			Intent intent = new Intent(this, ActivityUserDetails.class);
     			
     			intent.putExtra(getResources().getString(R.string.extra_key_main_data), arrMainDataValues);
-    			intent.putExtra("ActivityDetails.userIp", user.getIPAddress());
-    			intent.putExtra("ActivityDetails.userName", user.getFullName());
-    			intent.putExtra("ActivityDetails.isEditable", true);
+    			intent.putExtra(ActivityUserDetails.EXTRA_KEY_USER_IP, user.getIPAddress());
+    			intent.putExtra(ActivityUserDetails.EXTRA_KEY_USER_NAME, user.getUsername());
+    			intent.putExtra(ActivityUserDetails.EXTRA_KEY_IS_EDITABLE, true);
     		
-    			// TODO : Also pass the picture
     			startActivity(intent);
     		}
     	}
@@ -206,13 +211,15 @@ Log.d(LOG_TAG, "Got to mRunnableReturnNetwork");
     }
     
     public boolean onKeyDown(int keyCode, KeyEvent event) 
-	{ 
+	{
+    	// If the user presses the BACK button, log out
 		if (keyCode == KeyEvent.KEYCODE_BACK && event.getRepeatCount() == 0) 
 		{     
 			logout();
 			
 			return true;        
-		}        
+		}
+		
 		return super.onKeyDown(keyCode, event);    
 	}
     
@@ -221,13 +228,9 @@ Log.d(LOG_TAG, "Got to mRunnableReturnNetwork");
     {
          super.onCreateContextMenu(menu, view, menuInfo);
          
-//         String[] arrContextMenuItemsTitles = {MENU_ITEM_TITLE_CHAT};
-         
      	for (int indexMenuItem = 0; indexMenuItem < mArrContextMenuItemsTitles.length; ++indexMenuItem)
     	{
     		menu.add(Menu.NONE, indexMenuItem, indexMenuItem, mArrContextMenuItemsTitles[indexMenuItem]);
-//    		menuItemChat.setAlphabeticShortcut('a');
-//    		menuItemChat.setIcon(R.drawable.alert_dialog_icon);
     	}
     }
  
@@ -236,7 +239,7 @@ Log.d(LOG_TAG, "Got to mRunnableReturnNetwork");
     {
        	if (item.getTitle().equals(MENU_ITEM_TITLE_CHAT))
     	{
-       		// TODO : Check if this works
+       		// TODO : Check if this fixes touching the users list
        		User user = mUsers.get(getListView().getSelectedItemPosition());
        		
        		if (user == null)
@@ -245,9 +248,9 @@ Log.d(LOG_TAG, "Got to mRunnableReturnNetwork");
        		}
        		else
        		{
-       			Log.d(LOG_TAG, "User name : " + user.getFullName() + ", User IP : " + user.getIPAddress());
+       			Log.d(LOG_TAG, "User name : " + user.getUsername() + ", User IP : " + user.getIPAddress());
        			
-       			chat(user.getFullName(), user.getIPAddress());
+       			chat(user.getUsername(), user.getIPAddress());
        		}
     	}
     	
@@ -257,7 +260,6 @@ Log.d(LOG_TAG, "Got to mRunnableReturnNetwork");
     private void logout()
     {
 		Messages.MessageUserDisconnected msgUserDisconnected = new Messages.MessageUserDisconnected(application.getMyIP());
-		
 		application.sendMessage(msgUserDisconnected.toString());
 		
 		application.stopService();
@@ -268,8 +270,8 @@ Log.d(LOG_TAG, "Got to mRunnableReturnNetwork");
 	private void chat(String username, String ip)
 	{
     	Intent intent = new Intent(this, ActivityChat.class);
-    	intent.putExtra("ActivityChat.userIp", ip);
-    	intent.putExtra("ActivityChat.userName",username );
+    	intent.putExtra(ActivityChat.EXTRA_KEY_USER_IP, ip);
+    	intent.putExtra(ActivityChat.EXTRA_KEY_USER_NAME, username);
     	startActivity(intent);
 	}
 
@@ -303,12 +305,22 @@ Log.d(LOG_TAG, "Got to mRunnableReturnNetwork");
 			{
 				// Set the user's picture
 				ImageView imageViewUserPicture = (ImageView) view.findViewById(R.id.ImageViewUserIcon);
-				// TODO : Get the user's real picture
-				imageViewUserPicture.setImageResource(R.drawable.icon);
+				// TODO : Get the user's real picture if we have it
+				String fileNameUserPic = "/sdcard/" + user.getUsername() + ".jpg";
+				File fileTesting = new File(fileNameUserPic);
+				if (fileTesting.exists())
+				{
+					imageViewUserPicture.setImageBitmap(BitmapFactory.decodeFile(fileNameUserPic));
+				}
+				else
+				{
+					imageViewUserPicture.setImageResource(R.drawable.icon);
+				}
+				
 				
 				// Set the user's full name
 				TextView textViewUserFullName = (TextView) view.findViewById(R.id.TextViewUserFullName);
-				textViewUserFullName.setText("Name: " + user.getFullName());
+				textViewUserFullName.setText("Name: " + user.getUsername());
 				
 				// Set the user's sex and age
 				TextView textViewSexAndAge = (TextView) view.findViewById(R.id.TextViewSexAndAge);
@@ -324,7 +336,6 @@ Log.d(LOG_TAG, "Got to mRunnableReturnNetwork");
 					// TODO : This is a try to make the touch work
 Log.d(LOG_TAG, "Clicked on a user. Will touch work ???");					
 				}
-				
 			});
 			
 			return view;
@@ -355,16 +366,16 @@ Log.d(LOG_TAG, "Clicked on a user. Will touch work ???");
 				chatButton.setVisibility(View.VISIBLE);
 				chatButton.setBackgroundColor(Color.GREEN);
 				chatButton.setOnClickListener(new OnClickListener() {
-						public void onClick(View view)
-							{
-							showOpenChats();
-							}
+					public void onClick(View view)
+						{
+						showOpenChats();
+						}
 				});
 				return;
 			}
 			mUsers = application.getUsers();
 			for(User s: mUsers)
-				Log.d(LOG_TAG, s.getFullName());
+				Log.d(LOG_TAG, s.getUsername());
 			mUsersAdapter = new UsersAdapter(ActivityUsersList.this, R.layout.user, mUsers);
 			setListAdapter(mUsersAdapter);
 			mUsersAdapter.notifyDataSetChanged();
@@ -384,12 +395,12 @@ Log.d(LOG_TAG, "Clicked on a user. Will touch work ???");
 	private void showOpenChats() {
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
 		builder.setTitle("Pick a chat to resume");
-		Log.d(LOG_TAG, "before get and set items for chat" );
-		CharSequence[] res =  application.GetOpenChatUsers();
-		for(CharSequence s : res)
-		{
-			Log.d(LOG_TAG, "got item :"+s );
-		}
+//		Log.d(LOG_TAG, "before get and set items for chat" );
+//		CharSequence[] res =  application.GetOpenChatUsers();
+//		for(CharSequence s : res)
+//		{
+//			Log.d(LOG_TAG, "got item :"+s );
+//		}
 		builder.setItems(application.GetOpenChatUsers(), new DialogInterface.OnClickListener() 
 		{    
 			public void onClick(DialogInterface dialog, int item) {      
@@ -398,9 +409,9 @@ Log.d(LOG_TAG, "Clicked on a user. Will touch work ???");
 				chat(user,application.GetOpenChatsIP(user));
 			}
 		});
-	   Log.d(LOG_TAG, "after get and set items for chat" );
-	   AlertDialog alert = builder.create();
-	   alert.show();
+//		Log.d(LOG_TAG, "after get and set items for chat" );
+		AlertDialog alert = builder.create();
+		alert.show();
 	}
 
 	public Handler getUpdateHandler()

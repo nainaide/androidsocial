@@ -8,8 +8,12 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 
+import android.util.Log;
+
 public class ImageReceiver implements Runnable {
 
+	private static final String LOG_TAG = "ImageReceiver";
+	
 	private InputStream inputStream;
 	private OutputStream outputStream;
 	private Socket socket;
@@ -25,7 +29,7 @@ public class ImageReceiver implements Runnable {
 				new File( "userImages").mkdir( );
 			}
 		} catch (IOException e) {
-			e.printStackTrace();
+			Log.e(LOG_TAG, "ImageReceiver CTor - IOException. e.getMessage() = " + e.getMessage());
 		}
 	}
 
@@ -49,7 +53,7 @@ public class ImageReceiver implements Runnable {
 			stream.flush( );
 			notifiable.imageReady( userName);
 		} catch (IOException e) {
-			e.printStackTrace();
+			Log.e(LOG_TAG, "run() - IOException. e.getMessage() = " + e.getMessage());
 		} finally {
 			try {
 				if ( !socket.isInputShutdown())
@@ -57,10 +61,9 @@ public class ImageReceiver implements Runnable {
 				if ( !socket.isOutputShutdown())
 					outputStream.close( );
 				socket.close( );
-			} catch (IOException e) {
+			} catch (Exception e) {
 				//  Never will get here.
 			}
 		}
 	}
-
 }
