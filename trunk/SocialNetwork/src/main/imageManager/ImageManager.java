@@ -7,13 +7,14 @@ import java.net.Socket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import main.main.ApplicationSocialNetwork;
 import android.os.Looper;
 import android.util.Log;
 
 public class ImageManager implements Runnable {
 
 	private static final String LOG_TAG = "ImageManager";
+	
+	private static final int TIMEOUT_SERVER_SOCKET_ACCEPT = 500;
 	
 	private ExecutorService executor = Executors.newFixedThreadPool( 10);
 	private ServerSocket serverSocket;
@@ -37,7 +38,7 @@ public class ImageManager implements Runnable {
 	public void run() {
 		try {
 			serverSocket = new ServerSocket( ImageCommunicator.IMAGE_SERVER_PORT);
-			serverSocket.setSoTimeout(ApplicationSocialNetwork.TIMEOUT_SOCKET_RECEIVE);
+			serverSocket.setSoTimeout(TIMEOUT_SERVER_SOCKET_ACCEPT);
 			Looper.prepare();
 			while (!interrupted) {
 				try {
