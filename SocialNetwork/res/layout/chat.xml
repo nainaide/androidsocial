@@ -5,24 +5,17 @@
 	
 	<LinearLayout
 		android:id="@+id/LinearLayoutChatOtherUserDetails"
-		android:layout_width="fill_parent"
 		android:layout_height="wrap_content"
 		android:orientation="horizontal"
-		android:layout_gravity="top">
+		android:layout_width="wrap_content" android:layout_gravity="top|center_horizontal">
 		
-		<ImageView
+		<TextView android:text="Other User's Details" android:id="@+id/TextViewChatOtherUserDetails" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center_vertical">
+		</TextView><ImageView
 			android:id="@+id/ImageViewChatOtherUserPicture"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
-			android:layout_gravity="left">
+			android:layout_height="80sp" android:layout_width="80sp" android:layout_marginLeft="10sp">
 		</ImageView>
 		
-		<TextView
-			android:text="Other User's Details"
-			android:id="@+id/TextViewChatOtherUserDetails"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content">
-		</TextView>
+		
 	</LinearLayout>
 
 		

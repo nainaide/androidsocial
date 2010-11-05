@@ -371,9 +371,6 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 					
 					Log.d(LOG_TAG, "Reconnect : I'm the new leader. Returned from enabling leader");
 
-					// TODO : Degugging. Delete this broadcast("Testing")
-					broadcast("Testing");
-					
 					isDone = true;
 				}
 				else

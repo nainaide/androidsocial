@@ -1,6 +1,9 @@
 package main.main;
 
+import java.io.File;
+
 import android.app.Activity;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -9,6 +12,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 public class ActivityChat extends Activity
@@ -77,6 +81,20 @@ public class ActivityChat extends Activity
 
 		// Set the other user's details
 		mTextViewChatOtherUserDetails.setText("Chatting With : " + chattingWith);
+		
+		// Show the other user's picture, if we have it
+		ImageView imageViewOtherUserPic = (ImageView) findViewById(R.id.ImageViewChatOtherUserPicture);
+		String fileNameUserPic = "/sdcard/" + chattingWith + ".jpg";
+		File fileTesting = new File(fileNameUserPic);
+		if (fileTesting.exists())
+		{
+			imageViewOtherUserPic.setImageBitmap(BitmapFactory.decodeFile(fileNameUserPic));
+			imageViewOtherUserPic.setVisibility(View.VISIBLE);
+		}
+		else
+		{
+			imageViewOtherUserPic.setVisibility(View.GONE);
+		}
 		
 		// Scroll to the end of the chat
 		if(mEditTextConversation.length()!=0)
