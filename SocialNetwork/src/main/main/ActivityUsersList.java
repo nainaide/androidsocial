@@ -303,9 +303,8 @@ public class ActivityUsersList extends ListActivity
 			
 			if (user != null)
 			{
-				// Set the user's picture
+				// Set the user's picture if we have it, or set it as the default green android icon if we don't
 				ImageView imageViewUserPicture = (ImageView) view.findViewById(R.id.ImageViewUserIcon);
-				// TODO : Get the user's real picture if we have it
 				String fileNameUserPic = "/sdcard/" + user.getUsername() + ".jpg";
 				File fileTesting = new File(fileNameUserPic);
 				if (fileTesting.exists())
@@ -316,7 +315,6 @@ public class ActivityUsersList extends ListActivity
 				{
 					imageViewUserPicture.setImageResource(R.drawable.icon);
 				}
-				
 				
 				// Set the user's full name
 				TextView textViewUserFullName = (TextView) view.findViewById(R.id.TextViewUserFullName);
@@ -401,12 +399,12 @@ Log.d(LOG_TAG, "Clicked on a user. Will touch work ???");
 //		{
 //			Log.d(LOG_TAG, "got item :"+s );
 //		}
-		builder.setItems(application.GetOpenChatUsers(), new DialogInterface.OnClickListener() 
+		builder.setItems(application.getOpenChatUsers(), new DialogInterface.OnClickListener() 
 		{    
 			public void onClick(DialogInterface dialog, int item) {      
-				String user = application.GetOpenChatUsers()[item].toString();
+				String user = application.getOpenChatUsers()[item].toString();
                 
-				chat(user,application.GetOpenChatsIP(user));
+				chat(user,application.getOpenChatsIP(user));
 			}
 		});
 //		Log.d(LOG_TAG, "after get and set items for chat" );

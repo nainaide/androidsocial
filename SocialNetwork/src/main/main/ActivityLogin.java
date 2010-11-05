@@ -24,6 +24,9 @@ public class ActivityLogin extends Activity implements OnClickListener
 	private String mUserName = USER_NAME_EMPTY;
 	private ArrayAdapter<CharSequence> mArrayAdapter;
 	
+	private Spinner mSpinnerUserNames = null;
+	private CheckBox mCheckBoxAutomaticallyLogin = null;
+	
 	private ApplicationSocialNetwork application = null;
 	public static ActivityLogin instance = null;
 	
@@ -41,8 +44,10 @@ public class ActivityLogin extends Activity implements OnClickListener
     	ActivityLogin.instance = this;
         FILE_NAME_PREFS = getResources().getString(R.string.file_name_prefs);
 
+        mSpinnerUserNames = (Spinner) findViewById(R.id.SpinnerUserName);
+        mCheckBoxAutomaticallyLogin = (CheckBox) findViewById(R.id.CheckBoxAutomaticallyLoginWithUser);
+        
         // Get the last logged-in user name (and put it in mUserName)
-//		SharedPreferences settings = getSharedPreferences(FILE_NAME_PREFS, MODE_PRIVATE);
 		mPrefs = getSharedPreferences(FILE_NAME_PREFS, MODE_PRIVATE);
 		
     	String prefNameLastLoggedInUserName = getResources().getString(R.string.pref_name_last_logged_in_user_name);
@@ -61,10 +66,13 @@ public class ActivityLogin extends Activity implements OnClickListener
 
 	private void loginAutomaticallyIfNeeded()
 	{
-//		SharedPreferences settings = getSharedPreferences(FILE_NAME_PREFS, MODE_PRIVATE);
         String prefNameShouldLoginAutomatically = getResources().getString(R.string.pref_name_should_login_automatically);
         boolean shouldLoginAutomatically = mPrefs.getBoolean(prefNameShouldLoginAutomatically, false);
 
+        // Check or uncheck the check box as needed (We check it even when we are going to login and go to a different activity so
+        // when the user logs out, he will see it as selected)
+        mCheckBoxAutomaticallyLogin.setChecked(shouldLoginAutomatically);
+        
         if (shouldLoginAutomatically)
         {
         	login(mUserName);
@@ -82,10 +90,9 @@ public class ActivityLogin extends Activity implements OnClickListener
         Button buttonLogin = (Button) findViewById(R.id.ButtonLogin);
         buttonLogin.setOnClickListener(this);
         
-		Spinner spinnerUserNames = (Spinner) findViewById(R.id.SpinnerUserName);
 		mArrayAdapter = new ArrayAdapter<CharSequence>(this, android.R.layout.simple_spinner_item);  
 		mArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-		spinnerUserNames.setAdapter(mArrayAdapter);
+		mSpinnerUserNames.setAdapter(mArrayAdapter);
 	}
 
 	@Override
@@ -108,12 +115,10 @@ public class ActivityLogin extends Activity implements OnClickListener
 					
 					// Validation checks
 					if (userName.equals("")) {
-						//Toast.makeText(this, "User name cannot be empty", Toast.LENGTH_LONG).show();
 						application.showToast(this, "User name cannot be empty");
 					} else {
 						// Check if the spinner already contains the created user
 						if (mArrayAdapter.getPosition(userName) >= 0) {
-//							Toast.makeText(this, "User already exists", Toast.LENGTH_LONG).show();
 							application.showToast(this, "User already exists");
 						} else {
 							// Add the new user name to the spinner and sort the values
@@ -121,8 +126,7 @@ public class ActivityLogin extends Activity implements OnClickListener
 							mArrayAdapter.sort(null);
 
 							// Set the new user name in the spinner
-							Spinner spinnerUserNames = (Spinner) findViewById(R.id.SpinnerUserName);
-							spinnerUserNames.setSelection(mArrayAdapter.getPosition(userName));
+							mSpinnerUserNames.setSelection(mArrayAdapter.getPosition(userName));
 						}
 					}
 				}
@@ -149,8 +153,7 @@ public class ActivityLogin extends Activity implements OnClickListener
     		
     		case R.id.ButtonDeleteUser :
     		{
-				Spinner spinnerUserNames = (Spinner) findViewById(R.id.SpinnerUserName);
-				String userNameToDelete = (String) spinnerUserNames.getSelectedItem();
+				String userNameToDelete = (String) mSpinnerUserNames.getSelectedItem();
 				
 				// TODO : Ask the user if he is sure he wants to delete the selected user
 				
@@ -166,12 +169,10 @@ public class ActivityLogin extends Activity implements OnClickListener
     		case R.id.ButtonLogin :
     		{
     			// Get the selected user
-    			Spinner spinnerUserName = (Spinner) findViewById(R.id.SpinnerUserName);
-    			String selectedUserName = (String) spinnerUserName.getSelectedItem();
+    			String selectedUserName = (String) mSpinnerUserNames.getSelectedItem();
     			
     			if (selectedUserName == null || selectedUserName.equals(USER_NAME_EMPTY))
     			{
-//    				Toast.makeText(this, "You must select a user in order to login", Toast.LENGTH_SHORT).show();
     				application.showToast(this, "You must select a user in order to login");
     			}
     			else
@@ -182,12 +183,10 @@ public class ActivityLogin extends Activity implements OnClickListener
 //    				}
     					
     				// First, set the preference whether we should auto-login the next time
-//    				SharedPreferences prefs = getSharedPreferences(FILE_NAME_PREFS, MODE_PRIVATE);
     				Editor prefEditor = mPrefs.edit();
     				String prefNameShouldLoginAutomatically = getResources().getString(R.string.pref_name_should_login_automatically);
-    				CheckBox checkBoxAutomaticallyLoginWithUser = (CheckBox) findViewById(R.id.CheckBoxAutomaticallyLoginWithUser);
 
-    				prefEditor.putBoolean(prefNameShouldLoginAutomatically, checkBoxAutomaticallyLoginWithUser.isChecked());
+    				prefEditor.putBoolean(prefNameShouldLoginAutomatically, mCheckBoxAutomaticallyLogin.isChecked());
     				
     				prefEditor.commit();
     				
@@ -206,7 +205,6 @@ public class ActivityLogin extends Activity implements OnClickListener
 		if (userNameToLogin.equals(USER_NAME_EMPTY) == false)
 		{
 			// First, set the preference whether we should auto-login the next time
-//			SharedPreferences prefs = getSharedPreferences(FILE_NAME_PREFS, MODE_PRIVATE);
 			Editor prefEditor = mPrefs.edit();
         	String prefNameLastLoggedInUserName = getResources().getString(R.string.pref_name_last_logged_in_user_name);
         	
@@ -227,8 +225,6 @@ public class ActivityLogin extends Activity implements OnClickListener
 	
 	private void populateSpinnerUserNames()
 	{
-		Spinner spinnerUserNames = (Spinner) findViewById(R.id.SpinnerUserName);
-		
 		// Check the list of users files. Each file will have the name of the relevant
 		// user. This name will be entered to the spinner
 		File dirUsers = getApplicationContext().getFilesDir();
@@ -263,7 +259,7 @@ public class ActivityLogin extends Activity implements OnClickListener
 			// Check if the spinner contains the last logged-in user
 			if (mArrayAdapter.getPosition(mUserName) >= 0)
 			{
-				spinnerUserNames.setSelection(mArrayAdapter.getPosition(mUserName));
+				mSpinnerUserNames.setSelection(mArrayAdapter.getPosition(mUserName));
 			}
 			else
 			{

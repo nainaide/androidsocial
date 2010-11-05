@@ -235,9 +235,9 @@ public class OSFilesManager
 				}
 			}
 		}
-		catch (Exception ex)
+		catch (Exception e)
 		{
-			// Log.d(MSG_TAG, "Unexpected error: "+ex.getMessage());
+			 Log.e(LOG_TAG, "getMyDhcpAddress() : An Exception has occurred. e.getMessage() = " + e.getMessage());
 		}
 		finally
 		{
@@ -252,15 +252,14 @@ public class OSFilesManager
 					br.close();
 				}
 			}
-			catch (Exception ex)
+			catch (Exception e)
 			{
-				// nothinh
 			}
 		}
 		return myAddress;
 	}
 	
-	public void copyRawsIfNeeded(ApplicationSocialNetwork application)
+	public void copyAllRawsIfNeeded(ApplicationSocialNetwork application)
 	{
 		List<String> listFilesNames = new ArrayList<String>();
 		this.application = application;
@@ -268,11 +267,11 @@ public class OSFilesManager
 		checkDirs();
 		
 		// netcontrol
-		copyRaw(PATH_APP_DATA_FILES + "/bin/netcontrol", R.raw.netcontrol);
+		copyRawIfNeeded(PATH_APP_DATA_FILES + "/bin/netcontrol", R.raw.netcontrol);
 		listFilesNames.add("netcontrol");
 		
 		// dnsmasq
-		copyRaw(PATH_APP_DATA_FILES + "/bin/dnsmasq", R.raw.dnsmasq);
+		copyRawIfNeeded(PATH_APP_DATA_FILES + "/bin/dnsmasq", R.raw.dnsmasq);
 		listFilesNames.add("dnsmasq");
 		
 		try
@@ -285,29 +284,18 @@ public class OSFilesManager
 		}
 		
 		// dnsmasq.conf
-		copyRaw(PATH_APP_DATA_FILES + "/conf/dnsmasq.conf", R.raw.dnsmasq_conf);
+		copyRawIfNeeded(PATH_APP_DATA_FILES + "/conf/dnsmasq.conf", R.raw.dnsmasq_conf);
 		
 		// tiwlan.ini
-		copyRaw(PATH_APP_DATA_FILES + "/conf/tiwlan.ini", R.raw.tiwlan_ini);
+		copyRawIfNeeded(PATH_APP_DATA_FILES + "/conf/tiwlan.ini", R.raw.tiwlan_ini);
 	}
 
-	private void copyRaw(String filename, int resource)
+	private void copyRawIfNeeded(String filename, int resource)
 	{
 		File outFile = new File(filename);
 		
-		// TODO : The deletion of files is because I've changed the files and I want to make sure they get re-copied.
-		//        After the files will be final, this deletion can be deleted.
-		if (outFile.exists())
+		if (outFile.exists() == false)
 		{
-			if (outFile.delete() == false)
-			{
-//				int potentialDebugBreakPoint = 3;
-			}
-		}
-		
-//		if (outFile.exists() == false)
-//		{
-		
 			InputStream is = application.getResources().openRawResource(resource);
 			OutputStream out = null;
 			byte buf[] = new byte[1024];
@@ -331,7 +319,7 @@ public class OSFilesManager
 				closeStream(out);
 				closeStream(is);
 			}
-//		}
+		}
 	}
 
 	private void closeStream(InputStream inStream)
@@ -375,7 +363,7 @@ public class OSFilesManager
 		
 		if (dir.exists() == false)
 		{
-			if (!dir.mkdir())
+			if (dir.mkdir() == false)
 			{
 				application.showToast(application, "Couldn't create " + dirName + " directory!");
 			}

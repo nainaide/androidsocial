@@ -24,9 +24,6 @@ public class User
 		}
 	};
 
-//	private static final int INDEX_FIRST_NAME = 0;
-//	private static final int INDEX_LAST_NAME = 1;
-
 	private String mUesrname;
 	private Sex mSex;
 	private GregorianCalendar mDateBirth;
@@ -62,11 +59,6 @@ public class User
 			 new GregorianCalendar(Integer.parseInt(msgNewUser.getDateYear()), Integer.parseInt(msgNewUser.getDateMonth()), Integer.parseInt(msgNewUser.getDateDay())));
 		
 		setIPAddress(msgNewUser.getIPAddress());
-//		setUsername(msgNewUser.getUsername());
-//		setDateBirth(new GregorianCalendar(Integer.parseInt(msgNewUser.getDateYear()), Integer.parseInt(msgNewUser.getDateMonth()), Integer.parseInt(msgNewUser.getDateDay())));
-//		setSex(Sex.valueOf(msgNewUser.getSex().toUpperCase()));
-		
-//		setLastPongTime(System.currentTimeMillis());
 	}
 	
 	
@@ -79,7 +71,7 @@ public class User
 
 	public String getUsername()
 	{
-		return mUesrname; // + ((mLastName != null && mLastName.equals("") == false) ? " " + mLastName : "");
+		return mUesrname;
 	}
 
 	public String getSex()
@@ -134,38 +126,10 @@ public class User
 		return mFavoriteMusic;
 	}
 	
-	
-//	public void setFullName(String newFullName)
-//	{
-//		String[] nameParts = newFullName.split(" ");
-//
-//		if (nameParts.length >= 2)
-//		{
-//			setUsername(nameParts[INDEX_FIRST_NAME]);
-//			setLastName(nameParts[INDEX_LAST_NAME]);
-//		}
-//		else
-//		{
-//			if (INDEX_FIRST_NAME < INDEX_LAST_NAME)
-//			{
-//				setUsername(nameParts[INDEX_FIRST_NAME]);
-//			}
-//			else
-//			{
-//				setLastName(nameParts[INDEX_LAST_NAME]);
-//			}
-//		}
-//	}
-
 	public void setUsername(String newUsername)
 	{
 		mUesrname = newUsername;
 	}
-
-//	public void setLastName(String newLastString)
-//	{
-//		mLastName = newLastString;
-//	}
 
 	public void setSex(Sex newSex)
 	{
