@@ -24,16 +24,13 @@ public class User
 		}
 	};
 
-	private final int INDEX_FIRST_NAME = 0;
-	private final int INDEX_LAST_NAME = 1;
+//	private static final int INDEX_FIRST_NAME = 0;
+//	private static final int INDEX_LAST_NAME = 1;
 
-	private String mFirstName = "";
-	private String mLastName = "";
+	private String mUesrname;
 	private Sex mSex;
 	private GregorianCalendar mDateBirth;
 
-	// TODO : Add a picture to the user
-	
 	private String mHobbies = "";
 	private String mFavoriteMusic = "";
 
@@ -41,50 +38,35 @@ public class User
 	private String mIPaddress;
 
 
-	//	public String statusMsg;
-
-	public User(String newFirstName, String newLastName, Sex newSex, GregorianCalendar newDateBirth, String newIPAddress)
+	public User(String newUsername, Sex newSex, GregorianCalendar newDateBirth)
 	{
-		setFirstName(newFirstName);
-		setLastName(newLastName);
+		setUsername(newUsername);
 		setSex(newSex);
 		setDateBirth(newDateBirth);
-		setIPAddress(newIPAddress);
+		
+		setIPAddress("");
 		
 		setLastPongTime(System.currentTimeMillis());
 	}
 
-	public User(String newFirstName, String newLastName, Sex newSex, int newBirthYear, int newBirthMonth, int newBirthDay, String newIPAddress)
+	public User(String newUsername, Sex newSex, int newBirthYear, int newBirthMonth, int newBirthDay)
 	{
-		this(newFirstName, newLastName, newSex, new GregorianCalendar(newBirthYear, newBirthMonth, newBirthDay), newIPAddress);
+		this(newUsername, newSex, new GregorianCalendar(newBirthYear, newBirthMonth, newBirthDay));
 	}
 
-//	public User(String userFileName, String userName)
-//	{
-//		// TODO : Implement
-//		// TODO : When extraction of username from the file (or file name) will be done, remove the additional parameter - userName
-//		setFullName(userName);
-//		setSex(Sex.FEMALE);
-//		setDateBirth(new GregorianCalendar(1982, 8, 23));
-//		
-//		
-//		// If the user's file exists
-//		
-//			// Read the details, if exist
-//
-//	}
-	
 	public User(Messages.MessageNewUser msgNewUser)
 	{
 		// Structure : NewUser IPAddress username birthDate Sex Picture
+		this(msgNewUser.getUsername(),
+			 Sex.valueOf(msgNewUser.getSex().toUpperCase()),
+			 new GregorianCalendar(Integer.parseInt(msgNewUser.getDateYear()), Integer.parseInt(msgNewUser.getDateMonth()), Integer.parseInt(msgNewUser.getDateDay())));
+		
 		setIPAddress(msgNewUser.getIPAddress());
-		setFullName(msgNewUser.getUsername());
-		setDateBirth(new GregorianCalendar(Integer.parseInt(msgNewUser.getDateYear()), Integer.parseInt(msgNewUser.getDateMonth()), Integer.parseInt(msgNewUser.getDateDay())));
-		setSex(Sex.valueOf(msgNewUser.getSex().toUpperCase()));
+//		setUsername(msgNewUser.getUsername());
+//		setDateBirth(new GregorianCalendar(Integer.parseInt(msgNewUser.getDateYear()), Integer.parseInt(msgNewUser.getDateMonth()), Integer.parseInt(msgNewUser.getDateDay())));
+//		setSex(Sex.valueOf(msgNewUser.getSex().toUpperCase()));
 		
-		setLastPongTime(System.currentTimeMillis());
-		
-		// TODO : Deal with the picture
+//		setLastPongTime(System.currentTimeMillis());
 	}
 	
 	
@@ -92,12 +74,12 @@ public class User
 	{
 		User userOther = (User) objOther;
 		
-		return (getFullName().equals(userOther.getFullName()) && mIPaddress.equals(userOther.getIPAddress()));
+		return (getUsername().equals(userOther.getUsername()) && mIPaddress.equals(userOther.getIPAddress()));
 	}
 
-	public String getFullName()
+	public String getUsername()
 	{
-		return mFirstName + ((mLastName != null && mLastName.equals("") == false) ? " " + mLastName : "");
+		return mUesrname; // + ((mLastName != null && mLastName.equals("") == false) ? " " + mLastName : "");
 	}
 
 	public String getSex()
@@ -112,17 +94,17 @@ public class User
 
 	public int getAge()
 	{
-		Calendar cal = Calendar.getInstance();
+		Calendar calendar = Calendar.getInstance();
 		int age;
 
 		// Calculate the difference in years between Now and the user's birth date
-		age = cal.get(Calendar.YEAR) - mDateBirth.get(GregorianCalendar.YEAR);
+		age = calendar.get(Calendar.YEAR) - mDateBirth.get(GregorianCalendar.YEAR);
 
 		// Decrease the age by 1 if Now's month is earlier than the birth date's or if
 		// they have the same month, but the Now's day is earlier
-		if (cal.get(Calendar.MONTH) < mDateBirth.get(GregorianCalendar.MONTH) ||
-			(cal.get(Calendar.MONTH) == mDateBirth.get(GregorianCalendar.MONTH) &&
-			 cal.get(Calendar.DAY_OF_MONTH) < mDateBirth.get(GregorianCalendar.DAY_OF_MONTH)))
+		if (calendar.get(Calendar.MONTH) < mDateBirth.get(GregorianCalendar.MONTH) ||
+			(calendar.get(Calendar.MONTH) == mDateBirth.get(GregorianCalendar.MONTH) &&
+			 calendar.get(Calendar.DAY_OF_MONTH) < mDateBirth.get(GregorianCalendar.DAY_OF_MONTH)))
 		{
 			--age;
 		}
@@ -153,38 +135,37 @@ public class User
 	}
 	
 	
-	public void setFullName(String newFullName)
-	{
-		String[] nameParts = newFullName.split(" ");
+//	public void setFullName(String newFullName)
+//	{
+//		String[] nameParts = newFullName.split(" ");
+//
+//		if (nameParts.length >= 2)
+//		{
+//			setUsername(nameParts[INDEX_FIRST_NAME]);
+//			setLastName(nameParts[INDEX_LAST_NAME]);
+//		}
+//		else
+//		{
+//			if (INDEX_FIRST_NAME < INDEX_LAST_NAME)
+//			{
+//				setUsername(nameParts[INDEX_FIRST_NAME]);
+//			}
+//			else
+//			{
+//				setLastName(nameParts[INDEX_LAST_NAME]);
+//			}
+//		}
+//	}
 
-		// TODO : Check the validity of the name
-		if (nameParts.length >= 2)
-		{
-			setFirstName(nameParts[INDEX_FIRST_NAME]);
-			setLastName(nameParts[INDEX_LAST_NAME]);
-		}
-		else
-		{
-			if (INDEX_FIRST_NAME < INDEX_LAST_NAME)
-			{
-				setFirstName(nameParts[INDEX_FIRST_NAME]);
-			}
-			else
-			{
-				setLastName(nameParts[INDEX_LAST_NAME]);
-			}
-		}
+	public void setUsername(String newUsername)
+	{
+		mUesrname = newUsername;
 	}
 
-	public void setFirstName(String newFirstName)
-	{
-		mFirstName = newFirstName;
-	}
-
-	public void setLastName(String newLastString)
-	{
-		mLastName = newLastString;
-	}
+//	public void setLastName(String newLastString)
+//	{
+//		mLastName = newLastString;
+//	}
 
 	public void setSex(Sex newSex)
 	{

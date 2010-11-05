@@ -39,13 +39,6 @@ public class Messages
 	//               Structure : ChatMessage sourceIPAddress, targetIPAddress, messageContents
 	public static final String MSG_PREFIX_CHAT_MESSAGE = "ChatMessage";
 	
-	// MakeUserBackup : The leader sends this message to a user to let him know that he is the backup (In case the leader disconnects)
-	//               	Structure : MakeUserBackup
-//	public static final String MSG_PREFIX_MAKE_CLIENT_BACKUP = "MakeUserBackup";
-//	private static final String DUMMY_STRING = "DummyString";
-	
-//	public static final String MSG_EOM = "DONE";
-	
 	
 	public static final String MSG_PARAMS_SEPARATOR = "~";
 
@@ -57,6 +50,13 @@ public class Messages
 		return message.split(MSG_PARAMS_SEPARATOR)[INDEX_PARAM_PREFIX];
 	}
 	
+	/**
+	 * Gets a map of Index to Value, and makes a String out of all the values with the MSG_PARAMS_SEPARATOR as the separator
+	 * between the values
+	 * 
+	 * @param mapIndexToValue - The map to create the string out of its values
+	 * @return The string of values
+	 */
 	private static String makeMessageString(HashMap<Integer, String> mapIndexToValue)
 	{
 		String strMsg = "";
@@ -140,13 +140,13 @@ public class Messages
 	// Structure : NewUser username IPAddress dateBirth Sex Picture
 	public static class MessageNewUser
 	{
-		private final int INDEX_PARAM_IP_ADDRESS = 1;
-		private final int INDEX_PARAM_USERNAME = 2;
-		private final int INDEX_PARAM_DATE_BIRTH_YEAR = 3;
-		private final int INDEX_PARAM_DATE_BIRTH_MONTH = 4;
-		private final int INDEX_PARAM_DATE_BIRTH_DAY = 5;
-		private final int INDEX_PARAM_SEX = 6;
-		private final int INDEX_PARAM_PICTURE = 7;
+		private static final int INDEX_PARAM_IP_ADDRESS = 1;
+		private static final int INDEX_PARAM_USERNAME = 2;
+		private static final int INDEX_PARAM_DATE_BIRTH_YEAR = 3;
+		private static final int INDEX_PARAM_DATE_BIRTH_MONTH = 4;
+		private static final int INDEX_PARAM_DATE_BIRTH_DAY = 5;
+		private static final int INDEX_PARAM_SEX = 6;
+//		private static final int INDEX_PARAM_PICTURE = 7;
 		
 //		private List<String> listParams = new LinkedList<String>();
 		private HashMap<Integer, String> mMapIndexToValue = new HashMap<Integer, String>();
@@ -159,25 +159,25 @@ public class Messages
 //		private String mSex = "";
 //		private String mPicture = "";
 		
-		public MessageNewUser(String ipAddress, String username, int birthYear, int birthMonth, int birthDay, String sex, String picture)
-		{
-//			listParams.ad
-			mMapIndexToValue.put(INDEX_PARAM_PREFIX, MSG_PREFIX_NEW_USER);
-			mMapIndexToValue.put(INDEX_PARAM_IP_ADDRESS, ipAddress);
-			mMapIndexToValue.put(INDEX_PARAM_USERNAME, username);
-			mMapIndexToValue.put(INDEX_PARAM_DATE_BIRTH_YEAR, String.valueOf(birthYear));
-			mMapIndexToValue.put(INDEX_PARAM_DATE_BIRTH_MONTH, String.valueOf(birthMonth));
-			mMapIndexToValue.put(INDEX_PARAM_DATE_BIRTH_DAY, String.valueOf(birthDay));
-			mMapIndexToValue.put(INDEX_PARAM_SEX, sex);
-			mMapIndexToValue.put(INDEX_PARAM_PICTURE, picture);
-//			mIPAddress = ipAddress;
-//			mUsername = username;
-//			mBirthYear = birthYear;
-//			mBirthMonth = birthMonth;
-//			mBirthDay = birthDay;
-//			mSex = sex;
-//			mPicture = picture;
-		}
+//		public MessageNewUser(String ipAddress, String username, int birthYear, int birthMonth, int birthDay, String sex, String picture)
+//		{
+////			listParams.ad
+//			mMapIndexToValue.put(INDEX_PARAM_PREFIX, MSG_PREFIX_NEW_USER);
+//			mMapIndexToValue.put(INDEX_PARAM_IP_ADDRESS, ipAddress);
+//			mMapIndexToValue.put(INDEX_PARAM_USERNAME, username);
+//			mMapIndexToValue.put(INDEX_PARAM_DATE_BIRTH_YEAR, String.valueOf(birthYear));
+//			mMapIndexToValue.put(INDEX_PARAM_DATE_BIRTH_MONTH, String.valueOf(birthMonth));
+//			mMapIndexToValue.put(INDEX_PARAM_DATE_BIRTH_DAY, String.valueOf(birthDay));
+//			mMapIndexToValue.put(INDEX_PARAM_SEX, sex);
+////			mMapIndexToValue.put(INDEX_PARAM_PICTURE, picture);
+////			mIPAddress = ipAddress;
+////			mUsername = username;
+////			mBirthYear = birthYear;
+////			mBirthMonth = birthMonth;
+////			mBirthDay = birthDay;
+////			mSex = sex;
+////			mPicture = picture;
+//		}
 		
 		public MessageNewUser(Message message)
 		{
@@ -191,7 +191,7 @@ public class Messages
 			mMapIndexToValue.put(INDEX_PARAM_DATE_BIRTH_MONTH, arrParams[INDEX_PARAM_DATE_BIRTH_MONTH]);
 			mMapIndexToValue.put(INDEX_PARAM_DATE_BIRTH_DAY, arrParams[INDEX_PARAM_DATE_BIRTH_DAY]);
 			mMapIndexToValue.put(INDEX_PARAM_SEX, arrParams[INDEX_PARAM_SEX]);
-			mMapIndexToValue.put(INDEX_PARAM_PICTURE, arrParams[INDEX_PARAM_PICTURE]);
+//			mMapIndexToValue.put(INDEX_PARAM_PICTURE, arrParams[INDEX_PARAM_PICTURE]);
 //			mIPAddress = arrParams[INDEX_PARAM_IP_ADDRESS];
 //			mUsername = arrParams[INDEX_PARAM_USERNAME];
 //			mBirthYear = arrParams[INDEX_PARAM_DATE_BIRTH_YEAR];
@@ -205,13 +205,12 @@ public class Messages
 		{
 			mMapIndexToValue.put(INDEX_PARAM_PREFIX, MSG_PREFIX_NEW_USER);
 			mMapIndexToValue.put(INDEX_PARAM_IP_ADDRESS, currUser.getIPAddress());
-			mMapIndexToValue.put(INDEX_PARAM_USERNAME, currUser.getFullName());
+			mMapIndexToValue.put(INDEX_PARAM_USERNAME, currUser.getUsername());
 			mMapIndexToValue.put(INDEX_PARAM_DATE_BIRTH_YEAR, String.valueOf(currUser.getDateBirth().get(GregorianCalendar.YEAR)));
 			mMapIndexToValue.put(INDEX_PARAM_DATE_BIRTH_MONTH, String.valueOf(currUser.getDateBirth().get(GregorianCalendar.MONTH)));
 			mMapIndexToValue.put(INDEX_PARAM_DATE_BIRTH_DAY, String.valueOf(currUser.getDateBirth().get(GregorianCalendar.DAY_OF_MONTH)));
 			mMapIndexToValue.put(INDEX_PARAM_SEX, currUser.getSex());
-			// TODO : Get the real picture data
-			mMapIndexToValue.put(INDEX_PARAM_PICTURE, "StubPic"); //currUser.getPicture());
+//			mMapIndexToValue.put(INDEX_PARAM_PICTURE, "StubPic"); //currUser.getPicture());
 //			mIPAddress = currUser.getIPAddress();
 //			mUsername = currUser.getFullName();
 //			mDateBirth = currUser.getDateBirth().toString();
@@ -249,10 +248,10 @@ public class Messages
 			return mMapIndexToValue.get(INDEX_PARAM_SEX);
 		}
 		
-		public String getPicture()
-		{
-			return mMapIndexToValue.get(INDEX_PARAM_PICTURE);
-		}
+//		public String getPicture()
+//		{
+//			return mMapIndexToValue.get(INDEX_PARAM_PICTURE);
+//		}
 		
 		public String toString()
 		{
@@ -265,8 +264,8 @@ public class Messages
 	
 	public static class MessageGetUserDetails
 	{
-		private final int INDEX_PARAM_TARGET_IP_ADDRESS = 1;
-		private final int INDEX_PARAM_TARGET_USERNAME = 2;
+		private static final int INDEX_PARAM_TARGET_IP_ADDRESS = 1;
+		private static final int INDEX_PARAM_TARGET_USERNAME = 2;
 		
 		private String mTargetIPAddress = "";
 		private String mTargetUserName = "";
@@ -305,7 +304,7 @@ public class Messages
 	
 	public static class MessageGiveDetails
 	{
-		private final int INDEX_PARAM_ASKER_IP_ADDRESS = 1;
+		private static final int INDEX_PARAM_ASKER_IP_ADDRESS = 1;
 		
 		private String mAskerIPAddress = "";
 		
@@ -337,12 +336,12 @@ public class Messages
 	// Structure : UserDetails askerIPAddress *all the details. TBD*
 	public static class MessageUserDetails
 	{
-	    private final String FIELD_NOT_FILLED = "-- Not Filled By User --";
+	    private static final String FIELD_NOT_FILLED = "-- Not Filled By User --";
 
-	    private final int INDEX_PARAM_ASKER_IP_ADDRESS = 1;
-		private final int INDEX_PARAM_IP_ADDRESS = 2;
-		private final int INDEX_PARAM_HOBBIES = 3;
-		private final int INDEX_PARAM_FAVORITE_MUSIC = 4;
+	    private static final int INDEX_PARAM_ASKER_IP_ADDRESS = 1;
+		private static final int INDEX_PARAM_IP_ADDRESS = 2;
+		private static final int INDEX_PARAM_HOBBIES = 3;
+		private static final int INDEX_PARAM_FAVORITE_MUSIC = 4;
 		
 		private String mAskerIPAddress = "";
 		private String mIPAddress = "";
@@ -408,7 +407,7 @@ public class Messages
 	// Structure : UserDisconnected IPAddress
 	public static class MessageUserDisconnected
 	{
-		private final int INDEX_PARAM_IP_ADDRESS = 1;
+		private static final int INDEX_PARAM_IP_ADDRESS = 1;
 		
 		String mIPAddress = "";
 		
@@ -438,10 +437,10 @@ public class Messages
 	
 	public static class MessageChatMessage
 	{
-		private final int INDEX_PARAM_CHAT_USER = 1;
-		private final int INDEX_PARAM_CHAT_SOURCE_USER_IP = 2;
-		private final int INDEX_PARAM_CHAT_TARGET_USER_IP = 3;
-		private final int INDEX_PARAM_CHAT_MESSAGE_CONTENTS = 4;
+		private static final int INDEX_PARAM_CHAT_USER = 1;
+		private static final int INDEX_PARAM_CHAT_SOURCE_USER_IP = 2;
+		private static final int INDEX_PARAM_CHAT_TARGET_USER_IP = 3;
+		private static final int INDEX_PARAM_CHAT_MESSAGE_CONTENTS = 4;
 
 		private String mChatMessageContents = "";
 		private String mUsername = "";
@@ -496,25 +495,4 @@ public class Messages
 					mChatMessageContents;
 		}
 	}
-	
-	
-//	public static class MessageMakeClientBackup
-//	{
-//		public MessageMakeClientBackup()
-//		{
-//		}
-//		
-//
-//		public String toString()
-//		{
-//			return MSG_PREFIX_MAKE_CLIENT_BACKUP + MSG_PARAMS_SEPARATOR + DUMMY_STRING;
-//		}
-//	}
-	
-//	public static String createMessageAskForUsers()
-//	{
-//		String msg = MSG_PREFIX_NEW_USER;
-//		
-//		return msg;
-//	}
 }

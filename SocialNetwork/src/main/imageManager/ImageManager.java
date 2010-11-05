@@ -15,9 +15,9 @@ public class ImageManager implements Runnable {
 
 	private static final String LOG_TAG = "ImageManager";
 	
-	ExecutorService executor = Executors.newFixedThreadPool( 10);
-	ServerSocket serverSocket;
-	boolean interrupted = false;
+	private ExecutorService executor = Executors.newFixedThreadPool( 10);
+	private ServerSocket serverSocket;
+	private boolean interrupted = false;
 	private IImageNotifiable notifiable;
 	private String fileName;
 	
@@ -40,7 +40,6 @@ public class ImageManager implements Runnable {
 			serverSocket.setSoTimeout(ApplicationSocialNetwork.TIMEOUT_SOCKET_RECEIVE);
 			Looper.prepare();
 			while (!interrupted) {
-//			while (Thread.currentThread().isInterrupted() == false) {
 				try {
 					Socket socket = serverSocket.accept( );
 					ImageManagerRequestHandler handler = new ImageManagerRequestHandler( executor, notifiable, fileName);
@@ -49,7 +48,6 @@ public class ImageManager implements Runnable {
 				}
 			}
 		} catch (IOException e) {
-//			e.printStackTrace();
 			Log.e(LOG_TAG, "run() : IOException occurred. e.getMessage() = " + e.getMessage());
 		}
 		finally {
@@ -66,25 +64,4 @@ public class ImageManager implements Runnable {
 		interrupted = true;
 		executor.shutdown( );
 	}
-	
-//	public static void main(String[] args) {
-//		final ImageManager manager = new ImageManager( new IImageNotifiable( ) {
-//			public void imageReady( String imageName) {
-//			};
-//		});
-//		new Thread( manager).start( );
-//		Runtime.getRuntime( ).addShutdownHook( new Thread( ) {
-//			public void run( ) {
-//				manager.shutdown( );
-//			}
-//		});
-//		while( true) {
-//			try {
-//				Thread.sleep(500);
-//			} catch (InterruptedException e) {
-//				e.printStackTrace();
-//			}
-//		}
-//	}
-
 }

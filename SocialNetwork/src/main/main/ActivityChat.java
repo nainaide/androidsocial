@@ -13,16 +13,22 @@ import android.widget.TextView;
 
 public class ActivityChat extends Activity
 {
-	protected static final String LOG_TAG = "SN.Chat";
-	Button mButtonSend;
-	EditText mEditTextConversation;
-	EditText mEditTextMyMessage;
-	TextView mTextViewChatOtherUserDetails;
+	private static final String LOG_TAG = "SN.Chat";
+	
+	public static final String EXTRA_KEY_USER_IP = "UserIP";
+	public static final String EXTRA_KEY_USER_NAME = "Username";
+
+	private Button mButtonSend;
+	private EditText mEditTextConversation;
+	private EditText mEditTextMyMessage;
+	private TextView mTextViewChatOtherUserDetails;
+	
+	private String mUsername;
+	private String chattingWith;
+	private String chattingWithIp;
 	
 	private ApplicationSocialNetwork application =null;
-	private String username;
-	private String chatingWith;
-	private String chatingWithIp;
+	
 	public static ActivityChat instance = null;
 
 	
@@ -31,16 +37,21 @@ public class ActivityChat extends Activity
 	public void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
-		application  = (ApplicationSocialNetwork)getApplication();
 		setContentView(R.layout.chat);
+		
+		application = (ApplicationSocialNetwork)getApplication();
 		ActivityChat.instance = this;
-		username = ActivityLogin.instance.getUserName();
+		
+		mUsername = ActivityLogin.instance.getUserName();
+		
+		mTextViewChatOtherUserDetails = (TextView)findViewById(R.id.TextViewChatOtherUserDetails);
 		mEditTextConversation = (EditText) findViewById(R.id.EditTextChatConversation);
 		mEditTextMyMessage = (EditText) findViewById(R.id.EditTextChatMyMessage);
 		mButtonSend = (Button) findViewById(R.id.ButtonChatSend);
 //		Bundle extras = getIntent().getExtras();
 		
-		Log.d(LOG_TAG, "on create usrname:" + chatingWith + " in ip: "+chatingWithIp);
+		Log.d(LOG_TAG, "on create usrname:" + chattingWith + " in ip: "+chattingWithIp);
+		
 		mButtonSend.setOnClickListener(new OnClickListener() {
 			public void onClick(View view)
 			{
@@ -55,45 +66,54 @@ public class ActivityChat extends Activity
 		super.onResume();
 		
 		Bundle extras = getIntent().getExtras();
-		chatingWith = extras.getString("ActivityChat.userName");
-		chatingWithIp = extras.getString("ActivityChat.userIp");
-		String res = application.addOpenChats(chatingWith,chatingWithIp);
-		Log.d(LOG_TAG, "on resume chating with : " + chatingWith);
-		Log.d(LOG_TAG, "on resume chating with ip : " + chatingWithIp);
-		Log.d(LOG_TAG, "on resume got : " + res);
+		chattingWith = extras.getString(EXTRA_KEY_USER_NAME);
+		chattingWithIp = extras.getString(EXTRA_KEY_USER_IP);
+		
+		String res = application.addOpenChats(chattingWith, chattingWithIp);
 		mEditTextConversation.setText(res);
+		
+		Log.d(LOG_TAG, "on resume chatting with : " + chattingWith + ", chatting with ip : " + chattingWithIp);
+		Log.d(LOG_TAG, "on resume got : " + res);
 
 		// Set the other user's details
-		mTextViewChatOtherUserDetails = (TextView)findViewById(R.id.TextViewChatOtherUserDetails);
-		mTextViewChatOtherUserDetails.setText("Chatting With : " + chatingWith);
+		mTextViewChatOtherUserDetails.setText("Chatting With : " + chattingWith);
 		
+		// Scroll to the end of the chat
 		if(mEditTextConversation.length()!=0)
 			mEditTextConversation.setSelection(mEditTextConversation.length()-1);
 	}
 	
 	private void send()
 	{
+		// Make sure the message to be sent isn't empty
 		if (mEditTextMyMessage.getText().toString().equals(""))
 		{
 			return;
 		}
 		
-		String text = mEditTextConversation.getText().toString();
+		String conversation = mEditTextConversation.getText().toString();
 		String updatingWith = "";
-		if(!text.equals(""))
-			updatingWith+="\n";
-		updatingWith += username+" sends:\n"+mEditTextMyMessage.getText().toString()+"\n";
-		mEditTextConversation.setText(text+updatingWith);
-		Log.d(LOG_TAG, "Updating chat from chat, chating with ip: " +chatingWithIp);		
-		application.UpdateOpenChats(chatingWith, chatingWithIp, updatingWith);
-		Messages.MessageChatMessage msgChat = new Messages.MessageChatMessage(updatingWith,username, application.getMyIP(),chatingWithIp);
 		
+		if(!conversation.equals(""))
+			updatingWith += "\n";
+		
+		updatingWith += mUsername+" sends:\n"+mEditTextMyMessage.getText().toString()+"\n";
+		mEditTextConversation.setText(conversation + updatingWith);
+		
+		Log.d(LOG_TAG, "Updating chat from chat, chatting with ip: " +chattingWithIp);
+		
+		application.UpdateOpenChats(chattingWith, chattingWithIp, updatingWith);
+		
+		Messages.MessageChatMessage msgChat = new Messages.MessageChatMessage(updatingWith,mUsername, application.getMyIP(),chattingWithIp);
 		Message msg = ActivityUsersList.instance.getUpdateHandler().obtainMessage();
 		msg.obj = msgChat;
 		ActivityUsersList.instance.getUpdateHandler().sendMessage(msg);
 		
 		application.sendMessage(msgChat.toString());
+		
 		mEditTextMyMessage.setText("");
+		
+		// Scroll to the end of the chat
 		if(mEditTextConversation.length()!=0)
 			mEditTextConversation.setSelection(mEditTextConversation.length()-1);
 	}
@@ -102,20 +122,14 @@ public class ActivityChat extends Activity
 		public void handleMessage(Message msg)
 		{
 			Messages.MessageChatMessage msgChat = (Messages.MessageChatMessage)msg.obj;
-			chatingWith = msgChat.getChatMessageUser();
-			Log.d(LOG_TAG, "Chat from " +msgChat.getChatMessageUser());									
-			Log.d(LOG_TAG, "Chat from in chatingWith : "+chatingWith);		
-			Log.d(LOG_TAG, "Chat from ip " +msgChat.getSourceUserIP());			
-			Log.d(LOG_TAG, "Chat from in chatingWithIp : "+chatingWithIp);		
-			/*if(!msgChat.getChatMessageUser().equals(chatingWith))
-			{
-				return;
-			}*/
-//			String text = mEditTextConversation.getText().toString();
-			//if(!text.equals(""))
-			//	text+="\n";
-			mEditTextConversation.setText(application.addOpenChats(chatingWith,msgChat.getSourceUserIP()));
-					//text+msgChat.getChatMessageContents());
+			chattingWith = msgChat.getChatMessageUser();
+			
+			Log.d(LOG_TAG, "Chat from user " + msgChat.getChatMessageUser() + ", chattingWith = " + chattingWith);									
+			Log.d(LOG_TAG, "Chat from ip " + msgChat.getSourceUserIP() + ", chattingWithIp = " + chattingWithIp);			
+
+			mEditTextConversation.setText(application.addOpenChats(chattingWith,msgChat.getSourceUserIP()));
+
+			// Scroll to the end of the chat
 			if(mEditTextConversation.length()!=0)
 				mEditTextConversation.setSelection(mEditTextConversation.length()-1);
 		}

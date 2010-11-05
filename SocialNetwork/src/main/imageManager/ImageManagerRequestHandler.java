@@ -11,14 +11,15 @@ public class ImageManagerRequestHandler {
 
 	private static final String LOG_TAG = "ImageManagerRequestHandler";
 	
+	public static final int SEND_USER_IMAGE = 0x1;
+	public static final int RECEIVE_USER_IMAGE = SEND_USER_IMAGE << 1;
+	
 	private ExecutorService executor;
 
 	private IImageNotifiable notifiable;
 
 	private String fileName;
-	
-	final static public int SEND_USER_IMAGE = 0x1;
-	final static public int RECEIVE_USER_IMAGE = SEND_USER_IMAGE << 1;
+
 	
 	public ImageManagerRequestHandler(ExecutorService executor, IImageNotifiable notifiable, String fileName) {
 		this.executor = executor; 
@@ -39,10 +40,6 @@ public class ImageManagerRequestHandler {
 			executor.execute(handler);
 		} catch (IOException e) {
 			Log.e(LOG_TAG, "run() : IOException occurred. e.getMessage() = " + e.getMessage());
-//			e.printStackTrace();
 		}
-		
 	}
-	
-	
 }
