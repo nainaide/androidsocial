@@ -292,7 +292,6 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 								// Remove the leader from the list of users
 								removeUser(getLeaderIP());
 								
-								// TODO : Should we just delete the ThreadReconnect and put its contents as a function here ?
 								mThreadReconnect = new Thread(new ThreadReconnect());
 								mThreadReconnect.start();
 								mThreadReconnect.join();
@@ -556,8 +555,6 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 								String targetUsername = msgGetUserDetails.getTargetUserName();
 								ImageCommunicator imageOwner = new ImageCommunicator( targetIPAddress, ImageCommunicator.IMAGE_SERVER_PORT);
 								ImageCommunicator imageAsker = new ImageCommunicator( askerIPAddress, ImageCommunicator.IMAGE_SERVER_PORT);
-								// TODO : If the leader is the target ip, just create a copy of the picture instead of having him sending his
-								//        own picture to himself
 								imageOwner.requestImage(targetUsername);
 								imageAsker.sendImage( "/sdcard/" + targetUsername + ".jpg", targetUsername);
 							}
@@ -674,7 +671,6 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 			}
 		}
 
-		// TODO : Check for several runs of the program if there is an error here. If not, just delete this method and open the socket where it is called
 		private DatagramSocket createDatagramSocket()
 		{
 			DatagramSocket socket = null;

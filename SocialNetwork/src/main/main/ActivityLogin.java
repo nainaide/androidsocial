@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FilenameFilter;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
@@ -161,16 +163,32 @@ public class ActivityLogin extends Activity implements OnClickListener
     		
     		case R.id.ButtonDeleteUser :
     		{
-				String userNameToDelete = (String) mSpinnerUserNames.getSelectedItem();
+				final String userNameToDelete = (String) mSpinnerUserNames.getSelectedItem();
 				
-				// TODO : Ask the user if he is sure he wants to delete the selected user
+				// Ask the user if he is sure he wants to delete the selected user
+				AlertDialog.Builder builder = new AlertDialog.Builder(this);
 				
-				// Delete the user file
-				getApplicationContext().deleteFile(application.getUserFileName(userNameToDelete));
+				builder.setMessage("Are you sure you want to delete the user \"" + userNameToDelete + "\" ?");
+				builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int id)
+					{
+						// Delete the user file
+						getApplicationContext().deleteFile(application.getUserFileName(userNameToDelete));
+						
+						// Remove the user name from the spinner
+						mArrayAdapter.remove(userNameToDelete);
+					}
+				});
+				builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int id)
+					{
+						dialog.cancel();
+					}
+				});
 				
-				// Remove the user name from the spinner
-				mArrayAdapter.remove(userNameToDelete);
-    			
+				AlertDialog alert = builder.create();
+				alert.show();
+				
     			break;
     		}
     		
