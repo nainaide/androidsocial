@@ -33,6 +33,9 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
+/**
+ * This activity shows the list of currently connected users. The user can select one of them and view his details or chat with him
+ */
 public class ActivityUsersList extends ListActivity
 {
 	private static final String MENU_ITEM_TITLE_CHAT = "Chat";

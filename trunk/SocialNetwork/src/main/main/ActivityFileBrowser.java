@@ -16,6 +16,10 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
+/**
+ * This activity lets the user browse for a picture file for his user. This File Browser shows only .png and .jpg files as
+ * these (and the unrecommended .gif extension) are the only ones supported by the Android Bitmap class.
+ */
 public class ActivityFileBrowser extends ListActivity {
 
 	public static final String EXTRA_KEY_FILENAME = "fileName";
@@ -57,27 +61,36 @@ public class ActivityFileBrowser extends ListActivity {
 			this.browseTo(this.currentDirectory.getParentFile());
 	}
 
+	/**
+	 * If the parameter is a folder, this method browses to a given directory and shows its contents
+	 * (Only the supported extensions png and jpg along with other directories).
+	 * If the parameter is a file, the method creates a smaller copy of the file to be used throughout the program and
+	 * the activity finishes.
+	 * 
+	 * @param aDirectory - The directory to browse to or picture file to select
+	 */
 	private void browseTo(final File aDirectory) {
 		if (aDirectory.isDirectory()) {
 			this.currentDirectory = aDirectory;
 			fill(aDirectory.listFiles());
 		} else {
-			// First copy the selected picture to a smaller file, making the picture not bigger than the size of image view that
+			// Copy the selected picture to a smaller file, making the picture not bigger than the size of image view that
 			// is shown in ActivityUserDetails
 			String filePath = aDirectory.getAbsolutePath();
-//			BitmapFactory.Options options = new BitmapFactory.Options();
 			Bitmap bitmapOriginal = BitmapFactory.decodeFile(filePath);
-//			Bitmap bitmapSmall = BitmapFactory.decodeFile(filePath, options);
+			
 			int maxDimensionSmallPic = (int)getResources().getDimension(R.dimen.image_size); 
 			int widthOriginal = bitmapOriginal.getWidth();
 			int heightOriginal = bitmapOriginal.getHeight();
 			int maxDimensionOriginal = Math.max(widthOriginal, heightOriginal);
 			int widthSmall = (int)((double) widthOriginal / (double) maxDimensionOriginal * maxDimensionSmallPic);
 			int heightSmall = (int)((double) heightOriginal / (double) maxDimensionOriginal * maxDimensionSmallPic);
+			
 			Bitmap bitmapSmall = Bitmap.createScaledBitmap(bitmapOriginal, widthSmall, heightSmall, true);
 			String fileName = aDirectory.getName();
 			String fileSmallName = PREFIX_SMALL_PIC_FILE_NAME + fileName;
 			String fileSmallPath = aDirectory.getAbsolutePath().replace(fileName, fileSmallName);
+			
 			FileOutputStream fos = null;
 			try {
 				fos = new FileOutputStream(fileSmallPath);
@@ -90,15 +103,18 @@ public class ActivityFileBrowser extends ListActivity {
 				}
 			}
 			
-			
 			Intent data = new Intent( );
-//			data.putExtra(EXTRA_KEY_FILENAME, aDirectory.getAbsolutePath());
 			data.putExtra(EXTRA_KEY_FILENAME, fileSmallPath);
 			setResult(RESULT_OK, data);
 			finish( );	
 		}
 	}
 
+	/**
+	 * Show the given files
+	 * 
+	 * @param files - The files to show
+	 */
 	private void fill(File[] files) {
 		this.directoryEntries.clear();
 
@@ -106,7 +122,6 @@ public class ActivityFileBrowser extends ListActivity {
 		try {
 			Thread.sleep(10);
 		} catch (InterruptedException e1) {
-//			e1.printStackTrace();
 		}
 		this.directoryEntries.add(".");
 

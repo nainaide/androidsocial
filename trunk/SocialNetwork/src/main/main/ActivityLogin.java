@@ -15,6 +15,11 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.Spinner;
 
+/**
+ * This activity is the login screen. It enables creating a new user, selecting an existing user to login with, deleting a user,
+ * enabling the option to automatically login from now on with the selected user (Thus not showing the login screen from now on. It can be shown
+ * again by logging out from within the application) and, of course, logging in.
+ */
 public class ActivityLogin extends Activity implements OnClickListener
 {
 	private static final int CREATE_NEW_USER = 0x01;
@@ -64,6 +69,9 @@ public class ActivityLogin extends Activity implements OnClickListener
         populateSpinnerUserNames();
 	}
 
+    /**
+     * If the user has previously checked the option to automatically login, then login without showing the activity.
+     */
 	private void loginAutomaticallyIfNeeded()
 	{
         String prefNameShouldLoginAutomatically = getResources().getString(R.string.pref_name_should_login_automatically);
@@ -223,6 +231,10 @@ public class ActivityLogin extends Activity implements OnClickListener
 		}
 	}
 	
+	/**
+	 * Populates the users spinner with all the known users. This is done by searching for all the user-data files available,
+	 * each one for a different user.
+	 */
 	private void populateSpinnerUserNames()
 	{
 		// Check the list of users files. Each file will have the name of the relevant
