@@ -256,7 +256,7 @@ public class ActivityUserDetails extends Activity
 			{
 				handleHint(mEditTextFavoriteMusic);
 				
-				// Returning false so that the keyboard will show up
+				// Returning false will make the keyboard show up
 				return false;
 			}
     	});
@@ -273,7 +273,7 @@ public class ActivityUserDetails extends Activity
 			{
 				handleHint(mEditTextHobbies);
 				
-				// Returning false so that the keyboard will show up
+				// Returning false will make the keyboard show up
 				return false;
 			}
     	});
@@ -289,9 +289,10 @@ public class ActivityUserDetails extends Activity
 	
     private void setForViewOrEdit(boolean isEditable)
     {
-		mTextViewDateBirth.setEnabled(isEditable);
 		mEditTextFavoriteMusic.setEnabled(isEditable);
+		mEditTextFavoriteMusic.setFocusable(isEditable);
 		mEditTextHobbies.setEnabled(isEditable);
+		mEditTextHobbies.setFocusable(isEditable);
 		
 		int visibilityEditingViews = (isEditable) ? View.VISIBLE : View.GONE;
 		int visibilityViewingViews = (isEditable) ? View.GONE : View.VISIBLE;

@@ -27,19 +27,20 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.View.OnClickListener;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.AdapterView.AdapterContextMenuInfo;
 
 /**
  * This activity shows the list of currently connected users. The user can select one of them and view his details or chat with him
  */
 public class ActivityUsersList extends ListActivity
 {
-	private static final String MENU_ITEM_TITLE_CHAT = "Chat";
-	private static final String[] mArrContextMenuItemsTitles = {MENU_ITEM_TITLE_CHAT};
+	private static final String MENU_ITEM_TITLE_PREFIX_CHAT = "Chat With ";
 	
 	private static final String CTXT_MENU_ITEM_TITLE_EDIT_DETAILS = "Edit My Details";
 	private static final String CTXT_MENU_ITEM_TITLE_LOGOUT = "Logout";
@@ -79,6 +80,8 @@ public class ActivityUsersList extends ListActivity
 		mUsersAdapter = new UsersAdapter(this, R.layout.user, mUsers);
 		setListAdapter(mUsersAdapter);
 
+		registerForContextMenu(getListView());
+		
 		connect();
 	}
 
@@ -148,24 +151,7 @@ public class ActivityUsersList extends ListActivity
 		
 		User user = mUsers.get(position);
 		
-		if (user != null)
-		{
-			List<String> listMainDataValues = new LinkedList<String>();
-			listMainDataValues.add("Name: " + user.getUsername());
-			listMainDataValues.add(user.getSex() + ", " + user.getAge());
-			
-			String[] arrMainDataValues = listMainDataValues.toArray(new String[0]);
-			Intent intent = new Intent(this, ActivityUserDetails.class);
-			
-			intent.putExtra(getResources().getString(R.string.extra_key_main_data), arrMainDataValues);
-			intent.putExtra(ActivityUserDetails.EXTRA_KEY_USER_IP, user.getIPAddress());
-			intent.putExtra(ActivityUserDetails.EXTRA_KEY_USER_NAME, user.getUsername());
-			intent.putExtra(ActivityUserDetails.EXTRA_KEY_IS_EDITABLE, false);
-
-			Log.d(LOG_TAG, "selected username :" + user.getUsername() + " and his ip is : 0"+ user.getIPAddress());
-			
-			startActivity(intent);
-		}
+		startActivityUserDetails(user, false);
 	}
 	
     @Override
@@ -186,24 +172,9 @@ public class ActivityUsersList extends ListActivity
     {
     	if (item.getTitle().equals(CTXT_MENU_ITEM_TITLE_EDIT_DETAILS))
     	{
-    		User user = application.getMe();
+    		User userMe = application.getMe();
     		
-    		if (user != null)
-    		{
-    			List<String> listMainDataValues = new LinkedList<String>();
-    			listMainDataValues.add("Name: " + user.getUsername());
-    			listMainDataValues.add(user.getSex() + ", " + user.getAge());
-    			
-    			String[] arrMainDataValues = listMainDataValues.toArray(new String[0]);
-    			Intent intent = new Intent(this, ActivityUserDetails.class);
-    			
-    			intent.putExtra(getResources().getString(R.string.extra_key_main_data), arrMainDataValues);
-    			intent.putExtra(ActivityUserDetails.EXTRA_KEY_USER_IP, user.getIPAddress());
-    			intent.putExtra(ActivityUserDetails.EXTRA_KEY_USER_NAME, user.getUsername());
-    			intent.putExtra(ActivityUserDetails.EXTRA_KEY_IS_EDITABLE, true);
-    		
-    			startActivity(intent);
-    		}
+    		startActivityUserDetails(userMe, true);
     	}
     	else if (item.getTitle().equals(CTXT_MENU_ITEM_TITLE_LOGOUT))
     	{
@@ -229,29 +200,35 @@ public class ActivityUsersList extends ListActivity
     @Override
     public void onCreateContextMenu(ContextMenu menu, View view, ContextMenuInfo menuInfo) 
     {
-         super.onCreateContextMenu(menu, view, menuInfo);
-         
-     	for (int indexMenuItem = 0; indexMenuItem < mArrContextMenuItemsTitles.length; ++indexMenuItem)
+    	super.onCreateContextMenu(menu, view, menuInfo);
+    	
+    	if (view.getId() == getListView().getId())
     	{
-    		menu.add(Menu.NONE, indexMenuItem, indexMenuItem, mArrContextMenuItemsTitles[indexMenuItem]);
+	    	AdapterContextMenuInfo info = (AdapterContextMenuInfo) menuInfo;
+	    	ListView listView = (ListView) view;
+	    	User user = (User)(listView.getItemAtPosition(info.position));
+	    	
+	    	menu.add(Menu.NONE, 0, 0, MENU_ITEM_TITLE_PREFIX_CHAT + user.getUsername());
     	}
     }
  
     @Override
     public boolean onContextItemSelected(MenuItem item)
     {
-       	if (item.getTitle().equals(MENU_ITEM_TITLE_CHAT))
+    	String itemTitle = item.getTitle().toString(); 
+    	
+       	if (itemTitle.startsWith(MENU_ITEM_TITLE_PREFIX_CHAT))
     	{
-       		// TODO : Check if this fixes touching the users list
-       		User user = mUsers.get(getListView().getSelectedItemPosition());
+     		AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo)item.getMenuInfo(); 
+     		User user = (User)getListView().getItemAtPosition(info.position);
        		
        		if (user == null)
        		{
-       			Log.d(LOG_TAG, "User is null");
+       			Log.d(LOG_TAG, "onContextItemSelected() - User is null");
        		}
        		else
        		{
-       			Log.d(LOG_TAG, "User name : " + user.getUsername() + ", User IP : " + user.getIPAddress());
+       			Log.d(LOG_TAG, "onContextItemSelected() - User name : " + user.getUsername() + ", User IP : " + user.getIPAddress());
        			
        			chat(user.getUsername(), user.getIPAddress());
        		}
@@ -260,6 +237,28 @@ public class ActivityUsersList extends ListActivity
     	return true;    
     }    
 	
+    private void startActivityUserDetails(User user, boolean isEditable)
+    {
+		if (user != null)
+		{
+			List<String> listMainDataValues = new LinkedList<String>();
+			listMainDataValues.add("Name: " + user.getUsername());
+			listMainDataValues.add(user.getSex() + ", " + user.getAge());
+			
+			String[] arrMainDataValues = listMainDataValues.toArray(new String[0]);
+			Intent intent = new Intent(this, ActivityUserDetails.class);
+			
+			intent.putExtra(getResources().getString(R.string.extra_key_main_data), arrMainDataValues);
+			intent.putExtra(ActivityUserDetails.EXTRA_KEY_USER_IP, user.getIPAddress());
+			intent.putExtra(ActivityUserDetails.EXTRA_KEY_USER_NAME, user.getUsername());
+			intent.putExtra(ActivityUserDetails.EXTRA_KEY_IS_EDITABLE, isEditable);
+
+			Log.d(LOG_TAG, "startActivityUserDetails() - selected username : " + user.getUsername() + " and his ip is : "+ user.getIPAddress());
+			
+			startActivity(intent);
+		}
+    }
+    
     private void logout()
     {
 		Messages.MessageUserDisconnected msgUserDisconnected = new Messages.MessageUserDisconnected(application.getMyIP());
@@ -330,12 +329,16 @@ public class ActivityUsersList extends ListActivity
 			
 			// Assign the context menu to the current list item
 			view.setOnCreateContextMenuListener(ActivityUsersList.this);
+			view.setTag(user);
 			
 			view.setOnClickListener(new OnClickListener() {
-				public void onClick(View v)
+				public void onClick(View view)
 				{
-					// TODO : This is a try to make the touch work
-Log.d(LOG_TAG, "Clicked on a user. Will touch work ???");					
+					User userClicked = (User)view.getTag();
+					
+					Log.d(LOG_TAG, "onClick - Clicked on the user : " + userClicked.getUsername());
+					
+					startActivityUserDetails(userClicked, false);
 				}
 			});
 			
