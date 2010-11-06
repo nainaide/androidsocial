@@ -4,6 +4,9 @@ import java.util.Calendar;
 import java.util.GregorianCalendar;
 
 
+/**
+ * Represents a user in the program.
+ */
 public class User
 {
 	public enum Sex
@@ -53,7 +56,7 @@ public class User
 
 	public User(Messages.MessageNewUser msgNewUser)
 	{
-		// Structure : NewUser IPAddress username birthDate Sex Picture
+		// Structure of MessageNewUser : NewUser IPAddress username birthDate Sex Picture
 		this(msgNewUser.getUsername(),
 			 Sex.valueOf(msgNewUser.getSex().toUpperCase()),
 			 new GregorianCalendar(Integer.parseInt(msgNewUser.getDateYear()), Integer.parseInt(msgNewUser.getDateMonth()), Integer.parseInt(msgNewUser.getDateDay())));

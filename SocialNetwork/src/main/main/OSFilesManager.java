@@ -15,6 +15,9 @@ import java.util.List;
 import android.util.Log;
 
 
+/**
+ * This class takes care of all the the permissions, program files, dhcp script, etc.
+ */
 public class OSFilesManager
 {
 	private static final String LOG_TAG = "SN.OSFilesManager";

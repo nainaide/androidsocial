@@ -22,6 +22,7 @@ import java.util.Properties;
 import main.imageManager.IImageNotifiable;
 import main.imageManager.ImageCommunicator;
 import main.imageManager.ImageManager;
+import main.imageManager.ImageReceiver;
 import main.main.Messages.MessageChatMessage;
 import android.app.Application;
 import android.content.Context;
@@ -31,7 +32,9 @@ import android.os.SystemClock;
 import android.util.Log;
 import android.widget.Toast;
 
-
+/**
+ * This class extends the Android's Application class. It contains all the logic not related to a specific activity.
+ */
 public class ApplicationSocialNetwork extends Application implements IImageNotifiable
 {
 //	private static final int NAP_TIME_ADHOC_CLIENT_ENABLE = 1000;
@@ -252,6 +255,11 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 	}
 
 	
+	/**
+	 * This thread periodically checks if either the clients or the leader are stale.
+	 * If we are a client, it also notifies once (when it starts) the leader that we joined the network.
+	 * If we are the leader, it also periodically broadcasts a ping message to all clients so they know the leader isn't stale
+	 */
 	private class ThreadStaleChecker implements Runnable
 	{
 		// @Override
@@ -322,6 +330,9 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 			return (SystemClock.uptimeMillis() - mLeaderLastPing) > TIMEOUT_STALE_LEADER;
 		}
 
+		/**
+		 * Checks for each client if he is stale by checking if a certain timeout has passed since the client's last pong response
+		 */
 		private void updateStaleClients()
 		{
 			Collection<User> users =  new LinkedList<User>(mMapIPToUser.values());
@@ -346,6 +357,12 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 	}
 
 	
+	/**
+	 * This thread is run when a client identifies that the leader is stale. It finds the IP of a client that will now try
+	 * to connect as the new leader (All the clients have the same list of IPs so they all agree on the next leader).
+	 * The client with this IP tries to connect as the leader. If a certain timeout passes and he is not the leader yet, it
+	 * is assumed he got disconnected and the next IP is found, and so on.
+	 */
 	private class ThreadReconnect implements Runnable
 	{
 		// @Override
@@ -414,6 +431,9 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 		}
 		
 
+		/**
+		 * Find the IP to be the next leader.
+		 */
 		private String calcIPBackup()
 		{
 			String ipBackupToReturn = "999.999.999.999";
@@ -436,6 +456,9 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 	}
 	
 
+	/**
+	 * This thread runs the whole messages protocol. It waits for a message and then processes it.
+	 */
 	private class ThreadMessageLoop implements Runnable
 	{
 		// @Override
@@ -1055,6 +1078,10 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 //		return mDidRunBefore;
 //	}
 
+	/**
+	 * When receiving from the leader a picture of another user, the {@link ImageReceiver} calls this method when he has finished getting the
+	 * picture from the leader and it's ready to be used.
+	 */
 	public void imageReady( String imageName) {
 		// The Looper.prepare() method is needed for a thread to get a handler, otherwise it crashes
 		Looper.prepare();

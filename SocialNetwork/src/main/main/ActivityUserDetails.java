@@ -20,6 +20,10 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+/**
+ * This activity shows the details of a certain user. The user can either view the details of another user who is currently
+ * connected and shown in the {@link ActivityUsersList} or edit his own details.
+ */
 public class ActivityUserDetails extends Activity
 {
 	private static final String LOG_TAG = "SN.UserDetails";

@@ -12,6 +12,9 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.RadioButton;
 
+/**
+ * This activity enables creating a new user and selecting his basic details : username, sex, date of birth and picture
+ */
 public class ActivityCreateUser extends Activity implements OnClickListener {
 	
 	private static final int GET_PICTURE_FILE_NAME = 0x01;

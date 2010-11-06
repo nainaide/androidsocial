@@ -3,6 +3,9 @@ package main.main;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 
+/**
+ * All the messages that are sent between the different uses, as part of the communication protocol.
+ */
 public class Messages
 {
 	// Ping : Leader sends periodically to see if a client is still connected
