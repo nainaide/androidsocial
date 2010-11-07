@@ -37,20 +37,14 @@ import android.widget.Toast;
  */
 public class ApplicationSocialNetwork extends Application implements IImageNotifiable
 {
-//	private static final int NAP_TIME_ADHOC_CLIENT_ENABLE = 1000;
-//	private static final int NAP_TIME_ADHOC_CLIENT_DISABLE = 1000;
-//	private static final int NAP_TIME_ADHOC_SERVER_ENABLE = 1000;
-//	private static final int NAP_TIME_ADHOC_SERVER_DISABLE = 1000;
 	private static final int NAP_TIME_STALE_CHECKER = 1000;
-//	private static final int NAP_TIME_MESSAGE_LOOP = 1000;
 	private static final int NAP_TIME_GET_DATAGRAM_SOCKET = 1000;
 	private static final int NAP_TIME_TOAST_AND_EXIT = 3000;
 	private static final int NAP_TIME_RECONNECT = 1000;
 	
 	private static final int TIMEOUT_STALE_CLIENT = 5 * NAP_TIME_STALE_CHECKER;
 	private static final int TIMEOUT_STALE_LEADER = 5 * NAP_TIME_STALE_CHECKER;
-	private static final int TIMEOUT_RECONNECT = 40 * 1000; // 30 seconds
-//	private final int  TIMEOUT_SOCKET_ACCEPT = 30000;
+	private static final int TIMEOUT_RECONNECT = 40 * 1000;
 
 	public static final int TIMEOUT_SOCKET_RECEIVE = TIMEOUT_STALE_LEADER + 100;
 	
@@ -92,7 +86,6 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 	private HashMap<String, User> mMapIPToUser = null;
 	private long mLeaderLastPing = -1;
 	private String CHAT_SEPERATOR = "@";
-//	private boolean mDidRunBefore = false;
 	private Hashtable<String ,String > openChats = null;
 	private ImageManager imageManager;
 	
@@ -119,23 +112,14 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 		}
 
 		mCurrState = NetControlState.NOT_RUNNING;
-
-//		stopDnsmasq();
-//		disableAdhocServer();
 	}
 	
-//	public void stopDnsmasq()
-//	{
-//		mOSFilesManager.runRootCommand(mOSFilesManager.PATH_APP_DATA_FILES + "/bin/netcontrol stop_dnsmasq");
-//	}
-
 	public void onTerminate()
 	{
 		super.onTerminate();
 		
 		stopService();
 	}
-
 
 	public void setFileNameForManager( String fileName) {
 		imageManager.setFileName(fileName);
@@ -146,13 +130,12 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 		switch (mCurrState)
 		{
 			case NOT_RUNNING: {
+				Looper.prepare();
 				toastAndExit("Error connecting to an existing network or creating a new one. Exiting...");
 				break;
 			}
 			case LEADER: {
-				Log.d(LOG_TAG, "About to be a leader");
 				setMyIPAddress(IP_LEADER);
-				Log.d(LOG_TAG, "Set my ip as leader");
 				break;
 			}
 			case CLIENT: {
@@ -212,7 +195,6 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 		
 		Log.d(LOG_TAG, "Running as server");
 		
-//		mDidRunBefore = true;
 		setMyIPAddress(IP_LEADER);
 		mCurrState = NetControlState.LEADER;
 	}
@@ -254,7 +236,6 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 		mMe.setIPAddress(IPaddress);	    	
 	}
 
-	
 	/**
 	 * This thread periodically checks if either the clients or the leader are stale.
 	 * If we are a client, it also notifies once (when it starts) the leader that we joined the network.
@@ -269,13 +250,10 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 			// If this is a client, ask for the list of users
 			if (mCurrState == NetControlState.CLIENT)
 			{
-//				nap(500);
 				Messages.MessageNewUser msgNewUser = new Messages.MessageNewUser(mMe);
-
 				sendMessage(msgNewUser.toString());
 			}
 			
-//			Looper.prepare();
 			while (Thread.currentThread().isInterrupted() == false)
 			{
 				try
@@ -382,9 +360,13 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 				{
 					Log.d(LOG_TAG, "Reconnect : I'm the new leader. About to enable leader");
 					
-					disableAdhocClient();
+//					disableAdhocClient();
 					enableAdhocLeader();
 					
+					// Restart the imageManager thread
+					imageManager.shutdown();
+					new Thread( imageManager, "Image manager").start( );
+
 					Log.d(LOG_TAG, "Reconnect : I'm the new leader. Returned from enabling leader");
 
 					isDone = true;
@@ -397,6 +379,8 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 					
 					Log.d(LOG_TAG, "Reconnect : I'm not the new leader. About to try to connect as a client");
 					
+					// Try to connect as a client until a timeout passes (We want to try more than once in case
+					// the new designated leader hasn't connected yet)
 					while (isClientEnabled == false && timePassed < TIMEOUT_RECONNECT)
 					{
 						nap(NAP_TIME_RECONNECT);
@@ -408,8 +392,6 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 						Log.d(LOG_TAG, "Reconnect : Tried to enable client. isClientEnabled = " + isClientEnabled + ", timePassed = " + timePassed);
 					}
 
-					Log.d(LOG_TAG, "Reconnect : Out of the inner while. isClientEnabled = " + isClientEnabled);
-					
 					// Check if we were able to connect as a client
 					if (isClientEnabled)
 					{
@@ -468,10 +450,10 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 			DatagramSocket socket = null;
 
 			socket = createDatagramSocket();
-//			try {
-//				socket.setSoTimeout(TIMEOUT_SOCKET_RECEIVE);
-//			} catch (SocketException e) {
-//			}
+			try {
+				socket.setSoTimeout(TIMEOUT_SOCKET_RECEIVE);
+			} catch (SocketException e) {
+			}
 
 			while (Thread.currentThread().isInterrupted() == false) {
 				try {
@@ -553,6 +535,9 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 							public void run( ) {
 								setName( "Leader image send/receiver");
 								String targetUsername = msgGetUserDetails.getTargetUserName();
+								
+								Log.d(LOG_TAG, "MessageLoop - getUserDetails - targetIPAddress = " + targetIPAddress + ", " + "askerIPAddress = " + askerIPAddress);
+								
 								ImageCommunicator imageOwner = new ImageCommunicator( targetIPAddress, ImageCommunicator.IMAGE_SERVER_PORT);
 								ImageCommunicator imageAsker = new ImageCommunicator( askerIPAddress, ImageCommunicator.IMAGE_SERVER_PORT);
 								imageOwner.requestImage(targetUsername);
@@ -703,10 +688,15 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 
 
 	public synchronized void showToast(Context context, String toastMessage)
-//	public void showToast(Context context, String toastMessage)
 	{
-		Toast.makeText(context, toastMessage, Toast.LENGTH_LONG).show();
-//		Toast.makeText(this, toastMessage, Toast.LENGTH_LONG).show();
+		try
+		{
+			Toast.makeText(context, toastMessage, Toast.LENGTH_LONG).show();
+		}
+		catch (Exception e)
+		{
+			Log.e(LOG_TAG, "showToast - I'm irritating and cannot work right. e.getMessage() = " + e.getMessage());
+		}
 	}
 
 	private void addUser(User userToAdd)
@@ -734,8 +724,7 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 		}
 	}
 
-//	private synchronized void notifyActivityUserDetails(Messages.MessageUserDetails msgUserDetails) //String msgUserDetails)
-	private void notifyActivityUserDetails(Messages.MessageUserDetails msgUserDetails) //String msgUserDetails)
+	private void notifyActivityUserDetails(Messages.MessageUserDetails msgUserDetails)
 	{
 		Log.d(LOG_TAG, "About to notify ActivityUserDetails. Msg = " + msgUserDetails.toString());
 
@@ -745,12 +734,17 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 		ActivityUserDetails.instance.getUpdateHandler().sendMessage(msg);
 	}
 	
-	public String getOpenChatsIP(String user)
+	/**
+	 * Retrieves the IP of the given username
+	 * @param user - The username we want to get his IP
+	 * @return The IP of the given username
+	 */
+	public String getOpenChatIP(String user)
 	{
 		Enumeration<String> keys = this.openChats.keys();
 		while(keys.hasMoreElements())
 		{
-			String[] chat =keys.nextElement().split(CHAT_SEPERATOR);
+			String[] chat = keys.nextElement().split(CHAT_SEPERATOR);
 			String chatUser = chat[1];
 		    String ip = chat[0];
 			if(chatUser.equals(user))
@@ -760,19 +754,20 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 		return null;
  	}
 	
+	/**
+	 * Returns an array of all the usernames with which we have chatted with
+	 * @return The array of uesrnames
+	 */
 	public CharSequence[] getOpenChatUsers()
 	{
 		Enumeration<String> keys = openChats.keys();
 		List<CharSequence> itemsList = new ArrayList<CharSequence>();
 		
 	    int i=0;
-	    Log.d(LOG_TAG, "Going throught all open chats, have :"+openChats.size() +" open chats");
 	    while(keys.hasMoreElements())
 	    {
 	    	String key = keys.nextElement();
-	    	//items[i] = key.split(CHAT_SEPERATOR)[1];
 	    	itemsList.add(key.split(CHAT_SEPERATOR)[1]);
-	    	Log.d(LOG_TAG, "open chat with key  :"+key);
 	    	i++;
 	    }
 	    
@@ -780,13 +775,15 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 	    for(int j=0; j<itemsList.size();j++)
 	    	items[j] = itemsList.get(j);
 	    
-	    for(CharSequence s : items)
-		{
-			Log.d(LOG_TAG, "got item :"+s );
-		}
 	    return items;
 	}
 	
+	/**
+	 * Gets the whole conversation history with the given user (identified by a username and IP) 
+	 * @param user - The username of the user to get the history for
+	 * @param ip - The IP of the user to get the history for
+	 * @return
+	 */
 	public String addOpenChats(String user, String ip)
 	{
 		user = user.trim();
@@ -816,18 +813,18 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 		return this.openChats.get(key);
 	}
 	
+	/**
+	 * Updates the conversation history of the given chat with the given user (identified by a username and an IP)
+	 * @param user - The username of the user to update the history for
+	 * @param ip - The IP of the user to update the history for
+	 * @param value - The addition to the existing conversation
+	 */
 	public void UpdateOpenChats(String user,String ip, String value)
 	{
 		user = user.trim();
 		addOpenChats(user, ip);
 		
-		Log.d(LOG_TAG, "Update chat to user :"+user +"    with ip: "+ip);
-		Log.d(LOG_TAG, "UpdateOpenChats value prev updating:" +this.openChats.get(ip + CHAT_SEPERATOR + user) );
-		Log.d(LOG_TAG, "Value to add= " + value);
-		
 		this.openChats.put(ip + CHAT_SEPERATOR + user,this.openChats.get(ip + CHAT_SEPERATOR + user)+value);
-		
-		Log.d(LOG_TAG, "UpdateOpenChats value after updating:" +this.openChats.get(ip + CHAT_SEPERATOR + user) );	
 	}
 	
 	public void loadMyDetails(String userFileName)
@@ -896,7 +893,7 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 		sendMessage(message, getLeaderIP());
 	}
 	
-	private void broadcast(String message)
+	public void broadcast(String message)
 	{
 		byte[] buffer = new byte[1024];
 		DatagramPacket packet = null;
@@ -906,7 +903,7 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 		buffer = message.getBytes();
 		try
 		{
-			dest = InetAddress.getByName(calcBroadcastAddress(IP_LEADER)); //InetAddress.getByName("192.168.2.255");;
+			dest = InetAddress.getByName(calcBroadcastAddress(IP_LEADER));
 			packet = new DatagramPacket(buffer, buffer.length, dest, PORT);
 			
 			if (shouldLog(message))
@@ -944,7 +941,6 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 		return message.startsWith(Messages.MSG_PREFIX_PING) == false && message.startsWith(Messages.MSG_PREFIX_PONG) == false;
 	}
 	
-//	private synchronized String calcBroadcastAddress(String ipAddress)
 	private String calcBroadcastAddress(String ipAddress)
 	{
 		int pos = ipAddress.lastIndexOf(".");
@@ -1069,11 +1065,6 @@ public class ApplicationSocialNetwork extends Application implements IImageNotif
 									  userFileName.length() - (USER_FILE_NAME_SUFFIX.length() + USER_FILE_NAME_EXTENSION.length())); 
 	}
 	
-//	public boolean didRunBefore()
-//	{
-//		return mDidRunBefore;
-//	}
-
 	/**
 	 * When receiving from the leader a picture of another user, the {@link ImageReceiver} calls this method when he has finished getting the
 	 * picture from the leader and it's ready to be used.
