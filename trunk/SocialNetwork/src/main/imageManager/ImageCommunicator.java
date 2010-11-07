@@ -11,8 +11,12 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
+import android.util.Log;
+
 public class ImageCommunicator {
 
+	private static final String LOG_TAG = "ImageCommunicator";
+	
 	public static final int IMAGE_SERVER_PORT = 1703;
 	
 	private String host;
@@ -27,6 +31,7 @@ public class ImageCommunicator {
 		BufferedInputStream inputStream = null;
 		OutputStream 		outputStream = null;
 		Socket				socket = null;
+		
 		try {
 			socket = new Socket(host, port);
 			
@@ -44,19 +49,19 @@ public class ImageCommunicator {
 			if ( !socket.isOutputShutdown( ))
 				outputStream.flush( );
 		} catch (UnknownHostException e) {
-			e.printStackTrace();
+			Log.e(LOG_TAG, "sendImage - UnknownHostException. e.getMessage() = " + e.getMessage());
 		} catch (IOException e) {
-			e.printStackTrace();
+			Log.e(LOG_TAG, "sendImage - IOException. e.getMessage() = " + e.getMessage());
 		} finally {
 			try {
+				if (socket != null) {
+					socket.close();
+				}
 				if ( inputStream != null) {
 					inputStream.close( );
 				}
 				if ( outputStream != null) {
 					outputStream.close( );
-				}
-				if (socket != null) {
-					socket.close();
 				}
 			} catch (IOException e) {
 			}
@@ -68,6 +73,7 @@ public class ImageCommunicator {
 		OutputStream 		 outputStream = null;
 		InputStream			 inputStream = null;
 		Socket				 socket = null;
+		
 		try {
 			socket = new Socket(host, port);
 			
@@ -83,26 +89,22 @@ public class ImageCommunicator {
 			}
 			fileOut.flush( );
 		} catch (UnknownHostException e) {
-			e.printStackTrace();
+			Log.e(LOG_TAG, "requestImage - UnknownHostException. e.getMessage() = " + e.getMessage());
 		} catch (IOException e) {
-			e.printStackTrace();
+			Log.e(LOG_TAG, "requestImage - IOException. e.getMessage() = " + e.getMessage());
 		} finally {
 			try {
+				if (socket != null) {
+					socket.close();
+				}					
 				if ( fileOut != null)
 					fileOut.close( );
 				if ( outputStream != null)
 					outputStream.close( );
 				if ( inputStream != null) 
 					inputStream.close( );
-				if (socket != null)
-					socket.close();
 			} catch (IOException e) {
 			}
 		}
 	}
-//	
-//	public static void main(String[] args) {
-//		ImageCommunicator sender = new ImageCommunicator( "localhost", IMAGE_SERVER_PORT);
-//		sender.requestImage( "userTest");
-//	}
 }

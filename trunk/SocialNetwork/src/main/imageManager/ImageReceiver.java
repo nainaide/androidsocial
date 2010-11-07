@@ -30,6 +30,8 @@ public class ImageReceiver implements Runnable {
 			}
 		} catch (IOException e) {
 			Log.e(LOG_TAG, "ImageReceiver CTor - IOException. e.getMessage() = " + e.getMessage());
+		} catch (Exception e) {
+			Log.e(LOG_TAG, "ImageReceiver CTor - Exception. e.getMessage() = " + e.getMessage());
 		}
 	}
 

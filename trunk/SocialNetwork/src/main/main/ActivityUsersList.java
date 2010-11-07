@@ -111,11 +111,9 @@ public class ActivityUsersList extends ListActivity
 					Log.d(LOG_TAG, "connect : Not a client");
 
 					// Notify the user that we're about to create a new network and then connect as a leader
-					Looper.prepare(); // Apparently it's needed for showing a dialog (next line) in a thread
+					Looper.prepare(); // Apparently it's needed for showing a toast (next line) in a thread
 					application.showToast(ActivityUsersList.this, "No network could be found. Creating a new one...");
-//					mProgDialog = ProgressDialog.show(ActivityConnect.this, "", "No network could be found. Starting a new one...", true);
 					application.enableAdhocLeader();
-//					mProgDialog.dismiss();
 				}
 				
 				// Run the thread created below in the thread that can handle the GUI
@@ -262,7 +260,17 @@ public class ActivityUsersList extends ListActivity
     private void logout()
     {
 		Messages.MessageUserDisconnected msgUserDisconnected = new Messages.MessageUserDisconnected(application.getMyIP());
-		application.sendMessage(msgUserDisconnected.toString());
+		
+		if (application.getMyIP().equals(application.getLeaderIP()))
+		{
+			// Broadcast to everybody that this user (the leader) has disconnected, so they remove him from their list
+			application.broadcast(msgUserDisconnected.toString());
+		}
+		else
+		{
+			// We are a client, so send the leader a message that we are disconnecting
+			application.sendMessage(msgUserDisconnected.toString());
+		}
 		
 		application.stopService();
 		
@@ -354,6 +362,8 @@ public class ActivityUsersList extends ListActivity
 			
 			Log.d(LOG_TAG, "In ActivityUsersList's handleMessage");
 			
+			// We can handle to types of messages. First we try to convert to a chat message.
+			// If we fail, then we set the flag, and it means that we should deal a users list message
 			try{
 			 Messages.MessageChatMessage msgChat = (Messages.MessageChatMessage)msg.obj;
 			 chat(msgChat.getChatMessageUser(), msgChat.getSourceUserIP());
@@ -365,25 +375,25 @@ public class ActivityUsersList extends ListActivity
 			
 			Log.d(LOG_TAG, flag.toString());
 			
+			// Handle a chat message
 			if(!flag)
 			{
 				chatButton.setVisibility(View.VISIBLE);
 				chatButton.setBackgroundColor(Color.GREEN);
 				chatButton.setOnClickListener(new OnClickListener() {
 					public void onClick(View view)
-						{
+					{
 						showOpenChats();
-						}
+					}
 				});
 				return;
 			}
+			
+			// Handle a users list message
 			mUsers = application.getUsers();
-			for(User s: mUsers)
-				Log.d(LOG_TAG, s.getUsername());
 			mUsersAdapter = new UsersAdapter(ActivityUsersList.this, R.layout.user, mUsers);
 			setListAdapter(mUsersAdapter);
 			mUsersAdapter.notifyDataSetChanged();
-//			ActivityUsersList.this.updateListView();
 			
 			if (mUsersAdapter.isEmpty())
 			{
@@ -396,24 +406,20 @@ public class ActivityUsersList extends ListActivity
 		}
 	};
 	
+	/**
+	 * Shows a list of all open chats and lets the user select which one he wants to go to
+	 */
 	private void showOpenChats() {
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
 		builder.setTitle("Pick a chat to resume");
-//		Log.d(LOG_TAG, "before get and set items for chat" );
-//		CharSequence[] res =  application.GetOpenChatUsers();
-//		for(CharSequence s : res)
-//		{
-//			Log.d(LOG_TAG, "got item :"+s );
-//		}
 		builder.setItems(application.getOpenChatUsers(), new DialogInterface.OnClickListener() 
 		{    
 			public void onClick(DialogInterface dialog, int item) {      
 				String user = application.getOpenChatUsers()[item].toString();
                 
-				chat(user,application.getOpenChatsIP(user));
+				chat(user, application.getOpenChatIP(user));
 			}
 		});
-//		Log.d(LOG_TAG, "after get and set items for chat" );
 		AlertDialog alert = builder.create();
 		alert.show();
 	}

@@ -111,6 +111,8 @@ public class OSFilesManager
 		}
 		catch (Exception e)
 		{
+			Log.e(LOG_TAG, "runRootCommand - Exception : e.getMessage() = " + e.getMessage());
+			
 			return false;
 		}
 		finally

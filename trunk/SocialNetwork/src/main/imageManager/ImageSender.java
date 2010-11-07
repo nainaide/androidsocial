@@ -24,6 +24,8 @@ public class ImageSender implements Runnable {
 			this.fileName = fileName;
 		} catch (IOException e) {
 			Log.e(LOG_TAG, "ImageSender CTor - IOException. e.getMessage() = " + e.getMessage());
+		} catch (Exception e) {
+			Log.e(LOG_TAG, "ImageSender CTor - Exception. e.getMessage() = " + e.getMessage());
 		} 
 	}
 
@@ -51,7 +53,5 @@ public class ImageSender implements Runnable {
 				//  Never will get here.
 			}
 		}
-		
 	}
-
 }

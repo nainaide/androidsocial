@@ -39,7 +39,9 @@ public class ImageManagerRequestHandler {
 			}
 			executor.execute(handler);
 		} catch (IOException e) {
-			Log.e(LOG_TAG, "run() : IOException occurred. e.getMessage() = " + e.getMessage());
+			Log.e(LOG_TAG, "handleRequest() : IOException occurred. e.getMessage() = " + e.getMessage());
+		} catch (Exception e) {
+			Log.e(LOG_TAG, "handleRequest() : Exception occurred. e.getMessage() = " + e.getMessage());
 		}
 	}
 }
